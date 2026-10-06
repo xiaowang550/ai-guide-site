@@ -9,7 +9,7 @@ import type { CapabilityKey, Score, Tool, ToolCategory } from '@/data/types'
  * 卡片与表格**一个字都不渲染**，筛选也用不到。
  *
  * 这些长文本本来就已经在服务端渲染进 HTML 了，再序列化一份进 RSC payload
- * 等于同一份内容传两遍。22 个工具累积起来就是首屏 HTML 多出十几 KB，
+ * 等于同一份内容传两遍。工具数量一多，累积起来就是首屏 HTML 多出几十 KB，
  * 而所有页面都要为它付流量。
  *
  * 所以这里定义一个投影：只保留「筛选要用」+「卡片要显示」的字段，
