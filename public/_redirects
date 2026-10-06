@@ -1,0 +1,17 @@
+# Cloudflare Pages 路由规则
+#
+# 本站是 Next.js 静态导出（output: 'export'），每个路由会生成
+# out/<route>/index.html。Cloudflare Pages 默认就会把 /tools/ 映射到
+# out/tools/index.html，所以下面这条重写不是必需的。
+#
+# 写在这里是为了明确一件事：如果某天发现 /tools/ 404，
+# 先检查这条规则是否被平台正确加载，而不是去翻Next 配置。
+
+# 目录式 URL -> 目录下的 index.html
+/tools/*  /tools/:splat/index.html  200
+/learn/*  /learn/:splat/index.html  200
+/guides/*  /guides/:splat/index.html  200
+/cases/*   /cases/:splat/index.html   200
+/paths/*   /paths/:splat/index.html   200
+/edu/*     /edu/:splat/index.html     200
+/tools/*   /tools/:splat/index.html   200

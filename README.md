@@ -99,6 +99,9 @@ NEXT_PUBLIC_AI_MODEL=stealth/space-bunny-alpha
 **部署上线见 [`docs/deployment.md`](docs/deployment.md)**：三种部署形态怎么选、
 Cloudflare Worker 代理的逐步部署、上线前检查清单与目标性能值。
 
+**托管到 Cloudflare Pages 见 [`docs/cloudflare-pages.md`](docs/cloudflare-pages.md)**：
+后台逐项填什么、部署后必须验证的 6 项、常见问题排查。
+
 ---
 
 ## 快速开始
@@ -214,6 +217,7 @@ ai-guide-site/
 ├─ docs/
 │  ├��� deployment.md          # 三种部署形态、Worker 代理部署、上线检查清单
 │  ├─ ai-mode.md             # AI 模式配置、提示词策略、故障排查表
+│  ├─ cloudflare-pages.md    # Cloudflare Pages 后台逐项填什么、部署后 6 项验证
 │  └─ 试点学校信息模板.md    # 填真实试点学校信息用（可直接发我）
 ├─ proxy/
 │  └─ cloudflare-worker.js   # 生产用 AI 代理（可直接部署，无需构建）
