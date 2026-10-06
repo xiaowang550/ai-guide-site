@@ -231,7 +231,7 @@ console.log(`仓库地址：https://github.com/${REPO}`)
 // 为什么要这一步：曾经出过一次 bug —— blob 缓存按「路径」做键而不是
 // 「内容哈希」，文件改了以后仍复用旧sha，于是推上去的是上一版内容。
 // 全程没有任何报错，只有逐字节对比才能发现。
-const remoteCommit = await api(`/commits/${commit.sha}`)
+const remoteCommit = await api(`/git/commits/${commit.sha}`)
 if (!remoteCommit.tree) throw new Error('拿不到新提交的 tree')
 const remoteTree = await api(`/git/trees/${remoteCommit.tree.sha}?recursive=1`)
 
