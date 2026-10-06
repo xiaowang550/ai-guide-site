@@ -1,14 +1,15 @@
 import type { MetadataRoute } from 'next'
+import { siteConfig } from '@/lib/site'
 
 /** PWA 清单：允许「添加到主屏」，离线可用 */
 export const dynamic = 'force-static'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'AI 能力地图 —— 中文 AI 学习与工具指南',
-    short_name: 'AI 能力地图',
+    name: `${siteConfig.name} —— ${siteConfig.description.slice(0, 20)}…`,
+    short_name: siteConfig.shortName,
     description:
-      '把每个 AI 工具的能力量化成 14 个维度，并用纯规则决策器回答「该用哪个、为什么、怎么问」。面向本地教师与学生。',
+      siteConfig.description,
     start_url: '/',
     scope: '/',
     display: 'standalone',

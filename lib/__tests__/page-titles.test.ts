@@ -7,8 +7,8 @@ import { siteConfig } from '../site'
  * 页面标题门禁。
  *
  * 背景：layout 用 `title.template = '%s | 站点名'`。页面自设 title 时
- * 会被拼成「工具库 | AI 能力地图」，这是对的；但首页如果也自设，
- * 就会变成「首页 | AI 能力地图」—— 全站最重要的页面用了信息量最低的标题，
+ * 会被拼成「工具库 | 站点名」，这是对的；但首页如果也自设，
+ * 就会变成「首页 | 站点名」—— 全站最重要的页面用了信息量最低的标题，
  * 搜索结果里既没有站点名也没有任何关键词。
  *
  * 这类问题不报错、测试也测不出来（除非专门检查），所以这里显式锁住。
@@ -99,8 +99,7 @@ describe('页面标题', () => {
     const layout = readFileSync('app/layout.tsx', 'utf8')
     expect(layout, '缺少 title.template').toMatch(/template:\s*`/)
     expect(layout, '缺少站点名').toContain('siteConfig.name')
-    // 站点名本身也要有内容，不能是占位
+    // 站点名本身要有内容，不能是占位
     expect(siteConfig.name.length).toBeGreaterThan(1)
-    expect(siteConfig.tagline.length).toBeGreaterThan(4)
   })
 })

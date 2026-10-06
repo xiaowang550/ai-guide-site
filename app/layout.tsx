@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
-import { siteConfig } from '@/lib/site'
+import { siteConfig, siteTitle } from '@/lib/site'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ThemeScript } from '@/components/theme-toggle'
@@ -35,8 +35,9 @@ const REVEAL_EAGER = `(function(){try{var vh=window.innerHeight||800;var els=doc
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
+  // 标语为空时只输出站点名，不拼出「站点名—— 」这种带尾巴的标题
   title: {
-    default: `${siteConfig.name} —— ${siteConfig.tagline}`,
+    default: siteTitle(),
     template: `%s | ${siteConfig.name}`,
   },
   description: siteConfig.description,
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'zh-CN',
     siteName: siteConfig.name,
-    title: `${siteConfig.name} —— ${siteConfig.tagline}`,
+    title: siteTitle(),
     description: siteConfig.description,
   },
   robots: { index: true, follow: true },

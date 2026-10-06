@@ -38,7 +38,7 @@ export function buildIssueUrl(
   const body = `${buildErrataBatchText(list)}
 
 ---
-提交者：使用「AI 能力地图」的读者
+提交者：使用「AI 能力图谱」的读者
 如果需要补充上下文（你的业务场景、为什么发现这个问题），可以直接追加在下方。`
 
   const params = new URLSearchParams({

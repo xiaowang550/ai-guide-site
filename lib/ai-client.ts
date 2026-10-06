@@ -113,7 +113,7 @@ export function buildAiMessages(
     ? facts.relevant.map((r, i) => `${i + 1}. ${r.title}（${r.href}）：${r.note}`).join('\n')
     : '（本次没有匹配到站内条目）'
 
-  const system = `你是「AI 能力地图」站内的助手，服务对象主要是中小学教师与学生。
+  const system = `你是「AI 能力图谱」站内的助手，服务对象主要是中小学教师与学生。
 
 **必须用简体中文回答**，即使提问是英文或夹杂外文术语；专有名词（如 RAG、Prompt）保留英文原名并在首次出现时用括号给中文解释。
 
