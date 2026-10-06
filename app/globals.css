@@ -1,0 +1,626 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 主色：沉稳的靛蓝（降饱和、降明度），用于链接与强调，避免"科技蓝"观感 */
+    --primary: 243 48% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    /* 强调色：暖赭石，只用于「推荐 / 最强 / 必须」这类必须被看见的标记 */
+    --highlight: 20 72% 38%;
+    --highlight-foreground: 0 0% 100%;
+
+    /* 纸张底色：带一点暖调，长文阅读比纯白舒服 */
+    --background: 40 20% 99%;
+    --foreground: 222 22% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 22% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 22% 13%;
+
+    --secondary: 40 14% 96%;
+    --secondary-foreground: 222 20% 22%;
+
+    --muted: 40 12% 96%;
+    /* 次要文字提高对比：灰得读不清是 AI 站的通病 */
+    --muted-foreground: 222 9% 38%;
+
+    --accent: 243 40% 95%;
+    --accent-foreground: 243 45% 34%;
+
+    --danger: 355 62% 42%;
+    --danger-foreground: 0 0% 100%;
+
+    --border: 222 14% 90%;
+    /* 发丝线：内容分隔用的更浅一层，替代"卡片描边" */
+    --hairline: 222 14% 92%;
+    --input: 222 14% 86%;
+    --ring: 243 48% 42%;
+
+    /* 0-5 分色阶：整体降饱和，偏印刷感而非仪表盘感 */
+    --score-0: 222 8% 58%;
+    --score-1: 355 55% 48%;
+    --score-2: 27 72% 44%;
+    --score-3: 141 40% 32%;
+    --score-4: 168 52% 26%;
+    --score-5: 202 62% 31%;
+
+    /* 圆角：卡片 10px、控件 6px，不再全站统一 12px */
+    --radius: 0.625rem;
+
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+      'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
+      monospace;
+
+    /* 标题用衬线、正文用无衬线：中文长文站点的经典编辑排版搭配。
+       刻意不用 next/font 拉网络字体 —— 构建期联网会引入不确定性（曾因构建相关问题反复返工），
+       这里按平台优先级用系统衬线；装了思源宋体 / Noto Serif 的机器会自动用到更好的字形。 */
+    --font-serif: 'Source Han Serif SC', 'Noto Serif CJK SC', 'Noto Serif SC', 'Songti SC', 'STSong',
+      'Source Han Serif CN', SimSun, 'AR PL UMing CN', Georgia, 'Times New Roman', serif;
+
+    /* ---------- 反相区块（inverted band）----------
+       借鉴 Cobalt Hour / NOX Grid 那种「长页里插一块深色」的做法。
+       关键技巧：在 .band 内部重新定义语义变量，
+       区块内部的卡片、次要文字、边框会自动变成深色版，不需要逐个改 class。 */
+    --band: 220 22% 5%;
+    --band-fg: 40 14% 96%;
+    --band-muted: 220 8% 66%;
+    --band-elevated: 220 16% 10%;
+    --band-line: 220 14% 20%;
+    --band-accent: 244 40% 20%;
+  }
+
+  .dark {
+    /* 暗色页面里，反相区块要比页面底色亮一档才看得出来，
+       但不能亮到让区块里的链接掉到 4.5:1 以下 —— 这里的 16% 是
+       在「有层次」和「文字够清楚」之间取到的平衡点。
+       区块内链接单独提亮（见 .band 的 --primary 覆盖），不靠调暗整块背景。 */
+    --band: 220 15% 16%;
+    --band-fg: 40 16% 96%;
+    --band-muted: 220 10% 72%;
+    --band-elevated: 220 14% 17%;
+    --band-line: 220 12% 24%;
+    --band-accent: 244 34% 24%;
+    --primary: 244 72% 70%;
+    --primary-foreground: 222 45% 8%;
+
+    --highlight: 32 84% 60%;
+    --highlight-foreground: 222 45% 8%;
+
+    /* 暗色：近黑画布 + 三级表面分层（借鉴 motionsites 的 #121212/#202020/#303030 结构） */
+    --background: 222 24% 5%;
+    --foreground: 40 10% 94%;
+
+    --card: 222 20% 7.5%;
+    --card-foreground: 40 10% 94%;
+
+    --popover: 222 20% 8%;
+    --popover-foreground: 40 10% 94%;
+
+    /* 抬升表面：用于卡片内的嵌套块 */
+    --secondary: 222 16% 12%;
+    --secondary-foreground: 40 8% 92%;
+
+    --muted: 222 16% 11%;
+    --muted-foreground: 220 9% 68%;
+
+    --accent: 244 28% 18%;
+    --accent-foreground: 244 70% 84%;
+
+    --danger: 355 70% 64%;
+    --danger-foreground: 222 45% 8%;
+
+    /* 发丝线用「亮色的低明度版本」等效模拟半透明白：叠在近黑上与 rgba(255,255,255,.1) 观感一致 */
+    --border: 220 12% 22%;
+    --hairline: 220 12% 17%;
+    --input: 220 12% 26%;
+    --ring: 244 72% 70%;
+
+    --score-0: 220 8% 56%;
+    --score-1: 355 72% 64%;
+    --score-2: 30 82% 60%;
+    --score-3: 141 42% 48%;
+    --score-4: 168 48% 52%;
+    --score-5: 202 74% 64%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    /* 顶部有 sticky 顶栏 + 阅读进度条，锚点定位要留出偏移 */
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: 'tnum' 0;
+  }
+
+  /* 键盘可达性：焦点始终可见（深浅底色下都要看清） */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring/80 ring-offset-2 ring-offset-background;
+  }
+
+  /* 反相区块内的焦点环与边框反色，否则在深底上看不见 */
+  .band :focus-visible {
+    @apply ring-offset-transparent;
+    --ring: 244 72% 72%;
+  }
+
+  /* 卡片内部获得焦点（比如点进详情）时也要有反馈 */
+  .media-card:focus-within,
+  .band-card:focus-within {
+    @apply border-ring/50;
+  }
+
+  ::selection {
+    @apply bg-primary/15;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-semibold tracking-tight text-foreground;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* ---------- 微交互 ---------- */
+
+  /* 进入视口时上移入场。
+     刻意不动画 opacity：一旦"淡入"依赖过渡完成，而某个环境不推进 CSS 过渡
+     （无头浏览器、被冻结的标签页、省电模式），内容就会永久停在透明状态。
+     只动位移的话，最坏情况仅仅是位置偏了 12px，内容始终可读。 */
+  .js-reveal .reveal {
+    transform: translateY(12px) scale(0.99);
+  }
+
+  .js-reveal .reveal.is-in {
+    transform: none;
+    transition:
+      transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms ease-out,
+      box-shadow 300ms ease-out;
+    transition-delay: var(--d, 0ms);
+  }
+
+  /* spotlight：鼠标跟随的极淡高光。用 ::before 画，避免影响内容层叠 */
+  .spotlight {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 280ms ease-out;
+    background: radial-gradient(
+      16rem 16rem at var(--mx, 50%) var(--my, 50%),
+      hsl(var(--primary) / 0.07),
+      transparent 70%
+    );
+  }
+
+  .spotlight.is-lit::before {
+    opacity: 1;
+  }
+
+  /* 下划线从左滑出的链接 */
+  .link-animate {
+    @apply relative inline-block text-primary;
+  }
+
+  .link-animate::after {
+    content: '';
+    @apply absolute -bottom-0.5 left-0 h-px w-full origin-right scale-x-0 bg-current
+           transition-transform duration-300;
+  }
+
+  .link-animate:hover::after,
+  .link-animate:focus-visible::after {
+    @apply origin-left scale-x-100;
+  }
+
+  /* ---------- 反相区块：长页里插一块深色，打破单色长页 ---------- */
+
+  /* 关键技巧：在 .band 内部重新指向语义变量，区块内所有组件自动变深色版。
+     注意必须写「原始 HSL 三元组」而不是 hsl(...)：
+     Tailwind 生成的工具类本身已经是 hsl(var(--card))，
+     如果这里再包一层 hsl()，最终值会变成 hsl(hsl(...)) 而非法，声明会被丢弃。 */
+  .band {
+    @apply bg-band text-band-foreground;
+    --muted: var(--band-elevated);
+    --muted-foreground: var(--band-muted);
+    --card: var(--band-elevated);
+    --card-foreground: var(--band-fg);
+    --secondary: var(--band-elevated);
+    --secondary-foreground: var(--band-fg);
+    --popover: var(--band-elevated);
+    --popover-foreground: var(--band-fg);
+    --border: var(--band-line);
+    --hairline: var(--band-line);
+    --accent: var(--band-accent);
+    --accent-foreground: var(--band-fg);
+    --input: var(--band-line);
+  }
+
+  /* 反相区块内的链接：在暗色下整体提亮一级。
+     暗色区块底色比页面底色亮一档，若沿用页面上的 primary 亮度，
+     链接对底色的对比度会掉到 4.5:1 以下（Lighthouse 会判为不达标）。
+     这里单独提亮到约 6:1，既保住区块层次感，也不牺牲可读性。 */
+  .dark .band {
+    --primary: 244 74% 80%;
+    --primary-foreground: 224 50% 10%;
+  }
+
+  /* 反相区块内的卡片：抬升表面 + 发丝线 */
+  .band-card {
+    @apply rounded-lg border border-hairline bg-card p-5;
+  }
+
+  .band-kicker {
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-band-muted;
+  }
+
+  /* ---------- 媒体卡：大圆角 + 预览区 + hover 微放大 ---------- */
+
+  .media-card {
+    @apply relative flex flex-col overflow-hidden rounded-[20px] border border-hairline bg-card transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-foreground/15;
+  }
+
+  .media-cover {
+    @apply relative flex items-center justify-center overflow-hidden border-b border-hairline bg-muted/50;
+  }
+
+  /* hover 时封面轻微"推近"，和卡片的抬升形成视差 */
+  .media-card:hover .media-cover {
+    background-color: hsl(var(--muted));
+  }
+
+  .media-cover > * {
+    @apply transition-transform duration-500 ease-out;
+  }
+
+  .media-card:hover .media-cover > * {
+    transform: scale(1.06) translateY(-2px);
+  }
+
+  /* ---------- 媒体卡封面（无真实配图时的确定性封面视觉） ---------- */
+
+  .cover-art {
+    background-color: hsl(var(--cover-a, 215 30% 26%));
+    background-image:
+      radial-gradient(120% 90% at 12% 8%, hsl(var(--cover-a) / 0.95), transparent 60%),
+      linear-gradient(var(--cover-angle, 140deg), hsl(var(--cover-a)), hsl(var(--cover-b)));
+    color: white;
+  }
+
+  /* 网点纹理：让渐变不那么"塑料"，也提供一点纸质颗粒感 */
+  .cover-art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    background-image: radial-gradient(hsl(0 0% 100% / 0.9) 1px, transparent 1px);
+    background-size: 10px 10px;
+    mask-image: linear-gradient(to bottom, transparent, black 45%, transparent);
+  }
+
+  /* ---------- 编辑型排版（借鉴 MDN / Stripe docs / 阮一峰风格） ---------- */
+
+  /* hero 展示字：衬线 + 随视口缩放 + 行高收紧。
+     CJK 衬线在大字号下笔画更均匀，字距要再收紧一点才不散；
+     字重用 600 而非 700，避免系统衬线被合成加粗后显得糊。 */
+  .display {
+    /* 衬线体用 500：600 在系统衬线里常被合成加粗，笔画会糊在一起 */
+    @apply font-serif text-[2.1rem] font-medium leading-[1.12] tracking-[-0.01em] sm:text-[2.75rem] lg:text-[3.4rem];
+    font-family: var(--font-serif);
+  }
+
+  /* 页面主标题：同一套衬线，但字号小一档 */
+  .title-serif {
+    @apply font-medium leading-[1.25] tracking-[-0.005em];
+    font-family: var(--font-serif);
+  }
+
+  /* 导语：比正文略大、行高更松，给长段落一个入口 */
+  .lede {
+    @apply text-[1.0625rem] leading-[1.9];
+  }
+
+  /* 小标签：全站统一用它替代"药丸 badge"做区块标识 */
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  /* 带序号的分隔列表项，用于替代"三张功能卡"这类 AI 模板 */
+  .numbered-item {
+    @apply grid gap-x-6 gap-y-2 border-t border-hairline py-6 sm:grid-cols-[3.5rem_1fr];
+  }
+
+  /* 正文容器：限制行宽，长文可读性优先 */
+  .measure {
+    @apply max-w-[68ch];
+  }
+
+  .measure-wide {
+    @apply max-w-[78ch];
+  }
+
+  /* 内容区分隔线（比 border 更轻） */
+  .rule-t {
+    @apply border-t border-hairline;
+  }
+
+  .rule-b {
+    @apply border-b border-hairline;
+  }
+
+  /* 列表项：发丝线 + hover 极轻的背景，避免"卡片描边"堆砌 */
+  .row-item {
+    @apply border-t border-hairline transition-colors hover:bg-accent/40;
+  }
+
+  .row-item-last {
+    @apply border-b border-hairline;
+  }
+
+  /* 链接：默认无装饰，hover 出下划线（文档站习惯，比变色块克制） */
+  .link {
+    @apply text-primary underline-offset-4 hover:underline;
+  }
+
+  /* 交互元素用药丸（chip / CTA），信息标签用小方角 —— 两者刻意区分 */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors;
+  }
+
+  .prose-site {
+    @apply text-[15px] leading-7 text-foreground/85;
+  }
+
+  .prose-site h2 {
+    @apply mt-10 text-xl font-semibold;
+  }
+
+  .prose-site h3 {
+    @apply mt-6 text-base font-semibold;
+  }
+
+  .prose-site p {
+    @apply my-4;
+  }
+
+  .prose-site ul,
+  .prose-site ol {
+    @apply my-4 space-y-2 pl-6;
+  }
+
+  .prose-site ul {
+    @apply list-disc marker:text-muted-foreground;
+  }
+
+  .prose-site ol {
+    @apply list-decimal marker:text-muted-foreground;
+  }
+
+  .prose-site a {
+    @apply font-medium text-primary underline underline-offset-4 hover:opacity-80;
+  }
+
+  .prose-site code {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[13px];
+  }
+
+  .prose-site pre {
+    @apply my-5 overflow-x-auto rounded-lg border bg-muted/60 p-4 text-[13px] leading-6;
+  }
+
+  .prose-site pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .prose-site blockquote {
+    @apply my-5 border-l-2 border-primary/40 py-2 pl-4 text-foreground/75;
+  }
+
+  .prose-site table {
+    @apply my-6 w-full border-collapse text-sm;
+  }
+
+  .prose-site th,
+  .prose-site td {
+    @apply border px-3 py-2 text-left align-top;
+  }
+
+  .prose-site th {
+    @apply bg-muted/60 font-semibold;
+  }
+
+  /* 提示词里的变量高亮 */
+  .prompt-var {
+    @apply rounded bg-primary/12 px-1 py-0.5 font-mono text-[12px] text-primary;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .grid-auto-fill {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* ---------- 无障碍：尊重系统的「减少动态效果」设置 ----------
+   放在最后、用 !important 兜底：即使某个组件忘了判断，也会在这里被关掉。 */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* 撤销进场动画的初始位移：用户要求减少动效时不要有位移动画 */
+  .js-reveal .reveal {
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   打印样式（任务 C）
+   场景：老师要把教案包、学生使用声明、规范草案打印出来带进课堂。
+   目标：纸面上只剩内容 —— 没有导航、没有按钮、没有浮窗、没有深色底。
+   ========================================================================== */
+@media print {
+  /* 纸张：A4 纵向，页边距留够装订 */
+  @page {
+    size: A4 portrait;
+    margin: 16mm 14mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+
+  /* 交互层一律不打印 */
+  header,
+  footer,
+  nav,
+  aside,
+  [data-print-hide],
+  .print-hidden {
+    display: none !important;
+  }
+
+  /* 反相深色区块在纸面上必须是白底，否则会印出一整块黑色 */
+  .band {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 0 !important;
+  }
+
+  .band::before {
+    content: '';
+  }
+
+  /* 链接去色但保留下划线，可读又不刺眼 */
+  a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+
+  /* 打印时把外链地址显示出来（纯 CSS 拿不到 href，所以靠 a[href^="http"] 的常规做法：
+     这里退而求其次 —— 只保证链接可点击识别，不做 URL 展开） */
+
+  /* 去掉所有阴影与大圆角 */
+  * {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    text-shadow: none !important;
+    background-image: none !important;
+    background-color: transparent !important;
+  }
+
+  /* 需要强调的块保留极浅底色，方便纸上分辨区块 */
+  .print-keep,
+  .print-block {
+    background: #f6f6f6 !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* 避免卡片/表格/段落被分页切断 */
+  table,
+  tr,
+  blockquote,
+  pre,
+  figure {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+    margin-top: 1.2em;
+  }
+
+  /* 链接与标题之间不要留空隙导致孤行 */
+  a {
+    break-inside: avoid;
+  }
+
+  /* 表格太宽时横向滚动条会印出灰块，改为自适应 */
+  .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  /* 打印专用元素：屏幕上隐藏，纸面上显示 */
+  .print-only {
+    display: block !important;
+  }
+
+  /* 徽章类元素在纸面上退化为文字边框，不用底色 */
+  span.rounded,
+  .badge-print-plain {
+    background: transparent !important;
+    border: 1px solid #999 !important;
+    color: #000 !important;
+    padding: 0 2px !important;
+  }
+}
+
+/* 屏幕上 print-only 不显示 */
+.print-only {
+  display: none;
+}
+
+/* 需要保持完整的一块（例如提示框、声明文本） */
+.print-keep {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}

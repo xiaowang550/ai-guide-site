@@ -1,0 +1,58 @@
+{
+  "name": "ai-guide-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI 学习与工具指南网站 —— 能力地图 + 场景决策器",
+  "engines": {
+    "node": ">=20"
+  },
+  "browserslist": [
+    "chrome >= 111",
+    "edge >= 111",
+    "firefox >= 111",
+    "safari >= 16.4",
+    "ios_saf >= 16.4",
+    "not dead"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "dev:reset": "node scripts/reset-dev.mjs",
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve-out.mjs 4000",
+    "start": "node scripts/serve-out.mjs 4000",
+    "preview": "npm run build && node scripts/serve-out.mjs 4000",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx,md,mdx,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@next/mdx": "^15.5.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "fuse.js": "^7.1.0",
+    "lucide-react": "^0.544.0",
+    "next": "^15.5.27",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "autoprefixer": "^10.4.21",
+    "eslint": "^9.34.0",
+    "eslint-config-next": "^15.5.27",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

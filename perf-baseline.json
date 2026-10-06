@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-05T03:15:23.177Z",
+  "pages": {
+    "/": {
+      "label": "首页",
+      "html": 22504,
+      "app": 13458,
+      "framework": 143990,
+      "total": 179952,
+      "skippedNoModule": 39627
+    },
+    "/tools/": {
+      "label": "工具库",
+      "html": 48121,
+      "app": 22155,
+      "framework": 148492,
+      "total": 218768,
+      "skippedNoModule": 39627
+    },
+    "/tools/claude/": {
+      "label": "工具详情",
+      "html": 40996,
+      "app": 15371,
+      "framework": 143990,
+      "total": 200357,
+      "skippedNoModule": 39627
+    },
+    "/find/": {
+      "label": "场景决策器",
+      "html": 16757,
+      "app": 24692,
+      "framework": 190556,
+      "total": 232005,
+      "skippedNoModule": 39627
+    },
+    "/learn/": {
+      "label": "知识库",
+      "html": 18676,
+      "app": 13460,
+      "framework": 138785,
+      "total": 170921,
+      "skippedNoModule": 39627
+    },
+    "/cases/": {
+      "label": "案例库",
+      "html": 14046,
+      "app": 13458,
+      "framework": 143990,
+      "total": 171494,
+      "skippedNoModule": 39627
+    },
+    "/edu/": {
+      "label": "AI 教育服务",
+      "html": 20317,
+      "app": 13460,
+      "framework": 138785,
+      "total": 172562,
+      "skippedNoModule": 39627
+    },
+    "/compare/": {
+      "label": "工具对比",
+      "html": 41211,
+      "app": 17666,
+      "framework": 148492,
+      "total": 207369,
+      "skippedNoModule": 39627
+    }
+  }
+}

@@ -1,0 +1,147 @@
+# 数据保鲜定时检查
+#
+# 为什么在 CI 里做这件事：
+# 「内容会不会过时」依赖个人自觉就会慢慢失效。这道任务把它变成固定动作 ——
+# 每周一自动跑一次保鲜检查，有内容超期就**开一条 Issue 提醒**，
+# 而不是让工作流红一片（红一片只会被习惯性忽略，开 Issue 才会被处理）。
+#
+# 这里用 token 是合适的：token 只存在于 CI 环境，不进浏览器。
+# 前端仍然是零凭据的（反馈走预填链接 + 公开 API 匿名读）。
+name: 数据保鲜检查
+
+on:
+  schedule:
+    # 每周一 01:20 UTC（约北京时间 09:20），避开整点高峰
+    - cron: '20 1 * * 1'
+  # 也可以在 Actions 页面手动触发
+  workflow_dispatch:
+  # 改过 data/ 目录时也跑一次，PR 阶段就发现问题
+  pull_request:
+    paths:
+      - 'data/**'
+      - 'lib/freshness.ts'
+      - 'scripts/freshness-check.mjs'
+      - '.github/workflows/freshness.yml'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: freshness-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: 检查内容是否过期
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # 只跑保鲜检查不需要装依赖（脚本只读文件），但保持一致更省心
+      - name: 安装依赖
+        run: npm ci
+
+      # 生成 Markdown 报告，落在文件里而不是日志里，方便下一步读取
+      - name: 运行保鲜检查
+        run: node scripts/freshness-check.mjs --report=github > freshness-report.md
+
+      # 顺手跑一次完整门禁：定期任务也能发现类型/测试问题，
+      # 不用等到有人提交代码才发现
+      - name: 完整质量门禁
+        continue-on-error: true
+        run: |
+          npm ci
+          npx tsc --noEmit
+          npm run lint
+          npx vitest run --reporter=dot
+
+      - name: 附加产物校验说明
+        run: |
+          {
+            echo ""
+            echo "### 相关看板"
+            echo ""
+            echo "- 站内看板：\`/freshness\`"
+            echo "- 更新日志：\`/updates\`"
+          } >> freshness-report.md
+
+      - name: 打印报告
+        run: cat freshness-report.md
+
+      # 超期 → 开或更新一条 Issue；没超期 → 把之前开的提醒关掉
+      - name: 把结果同步到 Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const body = fs.readFileSync('freshness-report.md', 'utf8')
+
+            // 报告里的「超期 N 条」决定要不要开提醒
+            const staleMatch = body.match(/其中 \*\*(\d+) 条已超过保鲜阈值/)
+            const staleCount = staleMatch ? Number(staleMatch[1]) : 0
+
+            const marker = '<!-- auto-freshness -->'
+            const title = '[自动] 数据保鲜：本周有内容需要复核'
+
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: '自动检查',
+              per_page: 100,
+            })
+
+            const prior = existing.find((i) => i.body && i.body.includes(marker))
+
+            if (staleCount === 0) {
+              if (prior) {
+                // 内容已全部回到有效期，把提醒收掉，避免 Issue 长期挂着
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prior.number,
+                  state: 'closed',
+                })
+                core.info(`已关闭过期提醒 #${prior.number}（内容全部回到有效期）`)
+              } else {
+                core.info('全部内容在有效期内，无需提醒')
+              }
+              return
+            }
+
+            const payload = `${marker}\n本 Issue 由 [.github/workflows/freshness.yml](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) 自动维护，请勿手工关闭。\n\n${body}`
+
+            if (prior) {
+              // 每周更新同一条，而不是每周开一条新的
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prior.number,
+                body: payload,
+                title: `${title}（${staleCount} 条）`,
+              })
+              core.info(`已更新提醒 #${prior.number}：${staleCount} 条待复核`)
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `${title}（${staleCount} 条）`,
+                body: payload,
+                labels: ['自动检查'],
+              })
+              core.info(`已创建提醒：${staleCount} 条待复核`)
+            }
+
+      - name: 上传报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshness-report
+          path: freshness-report.md
+          retention-days: 30
