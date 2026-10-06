@@ -16,10 +16,13 @@ export const siteConfig = {
    * 1) 一键打开「预填好的 Issue」—— 不需要 token，Issue 即结构化反馈记录
    * 2) 读取公开 Issues 数量做统计 —— GitHub API 允许匿名读
    *
-   * 留空则相关入口自动隐藏，功能不受影响（复制与邮件两个出口始终可用）。
-   * 也可以用环境变量覆盖：NEXT_PUBLIC_FEEDBACK_REPO=owner/repo
+   * 为什么这里有默认值：`NEXT_PUBLIC_*` 是**构建期**内联的，静态站部署到
+   * 任何托管都可能没有这个环境变量，于是反馈入口会静默消失。
+   * 默认值让功能开箱可用，环境变量仍可在自建部署里覆盖成别的仓库。
+   *
+   * 留空（设成空字符串）则相关入口自动隐藏，复制与邮件两个出口始终可用。
    */
-  feedbackRepo: process.env.NEXT_PUBLIC_FEEDBACK_REPO ?? '',
+  feedbackRepo: process.env.NEXT_PUBLIC_FEEDBACK_REPO ?? 'xiaowang550/ai-guide-site',
   /** 收件邮箱：勘误与反馈的人工兜底通道 */
   feedbackEmail: '1302582367@qq.com',
   keywords: ['AI 工具', 'AI 提示词', 'AI 教程', '工具对比', '大模型', '场景选型'],
