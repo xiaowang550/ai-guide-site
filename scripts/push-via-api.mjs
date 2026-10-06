@@ -14,6 +14,7 @@
  * token 从 gh 的凭据存储里取（`gh auth token`），不落盘、不打印。
  */
 import { execFileSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 
 const REPO = 'xiaowang550/ai-guide-site'
@@ -113,7 +114,11 @@ const bootstrapSha = await bootstrapRepo()
 
 /**
  * blob 是内容寻址的：同样的内容永远得到同样的 sha。
- * 所以缓存到文件里，重跑时不必重新上传 203 次请求。
+ * 所以缓存下来，重跑时不必重新上传上百个请求。
+ *
+ * **键必须是「路径 + 内容哈希」，不能只用路径。**
+ * 早期版本按路径缓存，结果文件内容改了以后仍返回旧 sha，
+ * 推上去的是上一版的文件 —— 而且不报错，很难发现。
  */
 const CACHE_PATH = '.git/blob-sha-cache.json'
 let cache = {}
@@ -128,21 +133,24 @@ let done = 0
 let reused = 0
 
 async function pushFile(path) {
-  let sha = cache[path]
+  const buf = readFileSync(path)
+  const contentHash = createHash('sha1').update(buf).digest('hex')
+  const cacheKey = `${contentHash}:${buf.length}`
+
+  let sha = cache[cacheKey]
   if (sha) {
     reused++
   } else {
-    const buf = readFileSync(path)
     const blob = await apiRetry('/git/blobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: buf.toString('base64'), encoding: 'base64' }),
     })
     sha = blob.sha
-    cache[path] = sha
+    cache[cacheKey] = sha
   }
   done++
-  if (done % 25 === 0 || done === files.length) {
+  if (done % 50 === 0 || done === files.length) {
     console.log(`  blob 进度 ${done}/${files.length}（复用 ${reused}）`)
   }
   // 100644 = 普通文件；可执行位在这里不重要（站点里没有 .sh 需要执行）
@@ -217,3 +225,36 @@ if (!remoteHead) {
 
 console.log(`\n完成。总计 ${apiCalls} 次 API 调用。`)
 console.log(`仓库地址：https://github.com/${REPO}`)
+
+// ---------- 6. 校验：远程内容必须与本地逐字节一致 ----------
+//
+// 为什么要这一步：曾经出过一次 bug —— blob 缓存按「路径」做键而不是
+// 「内容哈希」，文件改了以后仍复用旧sha，于是推上去的是上一版内容。
+// 全程没有任何报错，只有逐字节对比才能发现。
+const remoteCommit = await api(`/commits/${commit.sha}`)
+if (!remoteCommit.tree) throw new Error('拿不到新提交的 tree')
+const remoteTree = await api(`/git/trees/${remoteCommit.tree.sha}?recursive=1`)
+
+const remotePaths = new Map()
+for (const node of remoteTree.tree || []) {
+  if (node.type === 'blob') remotePaths.set(node.path, node.sha)
+}
+
+const localPaths = new Map(entries.map((e) => [e.path, e.sha]))
+
+const missing = [...localPaths.keys()].filter((p) => !remotePaths.has(p))
+const extra = [...remotePaths.keys()].filter((p) => !localPaths.has(p))
+const mismatched = [...localPaths.entries()]
+  .filter(([p, sha]) => remotePaths.get(p) && remotePaths.get(p) !== sha)
+  .map(([p]) => p)
+
+if (missing.length || extra.length || mismatched.length) {
+  console.error('\n[校验失败] 远程内容与本地不一致：')
+  if (missing.length) console.error(`  远程缺少 ${missing.length} 个：${missing.slice(0, 5).join(', ')}`)
+  if (extra.length) console.error(`  远程多出 ${extra.length} 个：${extra.slice(0, 5).join(', ')}`)
+  if (mismatched.length)
+    console.error(`  内容不一致 ${mismatched.length} 个：${mismatched.slice(0, 5).join(', ')}`)
+  process.exit(1)
+}
+
+console.log(`[校验通过] 远程 ${remotePaths.size} 个文件与本地逐字节一致。`)
