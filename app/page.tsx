@@ -14,6 +14,7 @@ import { CAPABILITY_META, formatDate, latestUpdatedAt } from '@/lib/score'
 import { PRIMARY_ENTRY } from '@/lib/entries'
 import { Button } from '@/components/ui/button'
 import { ToolCard } from '@/components/tool-card'
+import { toListItems } from '@/lib/tool-list-item'
 import { Section } from '@/components/page-header'
 
 export const metadata: Metadata = {
@@ -53,6 +54,9 @@ export default function HomePage() {
   const featured = tools.filter((t) => t.featured).slice(0, 6)
   const fallbackFeatured = featured.length > 0 ? featured : [...tools].sort((a, b) => b.overallScore - a.overallScore).slice(0, 6)
   const latestUpdates = updates.slice(0, 5)
+  // 首页只展示 6 张卡，同样只传投影：22 个工具的强项/弱项/依据/来源
+  // 这些长文本卡片一个字都不用，不该进首屏
+  const featuredItems = toListItems(fallbackFeatured)
 
   return (
     <>
@@ -195,7 +199,7 @@ export default function HomePage() {
           }
         >
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {fallbackFeatured.map((tool, i) => (
+            {featuredItems.map((tool, i) => (
               <ToolCard key={tool.id} tool={tool} index={i} />
             ))}
           </div>

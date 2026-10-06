@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { LayoutGrid, Rows3, Search, SlidersHorizontal, X } from 'lucide-react'
-import type { CapabilityKey, Platform, Tool, ToolCategory } from '@/data/types'
+import type { CapabilityKey, Platform, ToolCategory } from '@/data/types'
+import type { ToolListItem } from '@/lib/tool-list-item'
 import { CAPABILITY_META, capabilityLabel } from '@/lib/score'
 import { sortTools } from '@/lib/recommend'
 import { CATEGORY_LABELS, PLATFORM_LABELS } from '@/lib/site'
@@ -82,7 +83,7 @@ function paramsToState(params: URLSearchParams): Partial<FilterState> {
   }
 }
 
-export function ToolExplorer({ tools }: { tools: Tool[] }) {
+export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
@@ -113,7 +114,7 @@ export function ToolExplorer({ tools }: { tools: Tool[] }) {
         return false
       if (filters.chinaDirect && !t.chinaAccessible) return false
       if (filters.capability !== 'any') {
-        const s = t.capabilities[filters.capability]?.score ?? 0
+        const s = t.scores[filters.capability] ?? 0
         if (s < filters.minScore) return false
       }
       if (filters.platforms.length && !filters.platforms.some((p) => t.platforms.includes(p)))

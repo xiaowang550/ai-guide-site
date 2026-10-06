@@ -16,6 +16,60 @@
 
 ---
 
+## 一点五、GitHub 相关的两个坑
+
+这一节记录首次推送时踩到的两个问题，都不是配置写错，而是环境和权限模型的隐性规则。
+
+### 坑 1：`github.com` 的 POST 可能被网络拦掉
+
+| 请求 | 结果 |
+|---|---|
+| GET `github.com` / `api.github.com` | 正常 |
+| **POST `github.com`** | 连接被重置（多次重试均失败） |
+
+这会连带打掉两条常见路径：
+
+- `gh auth login --web`（设备码流程的最后一步要POST 到 `github.com/login/oauth/access_token`）
+  → 症状：浏览器授权成功，但 gh 一直卡住最后一步然后报 `failed to authenticate via web browser`
+  → 绕法：改用 `--with-token`，在浏览器里生成 Personal Access Token 后用 `gh auth login --with-token`（纯本地写入凭据存储，不走网络）
+- `git push`
+  → 症状：`RPC failed; curl 55`、`Connection was reset`、`Could not connect to server`
+  → 绕法：走 API，见下
+
+如果`api.github.com` 可用而 `github.com` 不稳，用仓库里的 `scripts/push-via-api.mjs` 推送：它用 Git Data API 完成等价操作（建 blob → 建 tree → 建 commit → 更新 ref）。
+
+**日常同步请正常使用 `git push`**，这个脚本只在网络异常时用。
+
+### 坑 2：fine-grained token 推不了工作流文件
+
+即使已经给了 `Contents: Read and write`，推送 `.github/workflows/` 下的文件仍会返回：
+
+```
+403 Resource not accessible by personal access token
+```
+
+原因：GitHub 把 `.github/workflows/` 当作**独立资源**，需要单独给 `Workflows` 权限。
+
+**区分两个容易混淆的权限**：
+
+| 权限 | 作用 |
+|---|---|
+| `Contents: Read and write` | 推代码、建blob/tree/commit |
+| `Workflows: Read and write` | **推送 `.github/workflows/` 里的文件** |
+| `Actions: Read-only` | 只读查看 Actions 日志，**不能**用来推工作流 |
+
+**怎么确认是不是这个问题**：把 `.github/` 整个排除掉再推一次，通常就能过。
+
+```bash
+# 排除 .github 的树能建成、包含就403 -> 就是权限缺Workflows
+```
+
+### 顺带：空仓库不能直接建 blob
+
+GitHub 不允许在空仓库里创建 blob（返回 `409 Git Repository is empty`）。先用 Contents API 放一个占位文件把仓库「叫醒」，再走 Data API。`scripts/push-via-api.mjs` 已经处理了这一步。
+
+---
+
 ## 二、本地：把三种东西都跑起来
 
 ```bash

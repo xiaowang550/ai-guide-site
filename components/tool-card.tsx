@@ -1,6 +1,7 @@
 ﻿import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import type { Tool } from '@/data/types'
+import type { ToolListItem } from '@/lib/tool-list-item'
+import { scoresToCapabilityMap } from '@/lib/tool-list-item'
 import { CATEGORY_LABELS } from '@/lib/site'
 import { capabilityShort, rankedCapabilities } from '@/lib/score'
 import { cn } from '@/lib/utils'
@@ -13,8 +14,9 @@ import { UpdatedBadge } from '@/components/updated-badge'
  * 借鉴 motionsites 画廊的卡片观感：先给一个"封面"，再给标题与元信息，
  * 而不是把信息平铺在一块描边盒子里。
  */
-export function ToolCard({ tool, index = 0 }: { tool: Tool; index?: number }) {
-  const top = rankedCapabilities(tool.capabilities, 4).slice(0, 3)
+export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: number }) {
+  // 列表投影里只有分数，没有 basis 文本；这里还原成既有纯函数可用的形状
+  const top = rankedCapabilities(scoresToCapabilityMap(tool.scores), 4).slice(0, 3)
   const isFree = tool.pricing.model === 'free' || tool.pricing.model === 'open-source'
 
   return (
@@ -83,9 +85,14 @@ export function ToolCard({ tool, index = 0 }: { tool: Tool; index?: number }) {
 }
 
 /** 紧凑表格：用于工具库「表格视图」与对比页 */
-export function ToolTable({ tools }: { tools: Tool[] }) {
+export function ToolTable({ tools }: { tools: ToolListItem[] }) {
   return (
-    <div className="overflow-x-auto">
+    <div
+      className="overflow-x-auto"
+      tabIndex={0}
+      role="region"
+      aria-label="工具列表表格，可横向滚动查看全部列"
+    >
       <table className="w-full min-w-[720px] border-collapse text-sm">
         <caption className="sr-only">工具列表（紧凑表格视图）</caption>
         <thead>

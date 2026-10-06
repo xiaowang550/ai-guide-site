@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Compass } from 'lucide-react'
 import { tools } from '@/data'
 import { ToolExplorer } from '@/components/tool-explorer'
+import { toListItems } from '@/lib/tool-list-item'
 import { PageHeader, Section } from '@/components/page-header'
 import { UpdatedBadge } from '@/components/updated-badge'
 import { CAPABILITY_META, latestUpdatedAt } from '@/lib/score'
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function ToolsPage() {
+  // 只把卡片与筛选真正用得到的字段交给客户端组件，
+  // 强项/弱项/依据/来源这些长文本留给详情页，不进首屏
+  const listItems = toListItems(tools)
   const updated = latestUpdatedAt(tools)
 
   return (
@@ -42,7 +46,7 @@ export default function ToolsPage() {
           </p>
         </div>
 
-        <ToolExplorer tools={tools} />
+        <ToolExplorer tools={listItems} />
       </div>
 
       <div className="container">

@@ -1,68 +1,68 @@
 {
-  "at": "2026-10-05T03:15:23.177Z",
+  "at": "2026-10-06T08:00:42.690Z",
   "pages": {
     "/": {
       "label": "首页",
-      "html": 22504,
-      "app": 13458,
-      "framework": 143990,
-      "total": 179952,
+      "html": 22747,
+      "app": 13477,
+      "framework": 143986,
+      "total": 180210,
       "skippedNoModule": 39627
     },
     "/tools/": {
       "label": "工具库",
-      "html": 48121,
-      "app": 22155,
-      "framework": 148492,
-      "total": 218768,
+      "html": 19158,
+      "app": 22021,
+      "framework": 148507,
+      "total": 189686,
       "skippedNoModule": 39627
     },
     "/tools/claude/": {
       "label": "工具详情",
-      "html": 40996,
-      "app": 15371,
-      "framework": 143990,
-      "total": 200357,
+      "html": 41209,
+      "app": 15390,
+      "framework": 143986,
+      "total": 200585,
       "skippedNoModule": 39627
     },
     "/find/": {
       "label": "场景决策器",
-      "html": 16757,
-      "app": 24692,
-      "framework": 190556,
-      "total": 232005,
+      "html": 16984,
+      "app": 24540,
+      "framework": 190552,
+      "total": 232076,
       "skippedNoModule": 39627
     },
     "/learn/": {
       "label": "知识库",
-      "html": 18676,
-      "app": 13460,
-      "framework": 138785,
-      "total": 170921,
+      "html": 18896,
+      "app": 13479,
+      "framework": 138781,
+      "total": 171156,
       "skippedNoModule": 39627
     },
     "/cases/": {
       "label": "案例库",
-      "html": 14046,
-      "app": 13458,
-      "framework": 143990,
-      "total": 171494,
+      "html": 14250,
+      "app": 13477,
+      "framework": 143986,
+      "total": 171713,
       "skippedNoModule": 39627
     },
     "/edu/": {
       "label": "AI 教育服务",
-      "html": 20317,
-      "app": 13460,
-      "framework": 138785,
-      "total": 172562,
+      "html": 20536,
+      "app": 13479,
+      "framework": 138781,
+      "total": 172796,
       "skippedNoModule": 39627
     },
     "/compare/": {
       "label": "工具对比",
-      "html": 41211,
-      "app": 17666,
-      "framework": 148492,
-      "total": 207369,
+      "html": 41376,
+      "app": 17685,
+      "framework": 148507,
+      "total": 207568,
       "skippedNoModule": 39627
     }
   }

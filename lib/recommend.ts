@@ -7,6 +7,7 @@ import type {
   Tool,
 } from '@/data/types'
 import { capabilityLabel, round2 } from './score'
+import type { SortableTool } from './tool-list-item'
 
 /**
  * 场景决策器的推荐引擎。
@@ -356,12 +357,17 @@ function buildWorkflow(
 }
 
 /** 工具库排序用的纯函数：按指定 key 排序 */
-export function sortTools(
-  tools: Tool[],
+/**
+ * 排序只需要 4 个字段：总分、更新时间、中文质量、指定维度分数。
+ * 因此签名放宽成结构化类型，ToolListItem 与 Tool 都能传进来 ——
+ * 前者不含长文本，用在工具库列表页。
+ */
+export function sortTools<T extends SortableTool>(
+  tools: T[],
   key: 'overall' | 'updated' | 'chinese' | CapabilityKey,
   dir: 'asc' | 'desc' = 'desc'
-): Tool[] {
-  const val = (t: Tool): number => {
+): T[] {
+  const val = (t: T): number => {
     switch (key) {
       case 'overall':
         return t.overallScore
@@ -370,7 +376,7 @@ export function sortTools(
       case 'chinese':
         return t.chineseQuality
       default:
-        return t.capabilities[key]?.score ?? 0
+        return t.scores?.[key] ?? t.capabilities?.[key]?.score ?? 0
     }
   }
   const sign = dir === 'asc' ? 1 : -1
