@@ -98,7 +98,11 @@ export function CommandSearch({ className }: { className?: string } = {}) {
           // 这里不再自带 max-width，否则两处约束会打架。
           className
         )}
-        aria-label="打开全局搜索（快捷键斜杠）"
+        // 不写 aria-label：可见文字是「搜索工具、概念、教程…」，而可访问名是
+        // 「打开全局搜索（快捷键斜杠）」，两者对不上 —— 屏幕阅读器用户按下按钮
+        // 听到的内容与看到的不一致（Lighthouse 的 label-content-name-mismatch）。
+        // 改成「可见文字 + sr-only 后缀」，可访问名自然以可见文字开头；
+        // lg 段占位文字是 hidden（不进无障碍树），此时名字只剩后缀，也正确。
       >
         <Search className="h-4 w-4 shrink-0" aria-hidden />
         {/* 占位文字的出现时机：md（导航还隐藏、右侧空得多）显示，
@@ -110,7 +114,8 @@ export function CommandSearch({ className }: { className?: string } = {}) {
         <span className="hidden min-w-0 flex-1 truncate pr-4 md:inline lg:hidden xl:inline">
           搜索工具、概念、教程…
         </span>
-        {/* kbd 标 aria-hidden：按钮已有 aria-label="打开全局搜索（快捷键斜杠）"，
+        <span className="sr-only">打开全局搜索，快捷键斜杠</span>
+        {/* kbd 标 aria-hidden：按钮名由「占位文字 + sr-only 后缀」组成，
             不加的话屏幕阅读器会把可见的 "/" 也念一遍，重复播报。
             这个细节来自 Pydantic AI 的实现（唯一一个同时做了
             aria-keyshortcuts 与 kbd aria-hidden 的站点）。 */}
