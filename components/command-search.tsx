@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { useFocusTrap } from '@/lib/use-focus-trap'
 
 /** 全局搜索：按 `/` 唤起，方向键选择，回车跳转 */
-export function CommandSearch() {
+export function CommandSearch({ className }: { className?: string } = {}) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   // 索引按需加载：只有真的打开搜索时才请求 /search-index.json
@@ -91,12 +91,33 @@ export function CommandSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden h-9 items-center gap-2 rounded-lg border bg-background pl-3 pr-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent/40 sm:flex"
+        className={cn(
+          'hidden h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-background pl-3 pr-2 text-sm',
+          'text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent/40 sm:flex',
+          // 宽度完全交给外层容器控制（site-header 里那段 flex-1 + max-w）。
+          // 这里不再自带 max-width，否则两处约束会打架。
+          className
+        )}
         aria-label="打开全局搜索（快捷键斜杠）"
       >
         <Search className="h-4 w-4 shrink-0" aria-hidden />
-        <span className="pr-4">搜索工具、概念、教程…</span>
-        <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+        {/* 占位文字的出现时机：md（导航还隐藏、右侧空得多）显示，
+            lg（导航出现、横向最挤）又藏起来，xl 之后再展开。
+            量了 7 个文档站，桌面端搜索的主流是紧凑型（Pydantic 40px 纯图标、
+            Tailwind 图标+⌘K 约 90px、MDN 80px），只有 Zustand 用 140px+ 带文字；
+            本站一级项是中文，每项 70-110px，1024px 处只剩 90px 出头，
+            这时候塞占位文字只会被截成一个字。 */}
+        <span className="hidden min-w-0 flex-1 truncate pr-4 md:inline lg:hidden xl:inline">
+          搜索工具、概念、教程…
+        </span>
+        {/* kbd 标 aria-hidden：按钮已有 aria-label="打开全局搜索（快捷键斜杠）"，
+            不加的话屏幕阅读器会把可见的 "/" 也念一遍，重复播报。
+            这个细节来自 Pydantic AI 的实现（唯一一个同时做了
+            aria-keyshortcuts 与 kbd aria-hidden 的站点）。 */}
+        <kbd
+          aria-hidden
+          className="ml-auto rounded border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+        >
           /
         </kbd>
       </button>

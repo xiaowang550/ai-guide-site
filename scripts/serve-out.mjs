@@ -84,15 +84,37 @@ function cacheControl(urlPath, ext) {
   return 'public, max-age=3600'
 }
 
+/**
+ * gzip 结果缓存。键必须带上文件指纹，不能只用路径。
+ *
+ * 原来只按路径缓存，结果重新 build 之后 `out/` 里的文件内容变了、路径没变，
+ * 缓存仍然吐旧的 gzip 字节 —— 任何接受 gzip 的浏览器（本机所有浏览器都接受）
+ * 拿到的都是上一个构建，看起来就像「改了完全没反应」。
+ *
+ * 这个坑特别隐蔽：不带 Accept-Encoding 的请求（比如用 PowerShell
+ * Invoke-WebRequest 去检查）走的是未压缩分支，能看到新内容，
+ * 于是「服务端明明返回的是新的」和「浏览器看到的是旧的」两件事同时成立，
+ * 很容易误判成缓存头的问题。
+ */
 const gzipCache = new Map()
 
 function maybeGzip(file, acceptEncoding) {
   const ext = extname(file).toLowerCase()
   if (!COMPRESSIBLE.has(ext)) return null
   if (!/\bgzip\b/.test(acceptEncoding ?? '')) return null
-  if (gzipCache.has(file)) return gzipCache.get(file)
+
+  // 用 mtimeMs + size 当指纹：build 会重写文件，两者必然变化
+  const st = statSync(file)
+  const key = `${file}|${st.mtimeMs}|${st.size}`
+  const hit = gzipCache.get(key)
+  if (hit) return hit
+
   const buf = gzipSync(readFileSync(file), { level: 6 })
-  gzipCache.set(file, buf)
+  // 顺手淘汰同路径的旧指纹，避免长时间预览把 Map 撑大
+  for (const k of gzipCache.keys()) {
+    if (k !== key && k.startsWith(`${file}|`)) gzipCache.delete(k)
+  }
+  gzipCache.set(key, buf)
   return buf
 }
 

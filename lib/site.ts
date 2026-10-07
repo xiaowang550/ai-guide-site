@@ -95,6 +95,14 @@ export const megaNav: readonly NavItem[] = [
     href: '/guides',
     label: '教程',
     hint: 'AI 怎么用',
+    children: [
+      // 「学习路径」原来占一个一级项，收进教程面板。
+      // 原因是对齐 7 个文档站的实测：一级项之间普遍留 24-32px，
+      // 而 7 个中文项每项要 70-110px，留到这个间距后中间那段搜索框
+      // 在 1024px 断点处只剩一百多像素，等于没有。
+      // 路径本身是「按顺序学的教程」，放进教程面板语义也说得通。
+      { href: '/paths', label: '学习路径', hint: '按顺序学，每一节都有产出物' },
+    ],
   },
   {
     href: '/tools',
@@ -104,11 +112,6 @@ export const megaNav: readonly NavItem[] = [
       { href: '/find', label: '场景决策器', hint: '描述需求，纯规则算出该用哪个' },
       { href: '/compare', label: '工具对比', hint: '并排比较，链接可直接分享' },
     ],
-  },
-  {
-    href: '/paths',
-    label: '学习路径',
-    hint: '按顺序学',
   },
   {
     href: '/cases',

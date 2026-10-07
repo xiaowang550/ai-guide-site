@@ -35,20 +35,52 @@ export function SiteHeader() {
 
         <MegaNav />
 
-        <div className="ml-auto flex items-center gap-2">
+        {/*
+          三段式：品牌 + 分区 | 搜索 | 行动。
+          搜索放在中间并且 flex-1，让它吃掉导航与右侧之间的空白 ——
+          之前右侧簇带 ml-auto，空白全被 margin 吃掉，宽屏上中间留一个大洞，
+          看起来像「左边挤成一团、右边空一块」。搜索撑开后这条横线才是完整的。
+
+          搜索保持 flex-1 但设上限，免得在超宽屏上拉成一条 2000px 的输入框。
+        */}
+        {/*
+          justify-end 在 lg 以下、lg:justify-start 在 lg 以上。
+          桌面导航要到 lg 才出现，所以 lg 以下右侧本来就空着一大块
+          —— 这时候让搜索框贴右（挨着 CTA），别贴左，否则 logo 与搜索之间
+          会多出一个 400 多像素的洞。
+          lg 起导航出现，搜索才回到它右侧、紧跟导航并向右伸展。
+        */}
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:justify-start">
+          {/*
+            宽度必须跟着占位文字的出现时机走，否则会出现「文字被截成『搜...』」：
+            文字在 md 段出现、lg 段藏起来、xl 段再出现，所以宽度也是三段。
+              - sm-md   7rem   文字不显示，只要图标 + 快捷键
+              - md-lg  16rem   文字显示，且这一段导航还隐藏着、右侧空得多
+              - lg-xl   7rem   文字藏起来（横向最挤的一段）
+              - xl+     自适应 文字回来，向右伸展到 max-w-md 为止
+
+            16rem 是按「11 个汉字 + 图标 + / 快捷键」实算出来的，
+            比它窄占位文字就会被截成「搜索工具、概念、…」。
+          */}
+          <CommandSearch className="w-[7rem] shrink-0 md:w-[16rem] lg:w-[7rem] xl:w-auto xl:max-w-md xl:flex-1" />
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {/* 「帮我选」用实心底色，和导航里的灰字链接区分开。
+              之前它和「教程」「案例」长得一模一样，扫一眼分不清哪个是浏览、
+              哪个是要动手 —— 它其实是全站唯一的行动入口。 */}
           <Link
             href="/find"
             className={cn(
-              'hidden h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors md:inline-flex',
+              'hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors md:inline-flex',
               pathname.startsWith('/find')
-                ? 'bg-highlight/12 text-highlight'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                ? 'bg-highlight text-highlight-foreground'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
             )}
           >
             帮我选
           </Link>
-          <CommandSearch />
-          <div className="hidden sm:block">
+          <div className="hidden shrink-0 sm:block">
             <ThemeToggle />
           </div>
           <button
