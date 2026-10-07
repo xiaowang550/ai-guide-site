@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
+import { usePathname } from 'next/navigation'
 import { Sparkles } from 'lucide-react'
 import { readAiConfig, writeAiConfig, type AiConfig } from '@/lib/ai-client'
 import type { AssistantDock } from '@/lib/settings'
@@ -83,7 +84,12 @@ export function AssistantDock() {
     return () => window.removeEventListener('resize', reposition)
   }, [ready, open])
 
-  if (!ready || !enabled) return null
+  // 后台不显示助手浮窗：它是为访客准备的问答入口，
+  // 而后台已经有自己的反馈处理与审计记录，浮窗在这里只是干扰。
+  // 同 GuidedTour —— 后台无法脱离公开站根布局，所以由组件自行识别路径退出。
+  const inAdmin = usePathname()?.startsWith('/admin') ?? false
+
+  if (!ready || !enabled || inAdmin) return null
 
   // 窄屏上按实际可用宽度定位并夹紧，避免面板被推出屏幕（见 lib/dock-position.ts）
   const viewport = {

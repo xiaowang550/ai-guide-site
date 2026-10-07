@@ -40,6 +40,9 @@ export function CopyableText({
         <button
           type="button"
           data-print-hide
+          /* 声明式埋点：由 components/analytics-beacon.tsx 的全局委托监听上报，
+             这里不需要引任何状态管理或 fetch */
+          data-track="prompt_copy"
           onClick={copy}
           className={cn(
             'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors',

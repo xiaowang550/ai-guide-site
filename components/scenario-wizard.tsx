@@ -266,6 +266,10 @@ export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
 
       {step === 3 && scenario && resolved && recommendation ? (
         <StepThree
+          /* 决策器「走完四步看到结果」是最关键的使用信号：
+             它说明这个功能真的解决了问题，而不只是被打开过。
+             声明式埋点，不改动任何流程逻辑。 */
+          data-track="wizard_complete"
           rule={resolved.rule}
           variantLabel={
             resolved.variant ? resolved.variant.label : null

@@ -109,7 +109,13 @@ export function GuidedTour() {
     return () => window.removeEventListener('keydown', onKey)
   })
 
-  if (!mounted || !active || !step) return null
+  // 后台不弹新手引导：那套步骤讲的是公开站怎么用
+  //（「打开场景决策器」「查工具库」），在管理界面里弹出既莫名其妙又会挡住表单。
+  // Next.js 只有根布局能渲染 <html>/<body>，所以后台没法脱离公开站的外壳，
+  // 只能由这个组件自己识别路径后退出。
+  const inAdmin = pathname?.startsWith('/admin') ?? false
+
+  if (!mounted || !active || !step || inAdmin) return null
 
   function finish() {
     writeSettings({ onboardingDone: true })

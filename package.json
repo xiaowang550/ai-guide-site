@@ -15,9 +15,9 @@
     "not dead"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --experimental-strip-types scripts/sync-content.mjs && next dev",
     "dev:reset": "node scripts/reset-dev.mjs",
-    "build": "node scripts/build.mjs",
+    "build": "node --experimental-strip-types scripts/sync-content.mjs && node scripts/build.mjs",
     "serve": "node scripts/serve-out.mjs 4000",
     "start": "node scripts/serve-out.mjs 4000",
     "preview": "npm run build && node scripts/serve-out.mjs 4000",
@@ -25,7 +25,12 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,mdx,json}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "admin:dev": "node --experimental-strip-types scripts/admin-dev.mjs 4100",
+    "admin:seed": "node --experimental-strip-types scripts/seed-content.mjs",
+    "content:sync": "node --experimental-strip-types scripts/sync-content.mjs",
+    "dev:raw": "next dev",
+    "content:sync:local": "node --experimental-strip-types scripts/sync-content.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",

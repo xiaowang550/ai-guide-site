@@ -29,3 +29,17 @@ scripts/_*.mjs
 
 # Lighthouse / 性能采样产物
 .perf/
+
+# 本地后台开发用的 SQLite 文件（绝不进仓库）
+.data/
+
+# 构建时从后台同步的内容覆盖（由 scripts/sync-content.mjs 生成，不进仓库）
+data/generated/content-override.json
+.cache/
+
+# 本地后台开发服务器的日志
+admin-dev.out
+admin-dev.err
+
+# 临时输出（验证过程用，不要进仓库）
+*.out

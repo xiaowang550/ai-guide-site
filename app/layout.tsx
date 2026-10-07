@@ -8,6 +8,7 @@ import { ThemeScript } from '@/components/theme-toggle'
 import { MotionLayer } from '@/components/motion/motion-layer'
 import { ServiceWorkerRegistrar } from '@/components/motion/service-worker-registrar'
 import { AssistantDock } from '@/components/assistant/assistant-dock'
+import { AnalyticsBeacon } from '@/components/analytics-beacon'
 import { GuidedTour } from '@/components/onboarding/guided-tour'
 
 /**
@@ -68,6 +69,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <MotionLayer />
         {/* 离线能力：仅生产构建注册，失败不影响使用 */}
         <ServiceWorkerRegistrar />
+        {/*
+          访问统计采集：只上报页面路径与事件名，不发 Cookie、不发指纹、不发 UA。
+          后端据此按「天 × 路径」聚合，算不出独立访客数 —— 对外承诺的
+          「不做用户画像」不能在统计口开后门。
+        */}
+        <AnalyticsBeacon />
         {/* 站内助手浮窗：可拖动、可隐藏，在设置页可重新打开 */}
         <AssistantDock />
         {/* 首次进入的新手引导：任何一步都能跳过 */}

@@ -82,6 +82,12 @@ const ALLOW: { match: (line: string) => boolean; reason: string }[] = [
     match: (l) => l.includes('我实测下来并不成立'),
     reason: '案例正文叙述者视角：案例要表达的核心观点就是「模型排序不可全信」',
   },
+  {
+    // 后台的写入校验器本身要检测「实测」这个词才能拦下违规文案。
+    // 这一行是门禁的实现，不是对外的评测声明。
+    match: (l) => l.includes("includes('实测')") || l.includes('includes("实测")'),
+    reason: '后台校验器代码：这一行在检测「实测」这个词，是口径门禁的实现而非用户可见文案',
+  },
 ]
 
 describe('评分口径：不得声称做过自建实测', () => {

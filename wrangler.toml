@@ -1,0 +1,54 @@
+# Cloudflare Pages / Workers 配置
+#
+# 这个文件同时服务两件事：
+#   1. Pages 项目构建产物目录（pages_build_output_dir）
+#   2. D1 数据库绑定（[[d1_databases]]）
+#
+# ── 重要：Pages Functions 目录的约定 ──
+#
+# Cloudflare Pages 会在构建时自动把仓库根目录下的 `functions/` 目录
+# 编译成 Functions，**不需要**在这里声明。
+# 所以本文件里没有 functions 配置项 —— 那是因为 Pages 项目不需要，
+# 只有用 wrangler pages deploy 部署时才需要确认 Pages 自动发现了该目录。
+#
+# 部署后自查：Cloudflare 后台 → 你的 Pages 项目 → Functions 标签页，
+# 应该能看到一个 /api 路由。如果没有，说明 functions/ 目录没被识别。
+#
+# ── 为什么静态导出还能共存 Functions ──
+#
+# `next.config.ts` 里的 output: 'export' 只影响 Next.js 那一侧的产物
+# （写进 out/，由 Pages 作为静态资源托管）。
+# Functions 是 Pages 自己的服务端层，与 Next.js 无关，两者互不干扰。
+# 这正是本项目选择「Pages Functions 而不是换全栈平台」的原因：
+# 公开站仍然是纯静态的 140 个页面，读者侧零后端成本。
+
+name = "ai-guide-site"
+compatibility_date = "2025-09-01"
+pages_build_output_dir = "out"
+
+# ── D1 数据库绑定 ──
+#
+# database_name 要与 Cloudflare 后台里实际创建的库名一致；
+# database_id 用 wrangler d1 create 的返回值填。
+#
+# 一次性设置步骤（我无法代做，需要你在 Cloudflare 后台操作）：
+#   1. npx wrangler d1 create ai-guide-site        → 记下返回的 database_id
+#   2. 把下面的 database_name / database_id 填好
+#   3. npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql
+#   4. Cloudflare Pages → Settings → Bindings → 添加 D1 绑定，变量名写 DB
+#   5. Cloudflare Pages → Settings → Variables and Secrets → 添加 Secret：
+#        SITE_SALT      （站点盐，随机字符串）
+#        ADMIN_PASSWORD （初始管理员密码，≥12 位）
+#
+# 详细的逐步操作与验证方法见 docs/admin-backend.md。
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ai-guide-site"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[vars]
+# 初始管理员用户名。密码走 Secret（ADMIN_PASSWORD），不进仓库、不进产物。
+ADMIN_USERNAME = "admin"
+# 提醒：SITE_SALT 与 ADMIN_PASSWORD 请在 Cloudflare 后台设为 Secret，
+# 不要写进这个文件。写在 [vars] 里会被提交进 git。

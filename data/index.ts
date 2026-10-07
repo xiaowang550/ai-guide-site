@@ -24,12 +24,31 @@ import { eduBriefings } from './edu-briefings'
 import { eduFaq } from './edu-faq'
 import { eduPolicyRules } from './edu-policy'
 import { computeOverallScore } from '@/lib/score'
+import contentOverrides from './generated/content-override.json'
+import { applyOverrides, parseOverrideFile } from '@/lib/content/apply-overrides'
 
 /**
  * 工具综合分不在数据文件里手填，这里统一计算后对外暴露。
  * 页面请从本文件取工具列表，不要直接 import data/tools。
+ *
+ * ── 后台改动的内容是怎么进来的 ──
+ *
+ * 后台（D1）里「已发布」的内容以**字段级覆盖**的形式合到基线之上。
+ * 覆盖文件由构建第一步 `scripts/sync-content.mjs` 生成
+ * （从公开的 /api/content/published 拉取，不需要任何凭据）。
+ *
+ * 这样安排的理由：
+ *   · `data/*.ts` 仍是唯一基线，仍过全部 data 门禁 ——
+ *     后台改出来的内容合并后同样要过这些校验（引用了不存在的工具、
+ *     缺了能力维度，都会在 CI 里被抓到，而不是等线上才发现）
+ *   · 内容源不可达时覆盖文件是空的，站点照常按基线发布
+ *   · 覆盖通常只有几百字节，不会明显增加前端包体积
+ *
+ * 整条替换看起来更简单，但那会让「代码里修的数据」被后台一条旧记录静默盖掉。
  */
-export const tools: Tool[] = rawTools.map((tool) => ({
+const overrides = parseOverrideFile(contentOverrides)
+
+export const tools: Tool[] = applyOverrides(rawTools, overrides).tools.map((tool) => ({
   ...tool,
   overallScore: computeOverallScore(tool.capabilities),
 }))
