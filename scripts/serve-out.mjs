@@ -64,10 +64,23 @@ function resolveFile(urlPath) {
   return null
 }
 
-function cacheControl(urlPath) {
+/**
+ * 缓存策略必须和 public/_headers 保持一致（那边才是生产环境的真实规则）。
+ *
+ * 判断「这是不是 HTML」要看**解析后的文件扩展名**，不能看 URL 形状：
+ * Next.js 静态导出的大多数页面路由都没有扩展名（/cases/weekly-report-ops、
+ * /tools/chatgpt、/learn/llm…），URL 里既没有 .html 也不带尾斜杠。
+ * 早先只判断 URL，结果这些路由全落到最后一档 max-age=3600 ——
+ * 改了内容重新 build，本地预览还要等一小时才看得到，很容易误判成
+ * 「改动没生效」。生产环境没这个问题（_headers 是按 /cases/* 这类前缀配的），
+ * 但两边不一致本身就是坑：本地测出来的行为不代表线上行为。
+ */
+function cacheControl(urlPath, ext) {
   if (urlPath.startsWith('/_next/static/')) return 'public, max-age=31536000, immutable'
-  if (urlPath.endsWith('.html') || urlPath === '/' || urlPath.endsWith('/')) return 'no-cache'
-  if (urlPath.startsWith('/logos/') || urlPath.startsWith('/icon')) return 'public, max-age=2592000'
+  // ext 是解析后目标文件的扩展名，HTML 一律不缓存（与 _headers 的 HTML 规则一致）
+  if (ext === '.html') return 'public, max-age=0, must-revalidate'
+  if (ext === '.json') return 'public, max-age=3600'
+  if (ext === '.svg' || urlPath.startsWith('/logos/')) return 'public, max-age=2592000'
   return 'public, max-age=3600'
 }
 
@@ -208,7 +221,7 @@ createServer((req, res) => {
   const ext = extname(target).toLowerCase()
   const headers = {
     'content-type': MIME[ext] ?? 'application/octet-stream',
-    'cache-control': cacheControl(urlPath),
+    'cache-control': cacheControl(urlPath, ext),
     vary: 'Accept-Encoding',
   }
 

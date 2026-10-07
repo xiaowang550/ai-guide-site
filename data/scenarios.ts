@@ -44,11 +44,15 @@ export const scenarios: ScenarioRule[] = [
     label: '读长文档',
     icon: 'file-text',
     weights: {
-      longform: 0.35,
-      research: 0.25,
-      reasoning: 0.2,
-      writing: 0.1,
+      // 手里已经有文档，难点不在「找」而在「读得全」：
+      // 长上下文保证不丢中段，vision 负责扫描页与图表，
+      // research 压到最低 —— 你不需要检索，需要的是不漏读。
+      longform: 0.4,
+      vision: 0.2,
+      reasoning: 0.15,
       data: 0.1,
+      writing: 0.1,
+      research: 0.05,
     },
     defaultPromptTemplate: 'long-doc-digest',
     pitfalls: [
@@ -110,11 +114,13 @@ export const scenarios: ScenarioRule[] = [
     label: '查资料做研究',
     icon: 'search',
     weights: {
+      // 从零找信息，难点是检索与可溯源，所以 research 最高。
+      // longform 只留一点：找到长报告时仍要读得完，但不主导排序。
       research: 0.4,
-      longform: 0.25,
-      reasoning: 0.2,
+      reasoning: 0.25,
+      writing: 0.15,
+      longform: 0.1,
       data: 0.1,
-      writing: 0.05,
     },
     defaultPromptTemplate: 'research-with-citations',
     pitfalls: [

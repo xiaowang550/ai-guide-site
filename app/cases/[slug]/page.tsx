@@ -9,6 +9,7 @@ import { ToolLogo } from '@/components/tool-logo'
 import { CoverArt } from '@/components/cover-art'
 import { UpdatedBadge } from '@/components/updated-badge'
 import { PrintButton } from '@/components/print-button'
+import { CopyableText } from '@/components/copyable-text'
 import { PageHeader } from '@/components/page-header'
 import { Badge } from '@/components/ui/badge'
 
@@ -87,11 +88,9 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             </Section>
 
             <Section title="实际用的提示词（原文）" icon={<Quote className="h-4 w-4" aria-hidden />}>
-              <div className="rounded-xl border bg-muted/40 p-4">
-                <pre className="overflow-x-auto whitespace-pre-wrap font-mono text-[13px] leading-6 text-foreground/90">
-                  {c.prompt}
-                </pre>
-              </div>
+              {/* 用 CopyableText 而不是裸 pre：案例页的卖点就是「提示词可原样复制」，
+                  读者多半要把它粘到自己常用的工具里，没有复制按钮等于没兑现。 */}
+              <CopyableText text={c.prompt} label="复制提示词" title="可直接复制到你的 AI 工具里" />
               <p className="mt-2 text-xs text-muted-foreground">
                 这是这个案例最有价值的部分：注意它把「背景、约束、输出格式」写在了哪里。
               </p>
