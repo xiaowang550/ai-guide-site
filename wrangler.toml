@@ -28,26 +28,20 @@ pages_build_output_dir = "out"
 
 # ── D1 数据库绑定 ──
 #
-# ⚠️ 这一段默认是注释掉的，而且**必须**在数据库真实存在之前保持注释状态。
+# 绑定名必须正好是 `DB`：`functions/api/[[path]].ts` 读的是 `env.DB`。
+# `wrangler d1 create` 的输出示例给的是 `ai_guide_site`（库名去掉连字符），
+# **不要照抄** —— 名字对不上，接口会返回 500 并提示「数据库未绑定」。
 #
-# 原因：`database_id` 是占位字符串时，Cloudflare 会尝试解析这个绑定并失败，
-# 导致**整个部署失败** —— 而症状极具误导性：构建日志里看不出是绑定的问题，
-# 只显示「No deployment available」。本站已经踩过一次：
-# 后台代码全部就绪、CI 全绿，唯独 Cloudflare 部署失败，根因就是这一行。
-#
-# 启用步骤（见 docs/admin-backend.md 第 2 步）：
-#   1. npx wrangler d1 create ai-guide-site     → 记下返回的 database_id
-#   2. 把下面四行的注释去掉，并把 database_id 换成真实 UUID
-#   3. 提交推送，让 Cloudflare 重新构建
-#
-# 注意：Pages 用 Git 集成构建时，真正生效的绑定在 Dashboard
-# （Settings → Bindings），那里也要加一份，变量名同为 DB。
-# wrangler.toml 这一份是给 wrangler CLI 与部署期校验用的。
+# 这一段曾经整段注释掉：那时 database_id 还是占位字符串，
+# Cloudflare 解析绑定失败，整个部署跟着失败，而构建日志里
+# 只显示「No deployment available」，看不出是绑定的问题。
+# 现在填的是真实 UUID，绑定可用。
 
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "ai-guide-site"
-# database_id = "把 wrangler d1 create 返回的 database_id 填在这里"
+[[d1_databases]]
+binding = "DB"
+database_name = "ai-guide-site"
+# 库创建于 WNAM 区域（2026-10-07）
+database_id = "1816b80f-e9be-4017-bc28-84f424ebfc82"
 
 [vars]
 # 初始管理员用户名。密码走 Secret（ADMIN_PASSWORD），不进仓库、不进产物。
