@@ -33,8 +33,19 @@ scripts/_*.mjs
 # 本地后台开发用的 SQLite 文件（绝不进仓库）
 .data/
 
-# 构建时从后台同步的内容覆盖（由 scripts/sync-content.mjs 生成，不进仓库）
-data/generated/content-override.json
+# ─────────────────────────────────────────────────────────────────────────
+# data/generated/content-override.json **不忽略**，而且必须提交。
+#
+# 它虽然是构建产物，但 `data/index.ts` 用静态 import 引用它，
+# 而 data/index.ts 被 13 个客户端组件引用。静态 import 要求文件在
+# typecheck 时就存在 —— CI 是全新 checkout，构建脚本还没跑到 sync 那一步，
+# 文件就不存在，于是 `tsc` 直接报「找不到模块」，整条 CI 从类型检查就挂掉。
+#
+# 所以仓库里提交的是内容为空的占位版本（overrides: {}），
+# 真正的覆盖由 scripts/sync-content.mjs 在构建时写入。
+# CI 里有一条门禁禁止把非空的覆盖提交进仓库 ——
+# 生产内容不该进 git，构建时从线上拉就够了。
+# ─────────────────────────────────────────────────────────────────────────
 .cache/
 
 # 本地后台开发服务器的日志

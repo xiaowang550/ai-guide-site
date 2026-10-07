@@ -58,6 +58,23 @@ jobs:
       - name: 首屏体积不超过基线 5%
         run: node scripts/perf-baseline.mjs --check
 
+      - name: 内容覆盖文件必须是空占位
+        run: |
+          # data/generated/content-override.json 被 git 跟踪，因为 data/index.ts
+          # 静态 import 它 —— 全新 checkout 下文件不存在的话，类型检查这一步
+          # 就会报「找不到模块」（CI 从这里挂过一次）。
+          #
+          # 所以仓库里这一份必须永远是空占位：真正的覆盖由构建时
+          # scripts/sync-content.mjs 从线上拉取后写入，不需要进 git。
+          #
+          # 检查的是 **提交进仓库的那一份**（HEAD），不是构建后的工作区文件 ——
+          # 构建本来就会把它改写。
+          committed=$(git show HEAD:data/generated/content-override.json)
+          if ! echo "$committed" | grep -q '"overrides": {}'; then
+            echo "::error::content-override.json 在仓库里不是空占位。生产内容不应进 git —— 构建时会自动从 /api/content/published 拉取。请 git checkout 恢复这个文件。"
+            exit 1
+          fi
+
       - name: 检查未提交产物
         run: |
           # 构建会写出 .next/ 与 out/，这些应该在 .gitignore 里，
