@@ -323,6 +323,49 @@ export interface ScenarioRule {
   workflow?: { step: number; action: string; preferCapability: CapabilityKey }[]
   /** 一句话说明这个场景在挑什么 */
   description: string
+  /**
+   * 所属分组，只影响第 1 步怎么摆卡片，不影响计算。
+   * 见 SCENARIO_GROUPS。
+   */
+  group?: ScenarioGroupId
+  /**
+   * 子情境：同一场景下更具体的任务。
+   *
+   * 为什么需要：「写代码」用来「读懂一个没人维护的旧模块」和用来
+   * 「从零写新功能」，该看重的维度完全不同 —— 前者要长上下文与推理，
+   * 后者要编程与执行。光靠场景级的权重区分不出来，会给出错的答案。
+   *
+   * **只写要改的维度**，没写到的沿用场景级权重（见 lib/scenario-variants.ts
+   * 的 mergeWeights）。所以每条只有三五个数字，可逐条核对。
+   */
+  variants?: ScenarioVariant[]
+}
+
+/** 场景分组：第 1 步的卡片按这个分区，不再 10 个平铺 */
+export type ScenarioGroupId = 'writing' | 'visual' | 'technical' | 'learning'
+
+/**
+ * 子情境。
+ *
+ * 注意 `weights` 是**覆盖**而不是完整权重表：只列出与场景级不同的维度。
+ * 这样写的好处是改动面小、可核对 —— 一眼能看出「这个子情境把编程调低了、
+ * 把长文理解调高了」，而不是面对一张 14 维的表不知道改了什么。
+ */
+export interface ScenarioVariant {
+  id: string
+  label: string
+  /** 一句话说明这类任务真正的难点在哪 */
+  hint: string
+  /** 覆盖场景级的权重。未列出的维度沿用场景级取值 */
+  weights: Partial<Record<CapabilityKey, number>>
+  /** 覆盖场景级的硬性要求；列了就是「这个子情境有额外硬要求」 */
+  requiredCapabilities?: { key: CapabilityKey; minRequiredScore?: Score }[]
+  /** 换一个更贴题的提示词模板（id 对应 data/prompts.ts） */
+  promptTemplateId?: string
+  /** 换一组更贴题的避坑提示 */
+  pitfalls?: string[]
+  /** 换一套更贴题的组合工作流 */
+  workflow?: { step: number; action: string; preferCapability: CapabilityKey }[]
 }
 
 /** 决策器第 2 步的补充条件 */
@@ -334,6 +377,12 @@ export interface RequirementFlags {
   chinaDirect?: boolean
   needDeliverableFile?: boolean
   noLearningCurve?: boolean
+  /** 要能联网查最新资料（知识截止之后的东西） */
+  needWebAccess?: boolean
+  /** 材料很长：几万字 PDF、整个代码库、一堆文档 */
+  longInput?: boolean
+  /** 团队多人一起用，要账号与稳定性 */
+  teamUse?: boolean
 }
 
 // ---------- 更新雷达 ----------

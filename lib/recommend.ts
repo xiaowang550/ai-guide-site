@@ -6,6 +6,27 @@ import type {
   Score,
   Tool,
 } from '@/data/types'
+
+/**
+ * 条件分两类，界面上必须区分清楚：
+ * - **硬门槛**：不满足就直接剔除（大陆直连、必须免费）
+ * - **加减分**：影响排序但不剔除，最多 ±ADJUST_CAP
+ *
+ * 混在一起有个实际后果：用户勾了「必须免费」后发现推荐结果里有个付费工具，
+ * 会以为算错了。分开标注才能让人预判勾选之后会发生什么。
+ */
+export const FLAG_KIND = {
+  chinaDirect: 'hard',
+  mustBeFree: 'hard',
+  lowBudget: 'soft',
+  chineseFirst: 'soft',
+  privacySensitive: 'soft',
+  needDeliverableFile: 'soft',
+  noLearningCurve: 'soft',
+  needWebAccess: 'soft',
+  longInput: 'soft',
+  teamUse: 'soft',
+} as const satisfies Record<keyof RequirementFlags, 'hard' | 'soft'>
 import { capabilityLabel, round2 } from './score'
 import type { SortableTool } from './tool-list-item'
 
@@ -85,6 +106,9 @@ export const FLAG_LABELS: Record<keyof RequirementFlags, string> = {
   chinaDirect: '需要大陆直连',
   needDeliverableFile: '要能出成品文件',
   noLearningCurve: '不想学复杂工具',
+  needWebAccess: '要能联网查最新资料',
+  longInput: '材料很长（几万字文档 / 整个代码库）',
+  teamUse: '团队多人一起用',
 }
 
 /** 归一化场景权重：权重和为 1，缺失维度视为 0 */
@@ -213,6 +237,64 @@ export function explainTool(
     } else if (!hasWeb) {
       adjust -= 0.4
       violatedFlags.push('没有网页版，需要装客户端/命令行，上手成本高')
+    }
+  }
+
+  // 以下三条的加减分是**经验判断**，不是可复现的测量结果。
+  // 每条都写清依据（看的是哪个字段、为什么这么算），方便日后按反馈调整权重，
+  // 也避免把「看起来合理」当成「有依据」。
+
+  if (flags.needWebAccess) {
+    // 能否联网查资料，看的是 agent（能自己动手取）与 research（检索+引用）两个维度。
+    // 只看一个会误判：有些工具 research 分高但没有 agent，取不到实时网页。
+    const agent = tool.capabilities.agent?.score ?? 0
+    const research = tool.capabilities.research?.score ?? 0
+    const best = Math.max(agent, research)
+    if (best >= 4) {
+      adjust += 0.25
+      satisfiedFlags.push(
+        `能联网取实时资料（${capabilityLabel(agent >= research ? 'agent' : 'research')} ${best}/5）`
+      )
+    } else if (best <= 2) {
+      adjust -= 0.35
+      violatedFlags.push(
+        `联网能力弱（${
+          agent >= research ? '智能体' : '联网研究'
+        }最高只有 ${best}/5），知识截止之后的东西查不到`
+      )
+    }
+  }
+
+  if (flags.longInput) {
+    // 材料很长时，长上下文和文件支持是两回事：有的工具窗口标得很大，
+    // 但传不进 PDF；所以同时看 longform 分与 multimodal.file。
+    const longform = tool.capabilities.longform?.score ?? 0
+    const canFile = tool.multimodal?.file ?? false
+    if (longform >= 4 && canFile) {
+      adjust += 0.25
+      satisfiedFlags.push(`长文理解 ${longform}/5 且支持直接上传文件，长材料能一次读完`)
+    } else if (longform <= 2) {
+      adjust -= 0.4
+      violatedFlags.push(`长文理解仅 ${longform}/5，几万字的材料会丢掉中段或前后不一致`)
+    } else if (!canFile) {
+      adjust -= 0.15
+      violatedFlags.push('不能直接上传文件，长材料要先手工切成片段')
+    }
+  }
+
+  if (flags.teamUse) {
+    // 团队场景看三件事：稳定性（多人共用时不能时不时挂）、
+    // 有没有 API（要接进自己的流程）、有没有网页版（不用给每台电脑装客户端）。
+    const stable = tool.stability === 'high'
+    if (stable && tool.hasApi && tool.platforms.includes('web')) {
+      adjust += 0.25
+      satisfiedFlags.push('稳定性高、有 API、网页版可用，多人共用与接流程都省事')
+    } else if (!stable) {
+      adjust -= 0.3
+      violatedFlags.push(`稳定性为「${tool.stability}」，多人共用时容易中途失败`)
+    } else if (!tool.hasApi) {
+      adjust -= 0.1
+      violatedFlags.push('没有 API，接不进团队自己的流程')
     }
   }
 

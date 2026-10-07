@@ -1,4 +1,5 @@
 import type { CapabilityKey, ScenarioRule } from '@/data/types'
+import { attachVariants } from '@/lib/scenario-variant-data'
 
 /**
  * 场景决策器的规则表
@@ -14,7 +15,7 @@ import type { CapabilityKey, ScenarioRule } from '@/data/types'
  * icon 取值受限于 components/ui/Icon.tsx，不要自创。
  */
 
-export const scenarios: ScenarioRule[] = [
+const scenarioRules: ScenarioRule[] = [
   {
     id: 'write',
     label: '写东西',
@@ -251,6 +252,14 @@ export const scenarios: ScenarioRule[] = [
     description: '挑的是把复杂概念讲简单、并能按你的水平调整讲法的能力；这里最重要的问题是「你懂到哪一步」。',
   },
 ]
+
+/**
+ * 对外导出的场景表 = 原始权重表 + 分组 + 子情境。
+ *
+ * 对外仍然只有一个 scenarios 出口，页面与测试都从这里取；
+ * scenarioRules 只在本文件内可见，保证「场景级数据是权威、子情境只是附加层」。
+ */
+export const scenarios: ScenarioRule[] = attachVariants(scenarioRules)
 
 export const scenariosById: Record<string, ScenarioRule> = scenarios.reduce<
   Record<string, ScenarioRule>

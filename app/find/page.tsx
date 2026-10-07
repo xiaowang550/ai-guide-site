@@ -1,7 +1,8 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ShieldQuestion } from 'lucide-react'
-import { scenarios } from '@/data'
+import { scenarios, cases } from '@/data'
+import { toCaseListItems } from '@/lib/case-list-item'
 import { ScenarioWizard, ScenarioWeightTable } from '@/components/scenario-wizard'
 import { PageHeader, Section } from '@/components/page-header'
 
@@ -45,7 +46,12 @@ export default function FindPage() {
           </div>
         </div>
 
-        <ScenarioWizard />
+        {/*
+          案例只传最小投影：完整 CaseStudy 每条带 600 字以上提示词原文，
+          整个传进客户端会让 /find 的 JS 从 58.5 kB 涨到 99.7 kB。
+          详见 lib/case-list-item.ts 的说明。
+        */}
+        <ScenarioWizard caseItems={toCaseListItems(cases)} />
       </div>
 
       <div className="container">
