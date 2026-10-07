@@ -137,22 +137,39 @@ Cloudflare Pages → **Settings → Variables and Secrets** → Add → **Secret
 所以之后想改密码要走后台，而不是改 Secret —— 改 Secret 不会影响已有账号
 （这一点有测试守着：`admin-auth.test.ts`）。
 
-### 第 8 步：验证（6 项）
-
-| # | 检查 | 怎么看 |
-|---|---|---|
-| 1 | 未登录时接口一律 401 | `curl -i https://你的域名/api/admin/dashboard` 应返回 401 |
-| 2 | 公开内容接口可用且无需认证 | `curl https://你的域名/api/content/published` |
-| 3 | 登录成功并拿到 Cookie | 浏览器登录，看 DevTools 里 `admin_session` 是 HttpOnly |
-| 4 | 内容列表有 22 条 | 后台「内容」页 |
-| 5 | **发布后公开站会更新** | 改一条 → 发布 → 等 2-4 分钟 → 刷新 `/tools/<id>/` |
-| 6 | 控制台无报错 | DevTools → Console |
-
-第 5 项是最容易出问题的一项，验证方法：
+### 第 8 步：验证（跑一条命令）
 
 ```bash
-# 改完之后，等几分钟，再确认产物里已经是新内容
-curl -s https://你的域名/tools/kimi/ | grep -o '你改的那句话'
+npm run admin:verify
+# 或指定域名
+npm run admin:verify -- https://ai-guide-site.pages.dev
+
+# 想连登录一起验（会用一个真实登录请求确认 Secret 生效，Cookie 不会保留）
+$env:ADMIN_PASSWORD="你的密码"; npm run admin:verify
+```
+
+脚本只发公开请求，逐项检查 8 件事并给出通过/失败与处理办法：
+
+| # | 检查项 | 通过意味着 |
+|---|---|---|
+| 1 | Functions 被识别 | Pages 编译了 `functions/` |
+| 3 | 内容已迁移 | D1 里有 22 条已发布内容 |
+| 4 | 管理接口权限 | **未登录访问管理接口返回 401** |
+| 5 | 写操作同源校验 | 不带 Origin 的写请求被 403 拒绝 |
+| 6 | 内容接口 ETag | 内容未变时返回 304 |
+| 7 | 后台页面 | 200、已设 noindex、HTML 里无业务数据 |
+| 8 | 公开站未受影响 | 首页 200 |
+| 9 | 管理员登录 | 设了 `ADMIN_PASSWORD` 时才检查 |
+
+**先做这一步再往下**：如果第 1 项失败（404），说明 Functions 没被识别，
+后面几步做了也没用。处理办法见第八节。
+
+手工抽查（想直接看原始响应时）：
+
+```bash
+curl -i https://你的域名/api/admin/dashboard          # 期望 401
+curl -s  https://你的域名/api/content/published | head -c 300
+curl -s  https://你的域名/tools/kimi/ | grep -o '你改的那句话'
 ```
 
 ---
@@ -263,9 +280,33 @@ curl -s https://你的域名/tools/kimi/ | grep -o '你改的那句话'
 
 ## 八、常见问题
 
+### 第 0 步：确认最新部署是否成功（**先做这个**）
+
+后台的所有步骤都依赖于「带 `functions/` 的那次部署已经上线」。
+部署没成功时，`/admin/` 返回的是站点的 404 页 —— 而本站的 404 页因为
+fallback 配置**也返回 200**，只看状态码会误判成「已部署」。
+
+判断办法（任选其一）：
+
+```bash
+npm run admin:verify
+# 第 1 项报「返回 404 —— Pages 没有编译 functions/ 目录」就是没部署成功
+```
+
+或者直接看内容：
+
+```bash
+curl -s https://你的域名/admin/ | grep -c '内容管理后台'
+# 0 = 没部署成功（拿到的是 404 页）；1 = 部署成功
+```
+
+在 Cloudflare 后台看：**Deployments** 页面，最新一条的状态是
+「Success」还是「Failed」。失败的话点进去看构建日志。
+
 ### 后台能打开但一直显示登录失败
 
-**Function 没被识别**（第 6 步）。检查 Pages 项目的 Functions 标签页里有没有 `/api` 路由。
+**Function 没被识别**（先跑 `npm run admin:verify` 确认第 1 项）。
+检查 Pages 项目的 Functions 标签页里有没有 `/api` 路由。
 
 或者 D1 没绑定：接口会返回 500 并带上明确的提示文案（`数据库未绑定：…变量名必须是 DB`）。
 

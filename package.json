@@ -30,7 +30,8 @@
     "admin:seed": "node --experimental-strip-types scripts/seed-content.mjs",
     "content:sync": "node --experimental-strip-types scripts/sync-content.mjs",
     "dev:raw": "next dev",
-    "content:sync:local": "node --experimental-strip-types scripts/sync-content.mjs"
+    "content:sync:local": "node --experimental-strip-types scripts/sync-content.mjs",
+    "admin:verify": "node scripts/verify-admin.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",
