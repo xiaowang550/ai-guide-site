@@ -39,6 +39,9 @@ import { ProsConsCard } from '@/components/pros-cons-card'
 import { EvidenceCoverageBadge, EvidenceSection } from '@/components/evidence-section'
 import { PromptBlock } from '@/components/prompt-block'
 import { PageHeader, Section } from '@/components/page-header'
+import { ScoringSourceNote } from '@/components/scoring-source-note'
+import { isLocalOnly } from '@/lib/recommend'
+import { compareWithAlternatives } from '@/lib/compare-constants'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -150,7 +153,11 @@ const accessAlts = getTools(tool.access?.alternatives ?? [])
               </Button>
             </a>
             <Button asChild variant="outline">
-              <Link href={`/compare?ids=${tool.alternatives.slice(0, 2).join(',')}`}>
+              {/* 必须带上当前工具：标签写的是「和替代品对比」，
+                  如果对比页里只有替代品、没有你现在看的这个，
+                  你看不到它和替代品之间的实际差距，只能横向看替代品之间。
+                  超上限时取前几个替代品，当前工具永远排第一个。 */}
+              <Link href={`/compare?ids=${compareWithAlternatives(tool)}`}>
                 <Scale className="h-3.5 w-3.5" aria-hidden />
                 和替代品对比
               </Link>
@@ -280,20 +287,51 @@ const accessAlts = getTools(tool.access?.alternatives ?? [])
                 上手三步
               </h2>
               <ol className="mt-4 space-y-3">
-                <StepCard
-                  step={1}
-                  title="注册与准备"
-                  body={`用 ${tool.pricing.freeTier} 就能开始，不需要先付费。${
-                    tool.chinaAccessible
-                      ? '注册时建议绑定手机号，登录更稳定。'
-                      : '注意：在中国大陆通常需要可用的网络环境才能访问，注册前先确认这一点。'
-                  }`}
-                  href={tool.officialUrl}
-                />
+                {/*
+                  第 1 步必须按交付方式分两种写法。
+                  原来只有一套「注册与准备」的 SaaS 模板，于是 Ollama 这类
+                  本地开源工具也被告知「注册时建议绑定手机号」
+                  「在中国大陆通常需要可用的网络环境才能访问」——
+                  它根本不需要注册，装完跑起来数据就不出本机了，
+                  按那段文字操作只会把人引到错误的路上。
+                */}
+                {isLocalOnly(tool) ? (
+                  <StepCard
+                    step={1}
+                    title="本地安装，不需要注册"
+                    body={`${tool.name} 是可在自己电脑上部署的开源工具，没有账号、没有手机号、也没有联网要求。
+                          ${tool.pricing.freeTier}
+                          装好之后在本机起一个服务，浏览器打开本地地址就能用 ——
+                          提示词与材料都留在你自己机器上，不经过任何第三方。`}
+                    href={tool.officialUrl}
+                  />
+                ) : (
+                  <StepCard
+                    step={1}
+                    title="注册与准备"
+                    body={`用 ${tool.pricing.freeTier} 就能开始，不需要先付费。${
+                      tool.chinaAccessible
+                        ? '注册时建议绑定手机号，登录更稳定。'
+                        : '注意：在中国大陆通常需要可用的网络环境才能访问，注册前先确认这一点。'
+                    }`}
+                    href={tool.officialUrl}
+                  />
+                )}
                 <StepCard
                   step={2}
-                  title="第一次别只发「你好」，直接给一个真实任务"
-                  body="把下面的提示词模板复制过去，先跑一个你自己今天就要用的任务。第一次就用真实素材，比用「帮我写首诗」更能判断它合不合手。"
+                  title={
+                    isLocalOnly(tool)
+                      ? '第一次先确认它「认识」你的资料'
+                      : '第一次别只发「你好」，直接给一个真实任务'
+                  }
+                  body={
+                    isLocalOnly(tool)
+                      ? `本地模型要先选好模型再谈别的：装完之后第一件事是拉一个你打算长期用的模型，
+                        换模型要重新下载，体积和显存占用都提前算好。
+                        本地跑的速度取决于你的机器，把下面的提示词模板复制过去，
+                        拿一段你今天就要处理的真实材料试一次，比空问「你好」更能判断值不值得用。`
+                      : '把下面的提示词模板复制过去，先跑一个你自己今天就要用的任务。第一次就用真实素材，比用「帮我写首诗」更能判断它合不合手。'
+                  }
                 />
                 <StepCard
                   step={3}
@@ -359,9 +397,13 @@ const accessAlts = getTools(tool.access?.alternatives ?? [])
               ) : null}
               {alternatives.length > 1 ? (
                 <Button asChild variant="outline" className="mt-4">
-                  <Link href={`/compare?ids=${tool.alternatives.join(',')}`}>
+                  {/* 这里原先只传替代品、不含当前工具。标签说「一次对比全部替代品」，
+                      读者点进去却发现对比表里没有自己正在看的这个工具，
+                      只能横向比替代品之间 —— 拿不到「它比这些强在哪」这个答案。
+                      现在统一走 compareWithAlternatives()，当前工具永远在第一个。 */}
+                  <Link href={`/compare?ids=${compareWithAlternatives(tool)}`}>
                     <Scale className="h-3.5 w-3.5" aria-hidden />
-                    一次对比全部替代品
+                    一次对比全部替代品（含本工具）
                   </Link>
                 </Button>
               ) : null}
@@ -602,10 +644,14 @@ const accessAlts = getTools(tool.access?.alternatives ?? [])
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
-            难度分级参考：入门 / 进阶 / 深入（本站教程体系用）。本页所有评分维度统一口径，
-            与 <Link href="/about#scoring" className="text-primary underline underline-offset-4">评分方法</Link> 一致。
-            相关概念可从 <Link href="/learn" className="text-primary underline underline-offset-4">知识库</Link> 入手。
+            难度分级参考：入门 / 进阶 / 深入（本站教程体系用）。相关概念可从{' '}
+            <Link href="/learn" className="text-primary underline underline-offset-4">
+              知识库
+            </Link>{' '}
+            入手。
           </p>
+          {/* 评分口径统一引用，不再在本页另写一遍 */}
+          <ScoringSourceNote className="mt-3" variant="inline" />
         </Section>
       </div>
     </>

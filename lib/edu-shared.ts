@@ -139,7 +139,22 @@ const INTENSITY_LABEL: Record<EduIntensity, string> = {
   明确禁止: '本范围内禁止学生使用，只允许教师演示',
 }
 
+/**
+ * 生成给学生的单据。
+ *
+ * **这一段曾经是个逻辑错误**：强度选「明确禁止」时，页面仍然输出
+ * 「AI 使用声明」，让被禁止使用 AI 的学生去签一份「我用了 AI、我这样核对过」
+ * 的声明 —— 既自相矛盾，也会教出「先签了再说」的习惯。
+ *
+ * 现在按强度分两种单据：
+ * - 允许 / 受限使用 → 使用声明（声明用了什么、怎么核对）
+ * - 明确禁止       → 观察记录（记录观看教师演示时观察到了什么）
+ *
+ * 两者由同一入口 generatePolicy 产出，但字段完全不同。
+ * 页面标题也随强度变化，见 declarationTitle()。
+ */
 export function buildDeclaration(input: PolicyInput): string {
+  if (input.intensity === '明确禁止') return buildObservationRecord(input)
   return `AI 使用声明（${input.stage} · ${input.subject}）
 
 本人${INTENSITY_LABEL[input.intensity]}。
@@ -150,6 +165,35 @@ export function buildDeclaration(input: PolicyInput): string {
 我确认：以上内容没有直接复制工具输出，也没有请人代写。若有不实，愿承担相应责任。
 
 声明人：__________  日期：__________`
+}
+
+/**
+ * 「明确禁止」时给学生的单据：AI 使用观察记录。
+ *
+ * 用途是替代个人产出 —— 学生不用 AI，但要观看教师演示并留下观察痕迹，
+ * 这份记录就是该场景下合理的学习证据。字段围绕「我看到了什么、
+ * 我注意到什么局限、我打算自己怎么试」，而不是「我用了什么」。
+ */
+export function buildObservationRecord(input: PolicyInput): string {
+  return `AI 使用观察记录（${input.stage} · ${input.subject}）
+
+本范围内禁止学生使用 AI。以下是观看教师演示时的观察记录。
+
+演示课次与日期：____________________
+演示工具：____________________（写明工具名称与版本/日期）
+我观察到的三个要点：____________________（写具体做法，不要写「学到了很多」）
+我注意到的一处局限：____________________（哪一步需要人工核对、哪一步它做错了）
+我的疑问：____________________
+我想自己动手试的一件事（不用 AI）：____________________
+记录人：__________  日期：__________`
+}
+
+/**
+ * 单据标题随强度变化。
+ * 页面标题不能写死成「AI 使用声明」—— 禁止使用时出现这个标题本身就是错的。
+ */
+export function declarationTitle(input: PolicyInput): string {
+  return input.intensity === '明确禁止' ? 'AI 使用观察记录' : 'AI 使用声明'
 }
 
 export function buildHomeworkAdjustments(input: PolicyInput): string[] {

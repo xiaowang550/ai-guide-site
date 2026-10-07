@@ -8,6 +8,7 @@ import {
   INTENSITY_OPTIONS,
   STAGE_LABELS,
   SUBJECT_OPTIONS,
+  declarationTitle,
   generatePolicy,
 } from '@/lib/edu-shared'
 import { eduPolicyRules } from '@/data/edu-policy'
@@ -24,7 +25,8 @@ export function PolicyGenerator() {
   const [subject, setSubject] = useState<EduSubject>('通用')
   const [intensity, setIntensity] = useState<EduIntensity>('学生可用需声明')
 
-  const result = useMemo(() => generatePolicy({ stage, subject, intensity }), [stage, subject, intensity])
+  const input = useMemo(() => ({ stage, subject, intensity }), [stage, subject, intensity])
+  const result = useMemo(() => generatePolicy(input), [input])
   const ruleLabels = new Map(eduPolicyRules.map((r) => [r.id, r.label]))
 
   return (
@@ -154,8 +156,21 @@ export function PolicyGenerator() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-lg">配套的学生使用声明</h2>
-          <CopyableText text={result.declaration} title="学生 AI 使用声明（可复制打印）" />
+          {/* 标题跟着强度走：禁止学生使用时出现「使用声明」这个标题本身就是错的 */}
+          <h2 className="mb-3 text-lg">
+            {input.intensity === '明确禁止' ? '配套的学生观察记录' : '配套的学生使用声明'}
+          </h2>
+          <CopyableText
+            text={result.declaration}
+            title={`${declarationTitle(input)}（可复制打印）`}
+          />
+          {input.intensity === '明确禁止' ? (
+            <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs leading-5">
+              你选了「明确禁止」，所以这里给的是观察记录而不是使用声明 ——
+              既然不允许学生使用 AI，就不该让学生去签一份「我用了 AI」的声明。
+              学生看教师演示并记录观察要点，是这个强度下合理的学习证据。
+            </p>
+          ) : null}
         </section>
 
         <p className="border-t pt-5 text-xs leading-6 text-muted-foreground">

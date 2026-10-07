@@ -22,6 +22,8 @@ import {
   ADJUST_CAP,
   FLAG_KIND,
   FLAG_LABELS,
+  countLocalOnly,
+  isLocalOnly,
   recommend,
   type ToolExplanation,
 } from '@/lib/recommend'
@@ -47,7 +49,7 @@ const FLAG_HINTS: Record<FlagKey, string> = {
   chineseFirst: '中文表达自然，少有翻译腔',
   mustBeFree: '不花任何钱（免费版或本地开源）',
   lowBudget: '有免费额度就够，付费越少越好',
-  privacySensitive: '数据不能上传云端',
+  privacySensitive: '只保留可在自己电脑上部署的工具，数据完全不出本机',
   chinaDirect: '中国大陆不借助工具即可访问',
   needDeliverableFile: '要能直接导出 Word/PPT/Excel',
   noLearningCurve: '网页打开就能用，不想折腾配置',
@@ -293,6 +295,7 @@ function countHardFiltersByScenario(
 ): number {
   let pool = allTools
   if (flags.chinaDirect) pool = pool.filter((t) => t.chinaAccessible)
+  if (flags.privacySensitive) pool = pool.filter(isLocalOnly)
   if (flags.mustBeFree) {
     pool = pool.filter(
       (t) => t.pricing.model === 'free' || t.pricing.model === 'open-source'
@@ -546,7 +549,9 @@ function StepTwo({
 
       <ConditionGroup
         title="硬门槛（不满足会被直接剔除）"
-        note="勾上之后候选工具可能骤减。第 1 步的卡片上会实时显示每个任务还剩几个工具符合。"
+        note={`勾上之后候选工具可能骤减。第 1 步的卡片上会实时显示每个任务还剩几个工具符合。
+              提醒：「数据不能出本机」全站只有 ${countLocalOnly(tools)} 个工具满足 —— 可自己部署的工具本来就少，
+              勾了基本等于放弃其他工具，这是事实而不是筛选出错。`}
         keys={hard}
         flags={flags}
         onChange={onChange}

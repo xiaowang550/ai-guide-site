@@ -15,8 +15,24 @@ import { join } from 'node:path'
 /** 会「渲染给用户看」的目录 */
 const SCAN_DIRS = ['app', 'components', 'data', 'lib']
 
-/** 扫源码时跳过的目录：测试自身、__tests__ 里要出现「实测」两个字做断言 */
+/** 扫源码时跳过的目录名：测试自身、__tests__ 里要出现「实测」两个字做断言 */
 const SKIP = ['__tests__', 'node_modules', '.next', 'out', '.git']
+
+/**
+ * 判断某个**目录名**是否该跳过。
+ *
+ * 这里必须按目录名精确比对，不能用 `full.includes(s)` 做子串匹配。
+ * 原来的写法有一个真实的漏洞：`out/` 是要跳过的构建目录，
+ * 但子串匹配会把路径里含 "out" 的任何目录一起跳掉 ——
+ * `app/about/`（a-b-**out**）、`app/outline/`、`app/scouts/` 全部中招。
+ *
+ * 后果不是「漏扫几个文件」，而是这个门禁对它唯一该拦的页面完全失明：
+ * 关于页里当时写着「我们自己的实测：用固定的测试任务跑一遍」，
+ * 正是这个测试存在的理由所指向的那类虚假陈述，却因为目录名巧合而一直通过。
+ */
+function skipDir(name: string): boolean {
+  return SKIP.includes(name)
+}
 
 function walk(dir: string, out: string[] = []): string[] {
   let entries: Dirent[]
@@ -26,8 +42,8 @@ function walk(dir: string, out: string[] = []): string[] {
     return out
   }
   for (const e of entries) {
+    if (skipDir(e.name)) continue
     const full = join(dir, e.name)
-    if (SKIP.some((s) => full.includes(s))) continue
     if (e.isDirectory()) walk(full, out)
     else out.push(full)
   }
@@ -71,6 +87,35 @@ const ALLOW: { match: (line: string) => boolean; reason: string }[] = [
 describe('评分口径：不得声称做过自建实测', () => {
   it('扫描范围确实覆盖到文件（防止路径写错导致测试空跑）', () => {
     expect(files.length).toBeGreaterThan(50)
+  })
+
+  /**
+   * 防止再次出现「某个页面因为目录名巧合而没被扫到」。
+   *
+   * 这条断言就是为上面那个漏洞写的：门禁用子串匹配跳目录，
+   * `app/about/` 因为含 "out" 被静默跳过，于是关于页里
+   * 「我们自己的实测」这种虚假陈述一直没人拦。
+   *
+   * 断言方式不看具体文件名（那会随目录结构变），而是要求
+   * 至少扫到 N 个不同顶层目录下的文件 —— 少扫一个目录就会掉下来。
+   */
+  it('扫描覆盖多个目录，且没有哪个目录被整体漏掉', () => {
+    const topDirs = new Set(
+      files.map((f) => {
+        const parts = f.split(/[\\/]/)
+        return parts.length > 1 ? parts[1] : parts[0]
+      })
+    )
+    expect(
+      topDirs.size,
+      `只扫到了 ${topDirs.size} 个目录：${[...topDirs].join(', ')}`
+    ).toBeGreaterThanOrEqual(6)
+
+    // 关于页必须在内：它是讲「怎么做评测」的地方，最容易写出违规表述
+    expect(
+      files.some((f) => f.includes('about')),
+      '关于页没有被扫到 —— 门禁对它失明了'
+    ).toBe(true)
   })
 
   it('用户可见文案里不出现未加否定的「实测」', () => {

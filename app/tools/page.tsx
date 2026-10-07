@@ -57,7 +57,8 @@ export default function ToolsPage() {
               数据超过 90 天未复核的卡片会显示「可能已过时」。
             </li>
             <li>
-              · 分数 ≥4 或 ≤2 的维度都会写明依据（官方基准 / 公开反馈 / 社区共识），本站不做自建评测，
+              · 分数 ≥4 或 ≤2 的维度都会写明依据（官方基准 / 公开反馈 / 社区共识）。
+              本站不做自建评测，分数是编辑判断而非测量结果，
               详见 <Link href="/about" className="text-primary underline underline-offset-4">我们怎么打分</Link>。
             </li>
             <li>

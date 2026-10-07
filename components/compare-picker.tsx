@@ -6,7 +6,10 @@ import type { Tool } from '@/data/types'
 import { cn } from '@/lib/utils'
 import { ToolLogo } from '@/components/tool-logo'
 
-export const MAX_COMPARE = 4
+// 常量必须从非 client 模块导入。原先在这里 `export const MAX_COMPARE = 4`，
+// 服务端页面拿它拼文案时被替换成 client 引用桩，函数源码被写进了 HTML。
+// 详见 lib/compare-constants.ts 顶部的说明。
+import { MAX_COMPARE } from '@/lib/compare-constants'
 
 /** 受控的选择器：已选 id 由上层管理，便于与 URL / 对比表联动 */
 export function ComparePicker({

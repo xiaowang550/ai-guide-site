@@ -9,18 +9,23 @@ import type {
 
 /**
  * 条件分两类，界面上必须区分清楚：
- * - **硬门槛**：不满足就直接剔除（大陆直连、必须免费）
+ * - **硬门槛**：不满足就直接剔除（大陆直连、必须免费、数据不能出本机）
  * - **加减分**：影响排序但不剔除，最多 ±ADJUST_CAP
  *
  * 混在一起有个实际后果：用户勾了「必须免费」后发现推荐结果里有个付费工具，
  * 会以为算错了。分开标注才能让人预判勾选之后会发生什么。
+ *
+ * privacySensitive 归为硬门槛而不是加减分，理由是这条条件没有中间态：
+ * 数据一旦上传到别人的服务器就不叫「隐私友好」，扣 0.15 分仍然会把
+ * 云端服务排在前面，等于让用户以为约束生效了。宁可只剩 1 个候选
+ * （可本地部署的工具本来就很少），也不要给一个虚假的满足感。
  */
 export const FLAG_KIND = {
   chinaDirect: 'hard',
   mustBeFree: 'hard',
+  privacySensitive: 'hard',
   lowBudget: 'soft',
   chineseFirst: 'soft',
-  privacySensitive: 'soft',
   needDeliverableFile: 'soft',
   noLearningCurve: 'soft',
   needWebAccess: 'soft',
@@ -111,8 +116,30 @@ export const FLAG_LABELS: Record<keyof RequirementFlags, string> = {
   teamUse: '团队多人一起用',
 }
 
-/** 归一化场景权重：权重和为 1，缺失维度视为 0 */
-export function normalizeWeights(
+/**
+ * 判断一个工具是否真的「数据不出本机」。
+ *
+ * 判据只看一件事：**能不能自己部署**（pricing.model === 'open-source'）。
+ *
+ * 为什么不看别的字段：
+ * - `hasApi: false` 只说明没有官方 API，不等于数据留在本地
+ * - `chinaAccessible: true` 说的是网络可达性，与数据流向无关
+ * - 有网页版 ≠ 本地部署
+ *
+ * 所以「数据不能出本机」这条硬门槛在全站只会留下极少数工具 ——
+ * 这是事实，不是 bug。界面上会照实显示还剩几个候选，
+ * 让用户自己判断要不要为隐私放弃别的条件。
+ */
+export function isLocalOnly(tool: Tool): boolean {
+  return tool.pricing.model === 'open-source'
+}
+
+/** 可本地部署的工具数量，用于在界面上提前告知候选池有多小 */
+export function countLocalOnly(tools: Tool[]): number {
+  return tools.filter(isLocalOnly).length
+}
+
+/** 归一化场景权重：权重和为 1，缺失维度视为 0 */export function normalizeWeights(
   weights: Partial<Record<CapabilityKey, number>>
 ): Record<CapabilityKey, number> {
   const entries = Object.entries(weights) as [CapabilityKey, number][]
@@ -337,6 +364,7 @@ export function explainTool(
 export function filterByFlags(tools: Tool[], flags: RequirementFlags = {}): Tool[] {
   return tools.filter((tool) => {
     if (flags.chinaDirect && !tool.chinaAccessible) return false
+    if (flags.privacySensitive && !isLocalOnly(tool)) return false
     if (flags.mustBeFree) {
       const free = tool.pricing.model === 'free' || tool.pricing.model === 'open-source'
       if (!free) return false

@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
+  AlertTriangle,
   ArrowRight,
   BookOpen,
   Compass,
@@ -296,9 +297,29 @@ export default function HomePage() {
                 教师与学生的真实使用问题直接进入下一版的优先改进项。
               </p>
               <p className="mt-3 text-muted-foreground">
-                试点学校 {metrics.schools} 所 · 覆盖教师 {metrics.teachersReached} 人次 ·
+                {metrics.includesSample ? '试点学校' : '已覆盖学校'} {metrics.schools} 所 ·{' '}
+                {metrics.includesSample ? '示例覆盖教师' : '覆盖教师'} {metrics.teachersReached} 人次 ·{' '}
                 近 90 天更新 {metrics.recentlyUpdated} 项
               </p>
+              {/*
+                这段数字原先直接写在页面上，和 schools 页的示例数据警示完全脱节：
+                schools 页顶部有一条显眼的「本页目前展示的是示例数据」，
+                首页这里却只有「试点学校 8 所 · 覆盖教师 680 人次」，
+                读起来和课程数、更新项数一样像真实成果。
+                同一份数据在两个页面给出了强弱悬殊的提示，很容易被当成真实覆盖。
+              */}
+              {metrics.includesSample ? (
+                <p className="mt-2 inline-flex items-start gap-1.5 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[11px] leading-5">
+                  <AlertTriangle
+                    className="mt-0.5 h-3 w-3 shrink-0 text-amber-600 dark:text-amber-400"
+                    aria-hidden
+                  />
+                  <span>
+                    上面两项目前是<strong className="font-medium">示例数据</strong>
+                    ，不是真实覆盖成果；试点与推广页所有条目均已标注为示例。
+                  </span>
+                </p>
+              ) : null}
             </div>
           </div>
         </Section>
