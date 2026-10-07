@@ -327,7 +327,23 @@ node scripts/perf-baseline.mjs --save     # 写入 perf-baseline.json
 node scripts/perf-baseline.mjs --check    # 与基线对比，超出 5% 则退出码 1
 node scripts/audit-client-data.mjs        # 检查 data/ 长文本是否泄漏到浏览器包
 node scripts/audit-bundle.mjs             # 全站体积与单页预算
+node scripts/audit-content.mjs            # 内容体检：概念/教程/案例的厚度与覆盖
 ```
+
+### 内容体检（`audit-content.mjs`）
+
+加内容不难，难的是**加对地方**。这个脚本先量出哪里薄，再决定补哪里：
+
+- **14 个维度**各有多少工具达到 4 分 —— 如果某个维度全站都不到 4 分，
+  要先判断是「真的没人能做」还是「评分偏保守」，不能靠加内容填
+- **概念厚度**：定义/比喻/例子/误解条数的分布，找出偏薄的
+- **教程厚度**：产出字数、自评、易错项、步骤数 —— 这项查出一个真实缺口：
+  9 篇旧教程的 `assessment` 与 `commonMistakes` 一直为空（当时为了兼容
+  旧数据把这两个字段设成了可选），现已回填并改为必填
+- **案例行业覆盖**：哪些行业只有一例
+
+> 报告只打印、不改数据、不阻断。要让它真正拦住问题，靠
+> `lib/__tests__/guide-quality.test.ts` 之类的测试 —— 报告会被忽略，测试不会。
 
 ### 当前基线（gzip，真实首屏，不含 `noModule` polyfills）
 
