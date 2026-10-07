@@ -34,6 +34,21 @@ export interface CapabilityScore {
   basis?: string
 }
 
+/** 工具在大陆网络下的实际情况与替代方案 */
+export interface AccessNote {
+  /**
+   * 一句话说清「打开会怎样」，要区分原因：
+   * 官方未在该地区开放 / 服务条款限制 / 访问不稳定 —— 这三者性质不同，
+   * 读者需要的应对也不同。
+   */
+  reality: string
+  /**
+   * 打不开时能替代的本站已收录工具（Tool.id）。
+   * 必须是 `chinaAccessible: true` 的工具，否则等于把用户从一扇关着的门推到另一扇。
+   */
+  alternatives: string[]
+}
+
 // ---------- 工具 ----------
 
 export interface Tool {
@@ -76,6 +91,19 @@ export interface Tool {
   chineseQuality: Score
   /** 中国大陆是否可直连 */
   chinaAccessible: boolean
+  /**
+   * 不可直连时的说明。
+   *
+   * 为什么 `chinaAccessible: false` 不够：那个布尔值只回答「能不能打开」，
+   * 而读者真正需要的是「打不开该怎么办、能换用什么」。
+   * 少了这一段，工具详情页只能写一句「大陆需借助网络工具」，
+   * 等于没说 —— 点击链接打不开，页面却没给出任何下一步。
+   *
+   * **不要在这里写绕过网络限制的方法。** 本站不提供此类教程：
+   * 一是规避网络管理在境内有法律风险，二是本站承诺「不吹不黑」，
+   * 不做厂商带货。诚实地说清限制、并给出可用的替代方案，才是能提供的价值。
+   */
+  access?: AccessNote
   /** 文本上下文窗口，如 '200K tokens' */
   contextWindow?: string
   multimodal: MultimodalSupport

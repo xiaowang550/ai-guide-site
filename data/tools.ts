@@ -113,6 +113,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'OpenAI 未在中国大陆开放服务，官网与 API 在大陆网络下通常无法完成登录与对话；其服务条款也未把中国大陆列入支持地区，用不受支持的网络访问可能导致账号受限。',
+      alternatives: ['kimi', 'deepseek', 'doubao'],
+    },
     contextWindow: '400K tokens', // TODO: verify 具体上限随模型版本变动
     multimodal: { text: true, image: true, audio: true, video: true, file: true },
     hasApi: true,
@@ -237,6 +250,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Anthropic 未在中国大陆开放服务，网页版与 API 在大陆网络下通常无法登录；服务条款同样未把中国大陆列入支持地区。',
+      alternatives: ['kimi', 'deepseek', 'qwen'],
+    },
     contextWindow: '200K tokens',
     multimodal: { text: true, image: true, audio: true, video: false, file: true },
     hasApi: true,
@@ -361,6 +387,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Google Gemini 的可用性按地区划分，中国大陆不在其支持列表内；此外 Google 账号体系本身在大陆网络下也常无法完成注册与登录。',
+      alternatives: ['qwen', 'doubao', 'yuanbao'],
+    },
     contextWindow: '1M tokens', // TODO: verify 各模型档位不同
     multimodal: { text: true, image: true, audio: true, video: true, file: true },
     hasApi: true,
@@ -1220,6 +1259,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 2,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Cursor 是本地编辑器加云端服务的组合：编辑器能下载安装，但登录与云端功能在大陆网络下通常不可用。其服务条款也未把中国大陆列为支持地区。',
+      alternatives: ['ollama'],
+    },
     multimodal: { text: true, image: true, audio: false, video: false, file: true },
     hasApi: true,
     pricing: {
@@ -1343,6 +1395,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'GitHub Copilot 的功能依赖 GitHub 账号与服务，GitHub 在大陆网络下访问常不稳定；Copilot 的服务条款亦未把中国大陆列入支持地区。个人使用时常见的情况是编辑器插件可装、但登录与补全服务不可用。',
+      alternatives: ['ollama'],
+    },
     multimodal: { text: true, image: true, audio: false, video: false, file: true },
     hasApi: true,
     pricing: {
@@ -1465,6 +1530,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 2,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Midjourney 只提供网页与 Discord 两种使用方式，没有本地客户端或自部署选项，因此完全依赖能否访问其服务器。',
+      alternatives: ['jimeng', 'qwen'],
+    },
     multimodal: { text: true, image: true, audio: false, video: false, file: true },
     hasApi: false,
     pricing: {
@@ -1587,6 +1665,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 2,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Runway 为纯云端视频生成服务，没有本地部署选项，生成能力完全依赖其服务器可达性；服务条款未把中国大陆列入支持地区。',
+      alternatives: ['jimeng'],
+    },
     multimodal: { text: true, image: true, audio: true, video: true, file: true },
     hasApi: true,
     pricing: {
@@ -1709,6 +1800,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Suno 为纯云端音乐生成服务，无本地部署选项；其服务条款未把中国大陆列入支持地区，账号存在被限制的可能。',
+      alternatives: ['tongyi-tingwu'],
+    },
     multimodal: { text: true, image: false, audio: true, video: true, file: true },
     hasApi: true,
     pricing: {
@@ -1831,6 +1935,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Gamma 为云端演示文稿生成服务，依赖其服务器可达性；服务条款未把中国大陆列入支持地区。',
+      alternatives: ['wps-ai'],
+    },
     multimodal: { text: true, image: true, audio: false, video: true, file: true },
     hasApi: true,
     pricing: {
@@ -1953,6 +2070,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'NotebookLM 依托 Google 账号体系，账号注册与登录在中国大陆网络下通常无法完成，因此即使功能本身可用也进不去。',
+      alternatives: ['ima-copilot', 'tongyi-tingwu'],
+    },
     multimodal: { text: true, image: true, audio: true, video: true, file: true },
     hasApi: true,
     pricing: {
@@ -2076,6 +2206,19 @@ export const tools: Tool[] = [
     ],
     chineseQuality: 3,
     chinaAccessible: false,
+    /**
+     * 大陆网络下打不开时的实际情况与替代方案。
+     * 分清「官方未开放」「服务条款限制」「依赖服务器可达性」三类原因，
+     * 因为读者需要的应对完全不同。
+     *
+     * 本站不提供绕过网络限制的方法，也不推荐任何相关厂商 ——
+     * 规避网络管理在境内有法律风险，且与本站「不吹不黑」的承诺冲突。
+     */
+    access: {
+      reality:
+        'Perplexity 为纯云端检索问答服务，依赖其服务器可达性；服务条款未把中国大陆列入支持地区。',
+      alternatives: ['ima-copilot', 'doubao'],
+    },
     multimodal: { text: true, image: true, audio: true, video: false, file: true },
     hasApi: true,
     pricing: {

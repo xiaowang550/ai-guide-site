@@ -87,6 +87,7 @@ export const megaNav: readonly NavItem[] = [
     label: '知识库',
     hint: 'AI 是什么',
     children: [
+      { href: '/learn/access', label: '海外工具打不开', hint: '三类原因与替代方案，不提供绕过方法' },
       { href: '/learn/glossary', label: '术语表', hint: '中英对照速查，搜一个词就能查到' },
     ],
   },

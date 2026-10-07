@@ -70,6 +70,8 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
   const strong = rankedCapabilities(tool.capabilities, 4)
   const weak = weakestCapabilities(tool.capabilities, 2)
   const alternatives = getTools(tool.alternatives)
+/** 不可直连时的替代方案：与「同类工具」不同，必须自己也可直连，否则是死胡同 */
+const accessAlts = getTools(tool.access?.alternatives ?? [])
   const templates = pickTemplates(tool)
 
   const jsonLd = {
@@ -123,7 +125,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
               ) : (
                 <>
                   <WifiOff className="h-3.5 w-3.5" aria-hidden />
-                  中国大陆通常需借助网络工具访问
+                  中国大陆不可直连 · 见下方替代方案
                 </>
               )}
             </span>
@@ -367,6 +369,64 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
 
             {/* 8. 评分依据：把方法、逐条依据与来源摊开，供读者核对 */}
             <EvidenceSection tool={tool} />
+
+            {/* 8.5 打不开怎么办：只在不可直连时出现 */}
+            {!tool.chinaAccessible ? (
+              <section aria-labelledby="access-title" className="border-t pt-8">
+                <h2 id="access-title" className="flex items-center gap-2 text-xl">
+                  <WifiOff className="h-5 w-5 text-amber-600 dark:text-amber-400" aria-hidden />
+                  中国大陆打不开怎么办
+                </h2>
+                {tool.access?.reality ? (
+                  <p className="mt-3 text-sm leading-7 text-foreground/85">{tool.access.reality}</p>
+                ) : null}
+
+                {accessAlts.length > 0 ? (
+                  <div className="mt-5">
+                    <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                      大陆可直连的替代方案
+                    </p>
+                    <ul className="mt-2.5 grid gap-2 sm:grid-cols-2">
+                      {accessAlts.map((a) => (
+                        <li key={a.id}>
+                          <Link
+                            href={`/tools/${a.id}`}
+                            className="flex items-start gap-2.5 rounded-lg border px-3 py-2.5 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                          >
+                            <ToolLogo src={a.logo} alt="" size={28} />
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-baseline justify-between gap-2">
+                                <span className="text-sm font-medium">{a.name}</span>
+                                <span className="text-xs tabular-nums text-muted-foreground">
+                                  综合 {a.overallScore.toFixed(1)}/5
+                                </span>
+                              </span>
+                              <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
+                                {a.tagline}
+                              </span>
+                            </span>
+                            <ArrowRight
+                              className="mt-1 h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                <p className="mt-5 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3.5 text-sm leading-6 text-foreground/85">
+                  <b className="text-foreground">本站不提供绕过网络限制的方法或厂商推荐。</b>
+                  规避网络管理在中国境内有法律风险，本站也承诺不做厂商带货。
+                  我们能提供的是上面这些替代工具，以及
+                  <Link href="/learn/access" className="mx-1 underline underline-offset-4">
+                    为什么打不开以及该怎么处理
+                  </Link>
+                  的完整说明。
+                </p>
+              </section>
+            ) : null}
 
             {/* 9. 数据来源与更新时间 */}
             <section aria-labelledby="source-title" className="border-t pt-8">
