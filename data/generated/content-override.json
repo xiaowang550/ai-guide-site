@@ -1,8 +1,7 @@
 {
   "format": "ai-guide-content-overrides",
   "version": 1,
-  "generatedAt": "1970-01-01T00:00:00.000Z",
+  "generatedAt": "2026-10-07T09:18:06.524Z",
   "sourceEtag": null,
-  "overrides": {},
-  "_note": "占位文件，仓库里提交的这一份必须永远是空的。真正的覆盖由 scripts/sync-content.mjs 在构建时从线上 /api/content/published 拉取后写入。data/index.ts 静态 import 这个文件，所以它必须存在于仓库中 —— 否则全新 checkout 下 tsc 会报「找不到模块」，整条 CI 从类型检查那一步就挂掉。CI 有一条门禁检查提交进仓库的这一份内容是否为空。"
+  "overrides": {}
 }

@@ -94,7 +94,9 @@ npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql
 node --experimental-strip-types scripts/seed-content.mjs --remote
 ```
 
-把仓库里 22 个工具资料灌成各自的**版本 1**。UPSERT，重复执行安全。
+把仓库里**全部工具资料**灌成各自的**版本 1**。UPSERT，重复执行安全。
+输出里的「新建 N 条」就是实际条数 —— 不要在这里写死数字，
+工具增减后文档里的数字就会失真（站内有一条门禁专门拦这个）。
 
 > 为什么仓库的 `data/*.ts` 还要保留？
 > 因为它是全部 data 门禁的输入，也是内容源不可达时的兜底。
@@ -153,7 +155,7 @@ $env:ADMIN_PASSWORD="你的密码"; npm run admin:verify
 | # | 检查项 | 通过意味着 |
 |---|---|---|
 | 1 | Functions 被识别 | Pages 编译了 `functions/` |
-| 3 | 内容已迁移 | D1 里有 22 条已发布内容 |
+| 3 | 内容已迁移 | D1 里有已发布内容，条数与仓库基线一致 |
 | 4 | 管理接口权限 | **未登录访问管理接口返回 401** |
 | 5 | 写操作同源校验 | 不带 Origin 的写请求被 403 拒绝 |
 | 6 | 内容接口 ETag | 内容未变时返回 304 |
