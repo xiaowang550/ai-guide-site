@@ -24,6 +24,8 @@ interface PagesContext {
     SITE_SALT?: string
     ADMIN_PASSWORD?: string
     ADMIN_USERNAME?: string
+    /** 排查用，见 lib/admin/api.ts 里的 ADMIN_DEBUG 说明 */
+    ADMIN_DEBUG?: string
   }
 }
 
@@ -49,6 +51,7 @@ export const onRequest = async (context: PagesContext & { request: Request }): P
     SITE_SALT: env.SITE_SALT ?? '',
     ADMIN_PASSWORD: env.ADMIN_PASSWORD,
     ADMIN_USERNAME: env.ADMIN_USERNAME,
+    ADMIN_DEBUG: env.ADMIN_DEBUG,
   }
 
   const response = await handleApi(request, adminEnv)

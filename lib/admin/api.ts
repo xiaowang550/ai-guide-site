@@ -104,6 +104,11 @@ export interface AdminEnv {
    */
   ADMIN_PASSWORD?: string
   ADMIN_USERNAME?: string
+  /**
+   * 排查用：设为 '1' 时 500 响应会带上原始错误信息。默认关闭。
+   * 排查完必须删掉 —— 它会把 SQL 片段暴露给任何能触发 500 的人。
+   */
+  ADMIN_DEBUG?: string
 }
 
 /** 站点盐缺失时的兜底 */
@@ -388,6 +393,20 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
     // 不把内部错误原文返回给前端：那可能包含 SQL 或环境变量名。
     // 完整信息写进日志，前端只看到「服务端出错」。
     console.error('[admin-api] 未处理的异常', url.pathname, message)
+    // 唯一例外：ADMIN_DEBUG=1 时把错误原文返回。
+    //
+    // 为什么需要它：出问题时我手上只有「服务端处理出错」这一句话，
+    // 而 tail / Dashboard 日志在本机都拿不到（token 没有 Pages 权限、
+    // dash.cloudflare.com 又连不上），于是只能靠猜 ——
+    // 先后猜过「SQL 有问题」「往返次数太多」「绑定没配」，三次全错。
+    // 一句错误原文就能直接结束猜测。
+    //
+    // 默认关闭。开启方式：Pages → Settings → Variables and Secrets →
+    // 加 ADMIN_DEBUG = 1（用 **Secret** 或普通变量都行，它不是敏感值）。
+    // 排查完记得删掉：它会让 500 的响应体带上 SQL 片段。
+    if (env.ADMIN_DEBUG === '1') {
+      return fail(500, `服务端处理出错（ADMIN_DEBUG）：${message.slice(0, 500)}`)
+    }
     return fail(500, '服务端处理出错，请查看服务端日志。')
   }
 }

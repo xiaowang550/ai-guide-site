@@ -60,6 +60,46 @@ describe('D1 绑定缺失', () => {
     }
   })
 
+  it('ADMIN_DEBUG 默认关闭：500 不泄露内部错误原文', async () => {
+    // 默认情况下绝不能把 SQL / 环境变量名返回给前端。
+    // 造一个「绑定形状正确、但每次查询都抛出含敏感信息的错误」的 D1Database。
+    const SECRETY = 'D1_ERROR: near "SELECT token FROM sessions": syntax error'
+    const explodingDb = {
+      prepare: () => ({
+        bind() {
+          return this
+        },
+        first: async () => {
+          throw new Error(SECRETY)
+        },
+        all: async () => {
+          throw new Error(SECRETY)
+        },
+        run: async () => {
+          throw new Error(SECRETY)
+        },
+      }),
+      batch: async () => [],
+      exec: async () => ({ count: 0, duration: 0 }),
+    }
+
+    const plain = await handleApi(new Request('https://example.test/api/content/published'), {
+      DB: explodingDb as never,
+      SITE_SALT: 'test-salt',
+    })
+    const plainBody = await plain!.text()
+    expect(plainBody, '默认不能泄露内部错误').not.toMatch(/SELECT token/)
+    expect(plainBody).toMatch(/服务端处理出错/)
+
+    const verbose = await handleApi(new Request('https://example.test/api/content/published'), {
+      DB: explodingDb as never,
+      SITE_SALT: 'test-salt',
+      ADMIN_DEBUG: '1',
+    })
+    const verboseBody = await verbose!.text()
+    expect(verboseBody, 'ADMIN_DEBUG=1 时应能看到原始错误').toMatch(/SELECT token/)
+  })
+
   it('绑定正常时不会被误报成缺失', () => {
     // 造一个形状正确的 D1Database，确认校验放行
     const fake = {
