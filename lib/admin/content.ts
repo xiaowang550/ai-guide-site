@@ -589,26 +589,45 @@ export async function importBackup(
 }
 
 /**
- * 读取全部已发布内容，供构建时同步使用。
+ * 读取全部已发布内容，供构建时同步与公开快照接口使用。
  *
- * 注意它**只读已发布版本**，草稿永远不会泄漏进公开站 ——
+ * **一条 JOIN 查完，不是 1 + N 次串行查询。**
+ *
+ * 第一版是先查 content_items，再 for 循环逐个 getVersionData ——
+ * 22 个工具就是 23 次 D1 往返。在 Cloudflare Workers 上每次往返都要过网络，
+ * 既慢又占子请求数（免费版有上限），而这个接口恰恰是**每次构建都会被调一次**的。
+ * 改成一条 JOIN 之后是 1 次往返，返回的行自带每条内容。
+ *
+ * 注意只读已发布版本，草稿永远不会泄漏进公开站 ——
  * 这是「预览」与「发布」分离的实际意义。
  */
 export async function readPublishedAll(
   db: Db
 ): Promise<{ itemId: string; kind: string; slug: string; version: number; data: Record<string, unknown> }[]> {
-  const rows = await db.all<{ id: string; kind: string; slug: string; published_version: number }>(
-    `SELECT id, kind, slug, published_version
-       FROM content_items
-      WHERE published_version IS NOT NULL
-      ORDER BY kind, slug`
+  const rows = await db.all<{
+    id: string
+    kind: string
+    slug: string
+    published_version: number
+    data: string
+  }>(
+    `SELECT c.id, c.kind, c.slug, c.published_version, v.data
+       FROM content_items c
+       JOIN content_versions v
+         ON v.item_id = c.id AND v.version = c.published_version
+      WHERE c.published_version IS NOT NULL
+      ORDER BY c.kind, c.slug`
   )
-  const out: Awaited<ReturnType<typeof readPublishedAll>> = []
+
+  const out: { itemId: string; kind: string; slug: string; version: number; data: Record<string, unknown> }[] =
+    []
   for (const r of rows) {
-    const data = await getVersionData(db, toText(r.id), toInt(r.published_version))
-    if (!data) {
-      // 指针指向的版本不存在 = 数据损坏。跳过并继续，
-      // 不能让一条坏数据导致整次构建失败（那会让整个站点发不出去）。
+    let data: Record<string, unknown> | null = null
+    try {
+      data = JSON.parse(toText(r.data)) as Record<string, unknown>
+    } catch {
+      // 某一条的 JSON 坏了：跳过它继续。
+      // 不能让一条坏数据导致整次构建失败 —— 那会让整个站点发不出去。
       continue
     }
     out.push({
