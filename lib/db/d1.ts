@@ -33,7 +33,50 @@ export interface D1Database {
   exec(query: string): Promise<{ count: number; duration: number }>
 }
 
+/**
+ * Pages 的 D1 绑定缺失。
+ *
+ * 单独一个类型而不是复用 Error，是为了让调用方能**精确**识别这一种情况并给出
+ * 可操作的指引 —— 它是部署环节最容易漏的一步，而症状（某一个接口 500、
+ * 日志里只有一句 undefined.prepare）完全指不回原因。
+ *
+ * 注意：Pages 用 Git 集成构建时，`wrangler.toml` 里的 `[[d1_databases]]`
+ * **不会**注入到 Functions 运行时。绑定必须在 Dashboard 的
+ * Settings → Functions → Bindings 里配。这一点曾让我误判过一次，
+ * 详见 docs/admin-backend.md。
+ */
+export class D1BindingMissingError extends Error {
+  constructor() {
+    super('D1 绑定不可用：env.DB 不是 D1Database')
+    this.name = 'D1BindingMissingError'
+  }
+}
+
+/**
+ * 绑定缺失时**必须在这里抛**，不能等到第一次查询。
+ *
+ * 原来这个函数只是返回一个闭包，`database.prepare` 要等 `all()/first()/run()`
+ * 被调用时才执行。调用方写的是
+ *
+ *     try { db = createD1Db(env.DB) } catch { return fail(500, '数据库未配置') }
+ *
+ * 那个 catch 因此永远抓不到任何东西 —— 它保护的那一行根本不会抛。
+ * 后果不是「提示没用」，而是**整个症状被伪装成别的问题**：
+ *
+ *   - `createD1Db(undefined)` 安静成功，拿到一个「一切正常」的假 db
+ *   - 鉴权接口不查库就返回（token 为空时 verifySession 直接 return null），
+ *     所以后台看起来是活的
+ *   - 直到某个真的查库的接口才抛
+ *     `Cannot read properties of undefined (reading 'prepare')`，
+ *     而那句话被我的通用错误处理吞成「服务端处理出错，请查看服务端日志」
+ *
+ * 也就是说「Pages 没配 D1 绑定」在现场表现为「只有一个接口 500，
+ * 而且日志里看不出跟绑定有关」，极难定位。
+ */
 export function createD1Db(database: D1Database): Db {
+  if (!database || typeof database.prepare !== 'function') {
+    throw new D1BindingMissingError()
+  }
   return {
     async all<T = DbRow>(sql: string, params: SqlParam[] = []): Promise<T[]> {
       const stmt = database.prepare(sql)

@@ -23,7 +23,7 @@
  * 后台 UI 只是静态壳，没有数据就什么都渲染不出来。
  */
 import type { Db } from '../db/types.ts'
-import { createD1Db } from '../db/d1.ts'
+import { createD1Db, D1BindingMissingError } from '../db/d1.ts'
 import type { D1Database } from '../db/d1.ts'
 import { toInt, toText } from '../db/types.ts'
 import {
@@ -310,7 +310,19 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
   let db: Db
   try {
     db = createD1Db(env.DB)
-  } catch {
+  } catch (e) {
+    // 绑定缺失单独识别：它是部署环节最容易漏的一步，而症状完全指不回原因
+    // （所有接口都正常，只有一个查库的接口 500，日志里只有 undefined.prepare）。
+    if (e instanceof D1BindingMissingError) {
+      console.error('[admin-api] D1 绑定缺失', url.pathname)
+      return fail(
+        500,
+        'Pages 项目缺少名为 DB 的 D1 绑定。' +
+          '注意：Pages 用 Git 集成构建时，wrangler.toml 里的 [[d1_databases]] 不会注入到' +
+          'Functions 运行时，必须在 Dashboard → Settings → Functions → Bindings 里手动添加' +
+          '（变量名 DB，绑定到 ai-guide-site 这个 D1 数据库）。'
+      )
+    }
     return fail(500, '数据库未配置：Pages 项目的 D1 绑定名为 DB。')
   }
 

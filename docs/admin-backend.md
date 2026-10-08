@@ -103,10 +103,44 @@ node --experimental-strip-types scripts/seed-content.mjs --remote
 > D1 是**增量的编辑层**，不是内容的唯一存放处。
 > 新增工具应该走 git（代码变更，需要评审），而不是后台新建。
 
-### 第 4 步：加 D1 绑定
+### 第 4 步：加 D1 绑定（**必须在 Dashboard 做，wrangler.toml 不算**）
 
 Cloudflare Pages → 你的项目 → **Settings → Bindings** → Add → **D1 database**，
-变量名必须写 **`DB`**（对应 `wrangler.toml` 里的 `binding`）。
+变量名必须写 **`DB`**，绑定到第 1 步创建的库。
+
+> **这一步没有捷径，而且漏掉之后的症状极具误导性。**
+>
+> Pages 用 Git 集成构建时，`wrangler.toml` 里的 `[[d1_databases]]`
+> **不会注入到 Functions 运行时**。仓库里配好了、部署也成功了，
+> 但运行时拿到的 `env.DB` 仍然是 `undefined`。
+>
+> 症状不是「后台打不开」，而是**几乎一切正常，只有一个接口 500**：
+>
+> - 后台页面能打开、能显示登录表单
+> - `/api/admin/*` 全部返回 401，看起来「鉴权在工作」
+> - 只有 `GET /api/content/published` 返回 500「服务端处理出错」
+>
+> 为什么鉴权接口看起来是好的：没带 Cookie 时 `verifySession` 直接
+> `return null`，**一次数据库查询都不会发**。所以「401」并不代表数据库可用。
+>
+> 为什么错误提示指不回原因：最早的 `createD1Db` 只返回一个闭包，
+> 访问 `database.prepare` 要等第一次查询才发生，于是
+> `try { createD1Db(env.DB) } catch { 提示「数据库未配置」 }` 那个 catch
+> 永远抓不到东西。真正的异常是
+> `Cannot read properties of undefined (reading 'prepare')`，
+> 又被通用错误处理吞成「服务端处理出错，请查看服务端日志」。
+>
+> 现在 `createD1Db` 会立刻校验绑定形状，缺失时所有接口都会返回
+> 「缺少名为 DB 的 D1 绑定」并附上 Dashboard 路径 —— 见
+> `lib/__tests__/admin-binding.test.ts`，那个测试是照着这次踩坑写的。
+>
+> 验证绑定真的生效，要看**查询类接口**的结果，不能看鉴权接口：
+>
+> ```bash
+> npm run admin:verify
+> ```
+>
+> 其中第 1 项会真的查一次库。返回 200 才算绑定通了。
 
 ### 第 5 步：加两个 Secret
 
@@ -310,7 +344,27 @@ curl -s https://你的域名/admin/ | grep -c '内容管理后台'
 **Function 没被识别**（先跑 `npm run admin:verify` 确认第 1 项）。
 检查 Pages 项目的 Functions 标签页里有没有 `/api` 路由。
 
-或者 D1 没绑定：接口会返回 500 并带上明确的提示文案（`数据库未绑定：…变量名必须是 DB`）。
+或者 D1 没绑定：接口会返回 500 并带上明确的提示文案
+（`Pages 项目缺少名为 DB 的 D1 绑定…`，含 Dashboard 路径）。见第 4 步。
+
+### 只有公开快照接口 500，其他接口都正常
+
+**这是 D1 绑定缺失的典型症状**，因为没带 Cookie 时鉴权接口一次库都不查，
+所以它们照常返回 401，看着「后台是活的」。
+
+先直接看那个接口的提示文案：
+
+```bash
+curl -s https://你的域名/api/content/published
+```
+
+- 返回「缺少名为 DB 的 D1 绑定」→ 照第 4 步去 Dashboard 配绑定
+- 返回「服务端处理出错」→ 是别的问题，需要看 Functions 日志
+- 返回 200 → 绑定是通的，问题在你没看的那一层
+
+> 不要用 `/api/admin/dashboard` 的 401 来判断数据库是否可用。
+> 它在 token 为空时不会发出任何查询，401 和「库完全正常」无法区分。
+> 要判断绑定，用一个**真的会查库**的公开接口，或者直接跑 `npm run admin:verify`。
 
 ### 首次登录一直失败
 
