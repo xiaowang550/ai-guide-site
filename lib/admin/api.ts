@@ -314,8 +314,17 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
     return fail(500, '数据库未配置：Pages 项目的 D1 绑定名为 DB。')
   }
 
-  await ensureBootstrapAdmin(db, env)
-
+  // 建初始管理员只在「有人尝试登录」时才做。
+  //
+  // 原先放在这里（每个请求都做）有两个问题：
+  //   1. 每次请求都多一次 COUNT 查询 —— 而它对绝大多数请求毫无意义
+  //   2. **它在 try/catch 之外**。数据库还没建表时，这一句
+  //      `SELECT COUNT(*) FROM admins` 会直接抛错，异常一路冒到 Workers 运行时，
+  //      用户看到的是 Cloudflare 的 HTML 错误页而不是我的 JSON 提示 ——
+  //      「表不存在，需要执行 schema.sql」这条最关键的信息完全丢失。
+  //      线上库漏建表时就会是这个症状，很难排查。
+  //
+  // 移到 handleLogin 里之后：既省掉了无谓查询，异常也落进统一的错误处理。
   const cookies = parseCookies(request.headers.get('Cookie'))
   const token = cookies[SESSION_COOKIE] ?? null
   const identity = await verifySession(db, token)
@@ -351,9 +360,21 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
   try {
     return await route.handler(ctx, params)
   } catch (e) {
-    // 不把内部错误原文返回给前端：那可能包含 SQL 或环境变量名。
-    // 完整信息写进审计/日志，前端只看到「服务端出错」。
+    // 「表不存在」是部署过程中最常见的一种状态（绑定了 D1 但还没执行 schema.sql），
+    // 值得单独识别：它需要的是一条明确的操作指令，不是一句「服务端出错」。
+    // 不识别的话，用户只能看到一个 500，而真正的原因藏在日志里。
     const message = e instanceof Error ? e.message : String(e)
+    if (/no such table|SQLITE_ERROR.*table/i.test(message)) {
+      console.error('[admin-api] 数据库缺少表结构', url.pathname, message)
+      return fail(
+        500,
+        '数据库已绑定但还没有建表。请执行：' +
+          'npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql' +
+          '（然后 node --experimental-strip-types scripts/seed-content.mjs --remote 灌入内容）'
+      )
+    }
+    // 不把内部错误原文返回给前端：那可能包含 SQL 或环境变量名。
+    // 完整信息写进日志，前端只看到「服务端出错」。
     console.error('[admin-api] 未处理的异常', url.pathname, message)
     return fail(500, '服务端处理出错，请查看服务端日志。')
   }
@@ -380,6 +401,24 @@ async function handleLogin(ctx: RouteCtx): Promise<Response> {
 
   const meta = requestMeta(ctx.request)
   const salt = saltOf(ctx.env)
+
+  // 建初始管理员放在这里（原先在 handleApi 的入口，每个请求都做一次）：
+  // 只有真的有人来登录时才需要，而且这样它落在统一的错误处理里 ——
+  // 库没建表时的异常会变成明确的操作提示，而不是 Cloudflare 的 HTML 错误页。
+  try {
+    await ensureBootstrapAdmin(ctx.db, ctx.env)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    console.error('[admin-api] 初始化管理员失败', message)
+    if (/no such table|SQLITE_ERROR.*table/i.test(message)) {
+      return fail(
+        500,
+        '数据库已绑定但还没有建表。请先执行：' +
+          'npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql'
+      )
+    }
+    return fail(500, '服务端初始化失败，请查看服务端日志。')
+  }
 
   // 先看是否已被锁：被锁时**不**做任何密码计算，
   // 否则攻击者可以用「响应时间是否随密码错误而变化」判断是否被锁。
