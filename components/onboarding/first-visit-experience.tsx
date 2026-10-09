@@ -141,9 +141,40 @@ export function FirstVisitExperience({
               </article>
             )}
             {tutor.error && (
-              <p role="status" className="intro-status">
-                {tutor.error}
-              </p>
+              <div className="intro-status">
+                <p role="status">{tutor.error}</p>
+                <label className="intro-input-label">
+                  换一个免费模型，从第一句话重新比较
+                  <select
+                    aria-label="更换体验免费模型"
+                    value={tutor.model}
+                    disabled={tutor.busy}
+                    onChange={(e) => {
+                      tutor.setModel(e.target.value)
+                      tutor.setError('')
+                      setResults(['', ''])
+                      setKinds(['', ''])
+                      setStep(0)
+                    }}
+                    style={{
+                      width: '100%',
+                      minHeight: 44,
+                      marginTop: 8,
+                      borderRadius: 10,
+                      padding: 8,
+                      background: 'hsl(var(--card))',
+                    }}
+                  >
+                    {tutor.catalog?.models
+                      .filter((m) => m.available && tutor.catalog?.connected[m.provider])
+                      .map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                  </select>
+                </label>
+              </div>
             )}
           </>
         ) : step === 2 ? (
