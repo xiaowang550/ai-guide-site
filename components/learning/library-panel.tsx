@@ -48,7 +48,7 @@ export function LibraryPanel() {
   function card(item: LearningEntry, removable: boolean) {
     return (
       <article key={item.href} className="relative flex flex-col rounded-2xl border bg-card p-5">
-        <p className="text-[11px] text-primary">{labels[item.kind]}</p>
+        <p className="text-xs text-primary">{labels[item.kind]}</p>
         <Link
           href={item.href}
           className="mt-3 block text-base font-semibold leading-7 hover:text-primary"

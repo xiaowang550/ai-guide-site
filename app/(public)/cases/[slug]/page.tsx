@@ -169,7 +169,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
                       >
                         {t.name}
                       </Link>
-                      <span className="block text-[11px] text-muted-foreground">
+                      <span className="block text-xs text-muted-foreground">
                         综合分 {t.overallScore}/5
                       </span>
                     </span>
@@ -227,7 +227,7 @@ function Section({
         {icon}
         {title}
       </h2>
-      <div className="text-[15px] leading-7 text-foreground/85">{children}</div>
+      <div className="text-base leading-7 text-foreground/85">{children}</div>
     </section>
   )
 }

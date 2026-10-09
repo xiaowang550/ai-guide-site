@@ -123,7 +123,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
                 />
               </Link>
               <div className="flex flex-1 flex-col p-5">
-                <p className="mb-2 text-[11px] text-muted-foreground">
+                <p className="mb-2 text-xs text-muted-foreground">
                   {item.illustrative ? '演示案例 · 虚构材料练习' : '典型场景 · 编辑整理'}
                 </p>
                 <h2 className="text-base font-semibold leading-7">

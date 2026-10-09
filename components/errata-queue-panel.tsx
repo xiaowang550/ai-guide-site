@@ -49,7 +49,7 @@ export function ErrataQueuePanel() {
             <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden />
             你有 {queue.length} 条勘误反馈还没发出去
           </p>
-          <p className="mt-1 text-[13px] leading-6 text-muted-foreground">
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">
             反馈只存在这台设备上，本站没有后端、收不到自动提交。
             请复制或用邮件发给我们，附在{' '}
             <a href="/about#errata" className="link">
@@ -64,8 +64,8 @@ export function ErrataQueuePanel() {
         {queue.map((item) => (
           <li key={item.id} className="flex items-start justify-between gap-3 rounded-lg border p-3">
             <div className="min-w-0">
-              <p className="truncate font-mono text-[11px] text-muted-foreground">{item.pageUrl}</p>
-              <p className="mt-1 text-[13px] leading-5">
+              <p className="truncate font-mono text-xs text-muted-foreground">{item.pageUrl}</p>
+              <p className="mt-1 text-sm leading-5">
                 <span className="text-muted-foreground">{item.field}：</span>
                 {item.problem.slice(0, 48)}
                 {item.problem.length > 48 ? '…' : ''}
@@ -96,7 +96,7 @@ export function ErrataQueuePanel() {
         </Button>
       </div>
       {mailto.tooLong ? (
-        <p className="mt-2 text-[11px] text-amber-700 dark:text-amber-400">
+        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">
           内容较长，邮件客户端可能截断，建议改用「复制全部」再粘贴。
         </p>
       ) : null}

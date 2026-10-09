@@ -69,7 +69,7 @@ export function SaveButton({
         {saved ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
         {saved ? '已加入学习夹' : '加入学习夹'}
       </button>
-      <span role="status" className="max-w-64 text-[11px] text-muted-foreground">
+      <span role="status" className="max-w-64 text-xs text-muted-foreground">
         {message}
       </span>
     </div>

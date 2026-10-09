@@ -178,7 +178,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
             <X className="h-3.5 w-3.5 text-muted-foreground" />
           </button>
         ) : (
-          <kbd aria-hidden className="hidden text-[10px] text-muted-foreground xl:block">
+          <kbd aria-hidden className="hidden text-xs text-muted-foreground xl:block">
             /
           </kbd>
         )}
@@ -221,7 +221,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
             </div>
             {!query.trim() ? (
               <div className="p-4">
-                <p className="text-[11px] text-muted-foreground">试试这些关键词</p>
+                <p className="text-xs text-muted-foreground">试试这些关键词</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SUGGESTIONS.map((word) => (
                     <button
@@ -238,7 +238,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
                     </button>
                   ))}
                 </div>
-                <p className="mb-2 mt-5 text-[11px] text-muted-foreground">直接开始一件事</p>
+                <p className="mb-2 mt-5 text-xs text-muted-foreground">直接开始一件事</p>
                 {SHORTCUTS.filter((item) => pathEnabled(config, item.href)).map((s) => (
                   <Link key={s.href} href={s.href} onClick={close} className="search-shortcut">
                     {s.title}
@@ -266,12 +266,12 @@ export function CommandSearch({ className }: { className?: string } = {}) {
                             {hit.doc.title}
                           </span>
                           {hit.doc.subtitle && (
-                            <span className="mt-1 block truncate text-[11px] text-muted-foreground">
+                            <span className="mt-1 block truncate text-xs text-muted-foreground">
                               {hit.doc.subtitle}
                             </span>
                           )}
                         </span>
-                        <span className="shrink-0 text-[10px] text-muted-foreground">
+                        <span className="shrink-0 text-xs text-muted-foreground">
                           {SEARCH_TYPE_LABELS[hit.doc.type]}
                         </span>
                       </button>
@@ -289,7 +289,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
                 )}
               </div>
             )}
-            <div className="flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3 text-[10px] text-muted-foreground">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3 text-xs text-muted-foreground">
               <span className="hidden sm:inline">↑↓ 选择 · Enter 打开 · Esc 关闭</span>
               <span className="sm:hidden">点击结果查看 · 上下滑动浏览</span>
               {query.trim() && (

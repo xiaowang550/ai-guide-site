@@ -28,8 +28,7 @@ export default function CasesPage() {
             {cases.length} 个案例 · {industries.length} 个行业 · 查看阅读说明
           </summary>
           <p className="mt-3 leading-7">
-            共 {cases.length} 个案例，覆盖 {industries.length} 个行业。案例由典型场景改编整理而成，
-            提示词可原样复现；结果描述是编辑判断而非本站逐案实测，不同团队实际效果会有差异。
+            案例按典型任务整理，提示词可复制。结果说明是编辑判断，未经本站逐案验证；请核对实际效果。
           </p>
         </details>
 

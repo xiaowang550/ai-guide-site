@@ -31,7 +31,7 @@
   padding: 7px 11px;
   border: 1px solid hsl(var(--border));
   border-radius: 7px;
-  font-size: 12px;
+  font-size: 16px;
 }
 .search-suggestion:hover {
   background: hsl(var(--accent));
@@ -42,7 +42,7 @@
   justify-content: space-between;
   padding: 10px 8px;
   border-radius: 7px;
-  font-size: 13px;
+  font-size: 16px;
 }
 .search-shortcut:hover {
   background: hsl(var(--accent));
@@ -55,13 +55,13 @@
 }
 .workflow-visual figcaption strong {
   display: block;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
 }
 .workflow-visual figcaption span {
   display: block;
   margin-top: 5px;
-  font-size: 10px;
+  font-size: 14px;
   color: hsl(var(--muted-foreground));
 }
 .learning-start {
@@ -80,7 +80,7 @@
   margin-bottom: 40px;
 }
 .practice-tab {
-  font-size: 12px;
+  font-size: 16px;
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid hsl(var(--border));
@@ -99,7 +99,7 @@
   border: 1px solid hsl(var(--input));
   border-radius: 10px;
   background: hsl(var(--card));
-  font-size: 13px;
+  font-size: 16px;
   line-height: 1.8;
 }
 .lesson-info-card {
@@ -123,7 +123,7 @@
   padding: 8px 14px;
   border: 1px solid hsl(var(--border));
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 16px;
   color: hsl(var(--primary));
   background: hsl(var(--card));
 }
@@ -143,7 +143,7 @@
 }
 .lesson-details summary {
   cursor: pointer;
-  font-size: 11px;
+  font-size: 14px;
   color: hsl(var(--muted-foreground));
 }
 .prompt-element {

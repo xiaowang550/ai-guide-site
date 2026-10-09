@@ -161,8 +161,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
         ) : (
           <>
             <p className="intro-purpose-line">
-              这里帮你<span>找 AI 工具、学使用方法、完成教学和工作任务</span>
-              。无需本站账号，打开就能学。
+            <span>找 AI 工具、学方法、完成教学和工作任务。</span>无需注册，打开就能学。
             </p>
             <div className="intro-guide" role="status">
               <span>{guide}</span>
@@ -195,7 +194,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
               />
             </label>
             <p id="intro-prompt-help" className="intro-muted">
-              这句话就叫“提示词”。像平时聊天一样，说清楚你想做什么。
+            “提示词”就是你发给 AI 的要求，像平时聊天一样写。
             </p>
             <div className="intro-actions">
               <button
@@ -268,7 +267,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
             )}
             {stage === 'answer' && answer && (
               <p className="intro-muted intro-takeaway">
-                收到回答后可以继续追问、补充要求。实际使用前，记得核对内容。页面上的小芽也能陪你继续练习。
+              可以继续追问、补充要求。使用前先核对；页面上的小芽也能陪你练习。
               </p>
             )}
           </>

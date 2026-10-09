@@ -57,7 +57,7 @@ export function SiteHeader() {
             <Compass className="h-[18px] w-[18px]" aria-hidden />
           </span>
           {/* 窄屏用 sr-only 而不是 hidden：hidden 会让链接在移动端失去可访问名称 */}
-          <span className="hidden text-[15px] xl:inline">{siteConfig.name}</span>
+          <span className="hidden text-base xl:inline">{siteConfig.name}</span>
           <span className="sr-only xl:hidden">{siteConfig.name}</span>
         </Link>
 
@@ -83,7 +83,7 @@ export function SiteHeader() {
           之前右侧簇带 ml-auto，空白全被 margin 吃掉，宽屏上中间留一个大洞，
           看起来像「左边挤成一团、右边空一块」。搜索撑开后这条横线才是完整的。
 
-          搜索保持 flex-1 但设上限，免得在超宽屏上拉成一条 2000px 的输入框。
+          宽屏下搜索随导航剩余空间伸展，保持整条顶栏连贯。
         */}
         {/*
           justify-end 在 lg 以下、lg:justify-start 在 lg 以上。
@@ -104,7 +104,7 @@ export function SiteHeader() {
             16rem 是按「11 个汉字 + 图标 + / 快捷键」实算出来的，
             比它窄占位文字就会被截成「搜索工具、概念、…」。
           */}
-          <CommandSearch className="w-9 shrink-0 sm:w-[7rem] md:w-[16rem] lg:w-[7rem] xl:w-auto xl:max-w-md xl:flex-1" />
+          <CommandSearch className="w-9 shrink-0 sm:w-[7rem] md:w-[16rem] lg:w-[7rem] xl:w-auto xl:flex-1" />
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -179,7 +179,7 @@ export function SiteHeader() {
                 </li>
               ))}
               <li className="mt-1 border-t pt-1 sm:col-span-2">
-                <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   更多
                 </p>
                 <ul className="mt-1 grid gap-0.5 sm:grid-cols-2">
@@ -196,7 +196,7 @@ export function SiteHeader() {
                           )}
                         >
                           {item.label}
-                          <span className="max-w-[55%] text-right text-[11px] text-muted-foreground">
+                          <span className="max-w-[55%] text-right text-xs text-muted-foreground">
                             {item.hint}
                           </span>
                         </Link>

@@ -19,7 +19,7 @@
 }
 .school-illustration figcaption {
   padding: 0.8rem 1.25rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: hsl(var(--muted-foreground));
 }
 .school-path-options {
@@ -50,13 +50,13 @@
 }
 .school-path-option strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 .school-path-option small {
   display: block;
   margin-top: 0.4rem;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: hsl(var(--muted-foreground));
 }
@@ -88,7 +88,7 @@
   border-radius: 50%;
   background: hsl(var(--primary) / 0.12);
   color: hsl(var(--primary));
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 .school-details {
@@ -97,7 +97,7 @@
 }
 .school-details summary {
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 500;
   padding: 0.3rem 0 0.8rem;
 }
@@ -111,7 +111,7 @@
 }
 .school-stage-tabs button {
   padding: 0.6rem 1rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
   border-radius: 0.7rem;
   color: hsl(var(--muted-foreground));
 }
@@ -169,7 +169,7 @@
   margin-bottom: 0.5rem;
   border-radius: 0.9rem;
   background: hsl(var(--muted) / 0.5);
-  font-size: 0.875rem;
+  font-size: 1rem;
   line-height: 1.7;
 }
 .school-lesson-flow li::before {
@@ -186,7 +186,7 @@
   background: hsl(var(--background));
   border: 1px solid hsl(var(--primary) / 0.3);
   color: hsl(var(--primary));
-  font-size: 0.75rem;
+  font-size: 0.875rem;
 }
 @media (max-width: 700px) {
   .school-path-options,

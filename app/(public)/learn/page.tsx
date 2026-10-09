@@ -38,7 +38,7 @@ export default function LearnPage() {
     <>
       <PageHeader
         title="知识库：AI 到底是什么"
-        description="先读懂一个概念，再用一个例子把它带进日常任务。"
+        description="用日常例子读懂 AI，再动手练习。"
         breadcrumbs={[{ label: '首页', href: '/' }, { label: '知识库' }]}
         actions={
           <Link
@@ -56,10 +56,10 @@ export default function LearnPage() {
         <section className="mb-10 border-b border-hairline pb-5 sm:p-6">
           <h2 className="flex items-center gap-2 text-lg">
             <BookOpen className="h-5 w-5 text-primary" aria-hidden />
-            完全零基础？先按这个顺序读 8 篇
+            零基础，从这 8 篇开始
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            按顺序了解基础概念，读完就去做一次提示词练习。
+            先认识概念，再练一次提问。
           </p>
           <ol className="mt-4 grid gap-2 sm:grid-cols-2">
             {starter.map((c, i) =>
@@ -94,7 +94,7 @@ export default function LearnPage() {
             href="/guides/prompt-basics"
             className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            读完了，去做第一篇教程：好提示词的 6 个要素
+            去练习：把提示词说清楚
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         </section>
@@ -106,7 +106,7 @@ export default function LearnPage() {
             <p className="text-xs font-medium text-primary">已经会基本提问？</p>
             <h2 className="mt-2 text-lg">继续学模型与 Agent 工作流</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              六个练习，配合工作与教学图解，把每一步的输入、行动和验收接起来。
+              配合图解，练习选模型、搭流程和核对结果。
             </p>
           </div>
           <span className="section-link">进入进阶学习 →</span>

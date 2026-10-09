@@ -374,7 +374,7 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
       <dd
         className={
           mono
-            ? 'min-w-0 flex-1 whitespace-pre-wrap rounded-md bg-muted/60 p-2 font-mono text-[13px] leading-6'
+            ? 'min-w-0 flex-1 whitespace-pre-wrap rounded-md bg-muted/60 p-2 font-mono text-sm leading-6'
             : 'min-w-0 flex-1 leading-6 text-foreground/85'
         }
       >

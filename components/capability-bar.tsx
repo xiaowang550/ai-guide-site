@@ -25,14 +25,14 @@ export function CapabilityBar({
         <span className={cn('font-medium', compact ? 'text-xs' : 'text-sm')}>{label}</span>
         <span className="flex items-baseline gap-1 text-xs text-muted-foreground">
           {showBasis && capability.basis ? (
-            <span className="hidden max-w-[60%] truncate text-[11px] text-muted-foreground/80 sm:inline">
+            <span className="hidden max-w-[60%] truncate text-xs text-muted-foreground/80 sm:inline">
               {capability.basis}
             </span>
           ) : null}
           <span className="font-semibold tabular-nums" style={{ color: scoreColorVar(score) }}>
             {score}
           </span>
-          <span className="text-[11px]">/5</span>
+          <span className="text-xs">/5</span>
         </span>
       </div>
       <div
@@ -49,7 +49,7 @@ export function CapabilityBar({
         />
       </div>
       {showBasis && capability.basis ? (
-        <p className="mt-1 text-[11px] leading-4 text-muted-foreground sm:hidden">{capability.basis}</p>
+        <p className="mt-1 text-xs leading-4 text-muted-foreground sm:hidden">{capability.basis}</p>
       ) : null}
     </div>
   )

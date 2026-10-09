@@ -34,7 +34,7 @@ const startingPoints = [
   {
     icon: Compass,
     title: '找到合适的工具',
-    description: '从你要完成的事情出发，让选择简单一点。',
+    description: '按任务推荐，快速找到合适的工具。',
     href: '/find',
     label: '帮我选工具',
     tone: 'sage',
@@ -42,7 +42,7 @@ const startingPoints = [
   {
     icon: BookOpen,
     title: '把方法学会',
-    description: '从基础概念到提示词，一步一步用起来。',
+    description: '跟着步骤，学会提问和核对。',
     href: '/learn',
     label: '开始学习',
     tone: 'sand',
@@ -50,7 +50,7 @@ const startingPoints = [
   {
     icon: Workflow,
     title: '看看别人怎么做',
-    description: '拆解完整工作流，把好方法带回自己的任务。',
+    description: '参考案例，做出自己的成品。',
     href: '/cases',
     label: '浏览案例',
     tone: 'lavender',
@@ -92,10 +92,8 @@ export default function HomePage() {
                     <br />
                     <span className="text-primary">你顺手的工具。</span>
                   </h1>
-                  <p className="mt-6 max-w-lg text-[15px] leading-8 text-muted-foreground">
-                    少一点眼花缭乱，多一点真正会用。
-                    <br className="hidden sm:block" />
-                    在这里认识 AI、找到工具，把想法变成能完成的事。
+                  <p className="mt-6 max-w-lg text-base leading-8 text-muted-foreground">
+                    找工具、学方法，把 AI 用到学习和工作里。
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <ModuleSection id="finder">
@@ -129,11 +127,11 @@ export default function HomePage() {
                         </span>
                         从一件小事开始
                       </span>
-                      <span className="text-[11px] text-muted-foreground">YOUR NEXT STEP</span>
+                      <span className="text-xs text-muted-foreground">YOUR NEXT STEP</span>
                     </div>
                     <p className="text-xl font-semibold tracking-tight">今天，你想完成什么？</p>
                     <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                      不用先记住工具的名字，先说说你的任务。
+                      选一个今天要完成的任务。
                     </p>
                     <div className="mt-6 space-y-3">
                       {tasks.map(({ title, icon: Icon, hint, task }) => (
@@ -142,8 +140,8 @@ export default function HomePage() {
                             <Icon className="h-4 w-4" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[13px] font-medium">{title}</span>
-                            <span className="mt-1 block text-[11px] text-muted-foreground">
+                            <span className="block text-sm font-medium">{title}</span>
+                            <span className="mt-1 block text-xs text-muted-foreground">
                               {hint}
                             </span>
                           </span>
@@ -175,7 +173,7 @@ export default function HomePage() {
               {counts.map((m) => (
                 <div key={m.label}>
                   <span className="text-2xl font-semibold tracking-tight">{m.value}</span>
-                  <p className="mt-1.5 text-[11px] text-muted-foreground">{m.label}</p>
+                  <p className="mt-1.5 text-xs text-muted-foreground">{m.label}</p>
                 </div>
               ))}
             </div>
@@ -186,7 +184,7 @@ export default function HomePage() {
           content: (
             <Section
               title="从这里，找到你的起点"
-              description="不用一次了解全部。选择现在最需要的那一件事。"
+              description="选你现在最需要的一件事。"
               eyebrow="开始探索"
             >
               <div className="grid gap-4 md:grid-cols-3">
@@ -217,7 +215,7 @@ export default function HomePage() {
             <ModuleSection id="tools">
               <Section
                 title="值得先认识的工具"
-                description="强在哪里、有什么限制、适合做什么，放在一起看。"
+                description="比较能力、限制和适用任务。"
                 eyebrow="工具发现"
                 action={
                   <Link href="/tools" className="section-link">
@@ -244,7 +242,7 @@ export default function HomePage() {
             <ModuleSection id="guides">
               <Section
                 title="慢慢学，也能走得很远"
-                description="按自己的节奏前进。学习进度保存在你的浏览器里。"
+                description="分阶段学习，进度自动保留在本机。"
                 eyebrow="学习路径"
                 action={
                   <Link href="/paths" className="section-link">
@@ -287,7 +285,7 @@ export default function HomePage() {
                   </p>
                   <h2 className="mt-4 text-2xl">给老师和学生，一套能用起来的材料。</h2>
                   <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-                    课程、教案包和使用规范，按学段与学科整理。让准备更从容，让每一次尝试都有方向。
+                    按学段和学科选课程、教案与使用规范。
                   </p>
                   <div className="mt-5 flex flex-wrap gap-4 text-xs text-muted-foreground">
                     <span>{metrics.programs} 门课程</span>
@@ -308,7 +306,7 @@ export default function HomePage() {
             <ModuleSection id="news">
               <Section
                 title="AI 实时资讯"
-                description="新模型、新功能与工具变化，看看最近有哪些值得关注的消息。"
+                description="新模型、新功能和工具变化，一眼掌握。"
                 eyebrow="关注新消息"
                 action={
                   <Link href="/updates" className="section-link">

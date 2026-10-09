@@ -86,7 +86,7 @@ export function QuickPractice() {
             placeholder="只填写可以分享的材料…"
             className="practice-materials"
           />
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             这里只整理提示词，不发送你的材料。
           </p>
           <Link

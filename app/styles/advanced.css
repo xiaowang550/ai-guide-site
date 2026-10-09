@@ -1,6 +1,6 @@
 .advanced-intro {display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;padding:2rem;border-radius:1.5rem;background:hsl(var(--primary)/.045);margin-bottom:2.5rem;}
 .advanced-spine {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;}
-.advanced-spine li {display:flex;align-items:center;gap:.8rem;background:hsl(var(--card));padding:1rem;border-radius:1rem;font-size:.8rem;}
+.advanced-spine li {display:flex;align-items:center;gap:.8rem;background:hsl(var(--card));padding:1rem;border-radius:1rem;font-size:1rem;}
 .advanced-lessons {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;}
 .advanced-lesson {padding:1.5rem;border-radius:1.2rem;background:hsl(var(--card));border:1px solid hsl(var(--border));transition:border-color .2s;}
 .advanced-lesson:hover {border-color:hsl(var(--primary)/.4);}
@@ -9,23 +9,23 @@
 .lesson-diagram {padding:1.5rem;margin:1.5rem 0 2rem;border-radius:1.3rem;background:hsl(var(--primary)/.045);}
 .lesson-diagram-flow {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin-top:1.4rem;}
 .lesson-diagram-flow li {position:relative;padding:1rem;border-radius:1rem;background:hsl(var(--card));}
-.lesson-diagram-flow strong {display:block;font-size:.85rem;margin-top:.7rem;}
-.lesson-diagram-flow p {font-size:.75rem;line-height:1.8;margin-top:.5rem;color:hsl(var(--muted-foreground));}
+.lesson-diagram-flow strong {display:block;font-size:1rem;margin-top:.7rem;}
+.lesson-diagram-flow p {font-size:0.875rem;line-height:1.8;margin-top:.5rem;color:hsl(var(--muted-foreground));}
 .lesson-diagram-arrow {position:absolute;right:-1rem;top:1.7rem;z-index:1;color:hsl(var(--primary)/.4);}
 .agent-lab {padding:1.75rem;border-radius:1.5rem;background:hsl(var(--primary)/.045);scroll-margin-top:6rem;}
-.agent-lab-controls {display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;margin:1.5rem 0;font-size:.8rem;}
+.agent-lab-controls {display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;margin:1.5rem 0;font-size:1rem;}
 .agent-lab-controls select {background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:.7rem;padding:.5rem .75rem;max-width:100%;}
 .agent-lab-steps {display:flex;gap:.3rem;justify-content:space-between;margin-bottom:1.25rem;}
 .agent-lab-steps li {display:flex;align-items:center;gap:.4rem;min-width:0;}
-.agent-lab-steps button {display:flex;align-items:center;gap:.45rem;padding:.65rem .5rem;font-size:.75rem;border-radius:.7rem;color:hsl(var(--muted-foreground));}
+.agent-lab-steps button {display:flex;align-items:center;gap:.45rem;padding:.65rem .5rem;font-size:0.875rem;border-radius:.7rem;color:hsl(var(--muted-foreground));}
 .agent-lab-steps button span {display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;background:hsl(var(--primary)/.08);color:hsl(var(--primary));flex-shrink:0;}
 .agent-lab-steps button[aria-current=step] {background:hsl(var(--card));color:hsl(var(--primary));}
 .agent-lab-steps button:disabled {opacity:.4;cursor:not-allowed;}
 .agent-lab-panels {display:grid;grid-template-columns:.9fr 1.1fr;gap:1.25rem;}
 .agent-lab-panels>div {min-width:0;padding:1.4rem;background:hsl(var(--card));border-radius:1rem;}
-.agent-lab-table {width:100%;font-size:.7rem;line-height:1.7;}
+.agent-lab-table {width:100%;font-size:0.875rem;line-height:1.7;}
 .agent-lab-table th,.agent-lab-table td {text-align:left;padding:.6rem .3rem;border-bottom:1px solid hsl(var(--border));vertical-align:top;}
-.agent-lab-status {display:flex;align-items:center;gap:.4rem;margin-top:1.2rem;font-size:.75rem;color:hsl(var(--primary));}
+.agent-lab-status {display:flex;align-items:center;gap:.4rem;margin-top:1.2rem;font-size:0.875rem;color:hsl(var(--primary));}
 .agent-lab-status.is-paused {color:#947134;}
 .agent-lab .home-button:disabled {opacity:.5;cursor:not-allowed;}
 @media(max-width:1000px){.advanced-lessons {grid-template-columns:repeat(2,minmax(0,1fr));}.lesson-diagram-flow {grid-template-columns:repeat(2,minmax(0,1fr));}.lesson-diagram-arrow{display:none;}}
@@ -33,7 +33,7 @@
 @media print{.agent-lab-steps,.agent-lab-controls,.agent-lab .home-button{display:none;}.agent-lab-panels{grid-template-columns:1fr 1fr;}.lesson-diagram-flow{grid-template-columns:repeat(4,minmax(0,1fr));}}
 
 .agent-lab .concept-scene-tabs{display:flex;gap:.2rem;padding:.25rem;border-radius:.8rem;background:hsl(var(--muted));}
-.agent-lab .concept-scene-tabs button{display:flex;align-items:center;gap:.4rem;padding:.5rem .65rem;border-radius:.6rem;font-size:.75rem;color:hsl(var(--muted-foreground));}
+.agent-lab .concept-scene-tabs button{display:flex;align-items:center;gap:.4rem;padding:.5rem .65rem;border-radius:.6rem;font-size:0.875rem;color:hsl(var(--muted-foreground));}
 .agent-lab .concept-scene-tabs button[aria-pressed=true]{background:hsl(var(--card));color:hsl(var(--primary));}
 
 @media(max-width:650px){.agent-lab-panels.has-result>div:last-child{order:-1;}}

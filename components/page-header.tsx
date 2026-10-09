@@ -48,10 +48,10 @@ export function PageHeader({
       <div className="container py-10 sm:py-14">
         {breadcrumbs?.length ? <Breadcrumbs items={breadcrumbs} className="mb-4" /> : null}
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-3xl">
-            <h1 className="title-serif text-[1.7rem] sm:text-[2.1rem]">{title}</h1>
+          <div className="min-w-0 flex-1">
+            <h1 className="title-serif text-[1.875rem] sm:text-[2.5rem]">{title}</h1>
             {description ? (
-              <p className="measure-wide mt-4 text-[15px] leading-7 text-muted-foreground">
+              <p className="measure-wide mt-4 text-base leading-7 text-muted-foreground">
                 {description}
               </p>
             ) : null}

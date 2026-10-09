@@ -11,7 +11,7 @@ export function EvidenceCoverageBadge({ tool, className }: { tool: Tool; classNa
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium',
         strong
           ? 'bg-score-4/10 text-score-4'
           : cov.ratio >= 0.7
@@ -47,7 +47,7 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
       </div>
 
       {tool.evidence ? (
-        <p className="measure-wide mt-4 border-l-2 border-primary/40 pl-4 text-[15px] leading-7 text-foreground/85">
+        <p className="measure-wide mt-4 border-l-2 border-primary/40 pl-4 text-base leading-7 text-foreground/85">
           {tool.evidence}
         </p>
       ) : (
@@ -55,7 +55,7 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
       )}
 
       {cov.thinButHigh.length > 0 ? (
-        <p className="mt-4 flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-[13px] leading-6">
+        <p className="mt-4 flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm leading-6">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
           <span>
             以下维度分数较高但依据写得较薄，使用时请自行核对：
@@ -78,7 +78,7 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
                 <dd className="text-sm tabular-nums text-muted-foreground">
                   {cap?.score ?? 0} / 5
                 </dd>
-                <dd className="text-[13px] leading-6 text-muted-foreground">
+                <dd className="text-sm leading-6 text-muted-foreground">
                   {cap?.basis?.trim() ? cap.basis : '（未写依据）'}
                 </dd>
               </div>
@@ -98,7 +98,7 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="link inline-flex items-center gap-1 text-[13px]"
+                  className="link inline-flex items-center gap-1 text-sm"
                 >
                   {s.label}
                   <ExternalLink className="h-3 w-3" aria-hidden />
@@ -109,7 +109,7 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
         </div>
       ) : null}
 
-      <p className="mt-4 text-[11px] text-muted-foreground">
+      <p className="mt-4 text-xs text-muted-foreground">
         本页数据复核于 {formatDate(tool.updatedAt)}。如果你认为某条依据不成立或有更新，
         请在 <Linkish /> 提交勘误 —— 依据被推翻比分数算错更需要纠正。
       </p>

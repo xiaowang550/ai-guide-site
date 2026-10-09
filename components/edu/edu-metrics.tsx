@@ -66,7 +66,7 @@ export function EduMetricsBar({ metrics, className }: { metrics: EduMetrics; cla
             <p className="text-xs text-muted-foreground">
               {item.label}
               {item.sample ? (
-                <span className="ml-1.5 rounded border border-amber-500/50 px-1 py-px text-[10px] text-amber-700 dark:text-amber-300">
+                <span className="ml-1.5 rounded border border-amber-500/50 px-1 py-px text-xs text-amber-700 dark:text-amber-300">
                   示例
                 </span>
               ) : null}
@@ -75,7 +75,7 @@ export function EduMetricsBar({ metrics, className }: { metrics: EduMetrics; cla
               <span className="text-2xl font-bold tabular-nums">{item.value}</span>
               <span className="text-xs text-muted-foreground">{item.unit}</span>
             </p>
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">{item.hint}</p>
+            <p className="mt-1 text-xs leading-4 text-muted-foreground">{item.hint}</p>
           </div>
         ))}
       </div>

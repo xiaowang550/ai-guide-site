@@ -81,7 +81,7 @@ export function FaqList({ items }: { items: EduFaq[] }) {
               <summary className="flex cursor-pointer list-none items-start gap-2.5 text-sm font-medium">
                 <MessageCircleQuestion className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <span className="flex-1 leading-6">{item.question}</span>
-                <span className="shrink-0 text-[11px] text-muted-foreground">
+                <span className="shrink-0 text-xs text-muted-foreground">
                   {AUDIENCE_LABELS[item.audience]} · {item.category}
                 </span>
               </summary>
@@ -93,7 +93,7 @@ export function FaqList({ items }: { items: EduFaq[] }) {
                       <li key={href}>
                         <Link
                           href={href}
-                          className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] hover:border-primary/40 hover:bg-accent/30"
+                          className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs hover:border-primary/40 hover:bg-accent/30"
                         >
                           {href}
                           <ArrowRight className="h-3 w-3" aria-hidden />

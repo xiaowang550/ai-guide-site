@@ -129,7 +129,7 @@ function GuideCard({
           {related.map((t) => (
             <span
               key={t.id}
-              className="inline-flex items-center gap-1 rounded-md border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground"
+              className="inline-flex items-center gap-1 rounded-md border bg-muted/40 px-1.5 py-0.5 text-xs text-muted-foreground"
             >
               <ToolLogo src={t.logo} alt="" size={14} className="border-0 bg-transparent p-0" />
               {t.name}

@@ -22,7 +22,7 @@ export default function GuidesPage() {
     <>
       <PageHeader
         title="教程：AI 怎么用"
-        description="选一件今天要做的事，照着步骤完成，再把方法带回自己的工作。"
+        description="选一个任务，跟着步骤做出结果。"
         breadcrumbs={[{ label: '首页', href: '/' }, { label: '教程' }]}
         meta={<UpdatedBadge date={latestUpdatedAt(tools)} prefix="内容更新于" />}
       />
@@ -33,7 +33,7 @@ export default function GuidesPage() {
               <p className="eyebrow">从零开始 · 进度自动保留</p>
               <h2 className="mt-3 text-xl">零基础一对一</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                对话 → 提示词 → 作图 → 看图 → 语音 → 完成真实任务。小芽只讲你现在这一小步。
+                对话 → 作图 → 看图 → 语音，小芽带你逐步练习。
               </p>
               <span className="mt-4 inline-block text-sm text-primary">开始或继续学习 →</span>
             </Link>
@@ -42,7 +42,7 @@ export default function GuidesPage() {
             <p className="eyebrow">使用前先排除障碍</p>
             <h2 className="mt-3 text-xl">海外工具打不开？</h2>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              认识地区、账号与机构网络等限制，找到适合自己的可用替代工具。
+              排查地区、账号和网络限制，找到可用的替代工具。
             </p>
             <span className="mt-4 inline-block text-sm text-primary">查看使用帮助 →</span>
           </Link>
@@ -56,9 +56,7 @@ export default function GuidesPage() {
             <p className="eyebrow">不用先读完所有教程</p>
             <h2 className="mt-3 text-2xl">先完成一个小任务。</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              准备材料，说清要求，核对结果。
-              <br />
-              这套方法，写周报、做汇报、读资料都能用。
+              准备材料 → 说清要求 → 核对结果。
             </p>
             <a href="#quick-practice" className="home-button mt-5">
               开始一个练习 →
@@ -73,7 +71,7 @@ export default function GuidesPage() {
           <span>
             <strong className="text-sm">想把 AI 用成工作流？</strong>
             <span className="mt-2 block text-xs text-muted-foreground">
-              从模型选型到 Agent 验收，按顺序做六个进阶练习。
+              选模型、搭流程、检查结果。
             </span>
           </span>
           <span className="section-link">查看进阶路线 →</span>

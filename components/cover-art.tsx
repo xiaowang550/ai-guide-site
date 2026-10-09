@@ -74,7 +74,7 @@ export function CoverArt({
       aria-hidden
     >
       {eyebrow ? (
-        <span className="absolute left-4 top-3 text-[11px] font-medium text-white/75">
+        <span className="absolute left-4 top-3 text-xs font-medium text-white/75">
           {eyebrow}
         </span>
       ) : null}

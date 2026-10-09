@@ -375,7 +375,7 @@ function StepOne({
                         <span className="flex items-baseline gap-2">
                           <span className="text-sm font-semibold">{s.label}</span>
                           {variantCount > 0 ? (
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="text-xs text-muted-foreground">
                               {variantCount} 种细分
                             </span>
                           ) : null}
@@ -386,7 +386,7 @@ function StepOne({
                         {hasHardFlag ? (
                           <span
                             className={cn(
-                              'mt-1.5 inline-block rounded px-1.5 py-0.5 text-[11px]',
+                              'mt-1.5 inline-block rounded px-1.5 py-0.5 text-xs',
                               blocked
                                 ? 'bg-danger/10 text-danger'
                                 : 'bg-muted text-muted-foreground'
@@ -498,13 +498,13 @@ function WeightDelta({
 
   return (
     <span className="mt-2.5 block border-t border-hairline pt-2">
-      <span className="block text-[11px] text-muted-foreground">相比通用配置</span>
+      <span className="block text-xs text-muted-foreground">相比通用配置</span>
       <span className="mt-1 flex flex-wrap gap-1">
         {deltas.map((d) => (
           <span
             key={d.key}
             className={cn(
-              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px]',
+              'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs',
               d.delta > 0
                 ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
                 : 'bg-muted text-muted-foreground'
@@ -580,7 +580,7 @@ function StepTwo({
       </div>
 
       {variantCount > 0 ? (
-        <p className="mt-3 text-[11px] text-muted-foreground">
+        <p className="mt-3 text-xs text-muted-foreground">
           提示：还没挑细分任务的话，现在回去选会让结果更准。
         </p>
       ) : null}
@@ -823,7 +823,7 @@ function StepThree({
                   href={`/cases/${c.id}`}
                   className="block h-full rounded-xl border p-3.5 transition-colors hover:border-primary/40 hover:bg-accent/30"
                 >
-                  <span className="block text-[11px] text-muted-foreground">
+                  <span className="block text-xs text-muted-foreground">
                     {c.industry} · {c.role}
                   </span>
                   <span className="mt-1 block text-sm font-medium leading-6">{c.title}</span>
@@ -909,16 +909,16 @@ function RecommendationCard({
       <div className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="flex flex-wrap items-baseline gap-2 text-[15px] font-semibold">
+            <h3 className="flex flex-wrap items-baseline gap-2 text-base font-semibold">
               <Link href={`/tools/${tool.id}`} className="hover:text-primary">
                 {tool.name}
               </Link>
               <span className="text-xs font-normal text-muted-foreground">{tool.vendor}</span>
             </h3>
-            <p className="mt-1 text-[13px] leading-6 text-muted-foreground">{tool.tagline}</p>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">{tool.tagline}</p>
           </div>
           <span className="shrink-0 text-right">
-            <span className="block text-[11px] text-muted-foreground">场景适配分</span>
+            <span className="block text-xs text-muted-foreground">场景适配分</span>
             <ScoreBadge score={explanation.score} showMax label="场景适配分" />
           </span>
         </div>
@@ -945,7 +945,7 @@ function RecommendationCard({
             {topMatched.map((m) => (
               <li
                 key={m.key}
-                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground"
+                className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs text-muted-foreground"
                 title={`权重 ${m.weight}，贡献 ${m.contribution} 分`}
               >
                 <ScoreDot score={m.score} />
@@ -1005,7 +1005,7 @@ function RecommendationCard({
           >
             能力详情
           </Link>
-          <span className="ml-auto text-[11px] text-muted-foreground">
+          <span className="ml-auto text-xs text-muted-foreground">
             适配分 {explanation.score}/5
           </span>
         </div>
@@ -1045,7 +1045,7 @@ function TradeoffBlock({
                 {g.theirs} → {g.winner}
               </span>
               <span className="tabular-nums text-danger">-{g.costPoints}</span>
-              <span className="ml-auto shrink-0 text-[11px]">
+              <span className="ml-auto shrink-0 text-xs">
                 权重 {Math.round(g.weight * 100)}%
               </span>
             </li>
@@ -1054,7 +1054,7 @@ function TradeoffBlock({
       ) : null}
 
       {tradeoff.advantages.length > 0 ? (
-        <p className="mt-2.5 text-[11px] leading-5 text-emerald-700 dark:text-emerald-300">
+        <p className="mt-2.5 text-xs leading-5 text-emerald-700 dark:text-emerald-300">
           它在这些方面更强：
           {tradeoff.advantages
             .slice(0, 3)
@@ -1096,7 +1096,7 @@ export function ScenarioWeightTable({ rules }: { rules: ScenarioRule[] }) {
               <th scope="row" className="px-3 py-2 text-left font-medium">
                 {r.label}
                 {variantsOf(r).length > 0 ? (
-                  <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">
+                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">
                     +{variantsOf(r).length} 细分
                   </span>
                 ) : null}

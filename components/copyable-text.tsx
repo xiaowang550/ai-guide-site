@@ -66,7 +66,7 @@ export function CopyableText({
           复制未成功，可以选中下方文字手动复制。
         </p>
       )}
-      <pre className="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-[13px] leading-6 text-foreground/90">
+      <pre className="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-sm leading-6 text-foreground/90">
         {text}
       </pre>
     </div>

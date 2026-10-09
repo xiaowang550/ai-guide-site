@@ -141,7 +141,7 @@ export function PathProgress({ path }: { path: LearningPath }) {
                       >
                         {item.label}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {TYPE_LABEL[item.type]}
                       </span>
                     </span>

@@ -29,7 +29,7 @@ export function PromptMap() {
                 <Icon className="h-4 w-4 text-primary" />
                 {item.label}
               </span>
-              <span className="text-[10px] text-muted-foreground">0{i + 1}</span>
+              <span className="text-xs text-muted-foreground">0{i + 1}</span>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">{item.question}</p>
             <p className="mt-2 text-sm leading-6">{item.example}</p>

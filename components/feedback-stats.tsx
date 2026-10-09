@@ -80,7 +80,7 @@ export function FeedbackStatsPanel({ pageUrl, className }: { pageUrl?: string; c
           <p className="eyebrow">被质疑最多的内容</p>
           <ul className="mt-2 space-y-1">
             {stats.byPage.slice(0, 3).map((p) => (
-              <li key={p.pageUrl} className="flex items-baseline gap-2 text-[13px]">
+              <li key={p.pageUrl} className="flex items-baseline gap-2 text-sm">
                 <span className="tabular-nums text-muted-foreground">{p.count}×</span>
                 {p.pageUrl.startsWith('/') ? (
                   <Link href={p.pageUrl} className="link">
@@ -117,7 +117,7 @@ export function SubmitIssueButton({
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-accent',
+        'inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors hover:bg-accent',
         className
       )}
       title="在 GitHub 上提交一条反馈（你用自己的账号提交，本站不接触你的凭据）"

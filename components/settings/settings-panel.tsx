@@ -34,7 +34,7 @@ function Row({
     <div className="flex flex-wrap items-start justify-between gap-4 border-t border-hairline py-4">
       <div className="min-w-[16rem] flex-1">
         <p className="text-sm font-medium">{title}</p>
-        <p className="mt-1 text-[13px] leading-6 text-muted-foreground">{description}</p>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
       <div className="shrink-0">{control}</div>
     </div>
@@ -128,7 +128,7 @@ export function SettingsPanel() {
               )
             })}
             {typeof settings.assistantDock !== 'string' ? (
-              <span className="self-center text-[11px] text-muted-foreground">
+              <span className="self-center text-xs text-muted-foreground">
                 （当前为拖拽后的自定义位置）
               </span>
             ) : null}
@@ -145,7 +145,7 @@ export function SettingsPanel() {
               writeSettings({ onboardingDone: false })
               window.location.assign('/?tour=1')
             }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-accent"
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors hover:bg-accent"
           >
             <Compass className="h-3.5 w-3.5" aria-hidden />
             重新播放
@@ -162,7 +162,7 @@ export function SettingsPanel() {
               resetSettings()
               window.location.reload()
             }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-accent"
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors hover:bg-accent"
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden />
             恢复默认

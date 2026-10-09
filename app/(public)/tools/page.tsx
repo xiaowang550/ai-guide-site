@@ -47,7 +47,7 @@ export default function ToolsPage() {
       </div>
 
       <div className="container">
-        <Section title="关于这份数据" description="评分怎么来的、能不能质疑，站内都写清楚了。">
+        <Section title="选工具前，记住这几点">
           <details className="mb-5 rounded-xl border p-4">
             <summary className="cursor-pointer text-sm font-medium">查看 14 个能力维度</summary>
             <p className="mt-3 text-xs leading-7 text-muted-foreground">
@@ -56,31 +56,29 @@ export default function ToolsPage() {
           </details>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
-              · 每个工具都有 <strong className="text-foreground">updatedAt</strong>{' '}
-              与至少一条官方来源链接， 数据超过 90 天未复核的卡片会显示「可能已过时」。
+              · 每个工具附官方来源和复核日期；超过 90 天未复核会提示。
             </li>
             <li>
-              · 分数 ≥4 或 ≤2 的维度都会写明依据（官方基准 / 公开反馈 / 社区共识）。
-              本站不做自建评测，分数是编辑判断而非测量结果， 详见{' '}
+              · 本站不做自建评测；评分属于编辑判断，依据见{' '}
               <Link href="/about" className="text-primary underline underline-offset-4">
                 我们怎么打分
               </Link>
               。
             </li>
             <li>
-              · 本站不与任何厂商有合作或返佣。价格与额度请以
+              · 价格和免费额度以
               <Link href="/compare" className="text-primary underline underline-offset-4">
                 {' '}
                 对比页{' '}
               </Link>
-              里的官方链接为准。
+              中的官方链接为准。
             </li>
             <li>
               · 发现某条数据过时？请在{' '}
               <Link href="/about#errata" className="text-primary underline underline-offset-4">
                 勘误入口
               </Link>{' '}
-              提交， 我们会更新并记入{' '}
+              反馈，也可查看{' '}
               <Link href="/updates" className="text-primary underline underline-offset-4">
                 AI 实时资讯
               </Link>

@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-[13px] font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -15,10 +15,10 @@ const buttonVariants = cva(
         danger: 'bg-danger text-danger-foreground hover:bg-danger/90',
       },
       size: {
-        sm: 'h-7 px-2.5 text-xs',
-        default: 'h-8 px-3',
-        lg: 'h-10 px-5 text-sm',
-        icon: 'h-8 w-8',
+        sm: 'h-9 px-3 text-xs',
+        default: 'h-10 px-4',
+        lg: 'h-12 px-5 text-sm',
+        icon: 'h-10 w-10',
       },
     },
     defaultVariants: { variant: 'default', size: 'default' },

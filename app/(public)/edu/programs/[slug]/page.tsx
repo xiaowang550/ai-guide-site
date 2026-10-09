@@ -148,7 +148,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                   ))}
                 </ul>
                 {tier ? (
-                  <p className="mt-3 rounded-lg bg-muted/60 p-2.5 text-[11px] leading-5 text-muted-foreground">
+                  <p className="mt-3 rounded-lg bg-muted/60 p-2.5 text-xs leading-5 text-muted-foreground">
                     阶梯前置：{tier.requires}
                   </p>
                 ) : null}
@@ -243,7 +243,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                           className="flex items-center justify-between gap-3 border-t border-hairline py-3 text-sm hover:border-primary/40 hover:bg-accent/30"
                         >
                           <span className="min-w-0 truncate">{r.label}</span>
-                          <span className="shrink-0 text-[11px] text-muted-foreground">{r.kind}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">{r.kind}</span>
                         </Link>
                       </li>
                     ) : null
@@ -255,7 +255,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                         className="flex items-center justify-between gap-3 border-t border-hairline py-3 text-sm hover:border-primary/40 hover:bg-accent/30"
                       >
                         <span className="min-w-0 truncate">{t.title}</span>
-                        <span className="shrink-0 text-[11px] text-muted-foreground">教案包</span>
+                        <span className="shrink-0 text-xs text-muted-foreground">教案包</span>
                       </Link>
                     </li>
                   ))}

@@ -6,10 +6,18 @@ const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: { DEFAULT: '1rem', sm: '1.5rem', lg: '2rem' },
-      screens: { '2xl': '1200px' },
+      padding: 'clamp(1rem, 2.1vw, 3rem)',
+      screens: {},
     },
     extend: {
+      fontSize: {
+        xs: ['0.875rem', { lineHeight: '1.55' }],
+        sm: ['1rem', { lineHeight: '1.65' }],
+        base: ['1.125rem', { lineHeight: '1.75' }],
+        lg: ['1.25rem', { lineHeight: '1.5' }],
+        xl: ['1.5rem', { lineHeight: '1.45' }],
+        '2xl': ['1.75rem', { lineHeight: '1.4' }],
+      },
       // 补齐设计 token 用到的透明度档位（如 bg-primary/12、text-foreground/85）
       opacity: {
         12: '0.12',

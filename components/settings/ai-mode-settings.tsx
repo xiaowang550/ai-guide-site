@@ -102,12 +102,12 @@ export function AiModeSettings() {
             <p className="flex items-center gap-1.5 text-sm font-medium">
               AI 模式
               {config.mode === 'live' ? (
-                <span className="rounded bg-highlight/10 px-1.5 py-0.5 text-[11px] font-medium text-highlight">
+                <span className="rounded bg-highlight/10 px-1.5 py-0.5 text-xs font-medium text-highlight">
                   已开启
                 </span>
               ) : null}
             </p>
-            <p className="mt-1 text-[13px] leading-6 text-muted-foreground">
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
               关闭时助手是<strong className="text-foreground">规则模式</strong>：不联网、不花钱、离线可用，
               所有结论来自站内数据并附来源。开启后会把你输入的问题连同「站内最相关的几条事实」一起发给外部模型。
             </p>
@@ -137,7 +137,7 @@ export function AiModeSettings() {
             {/* 安全提示 */}
             <div className="flex gap-3 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3.5">
               <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-              <div className="text-[13px] leading-6 text-foreground/85">
+              <div className="text-sm leading-6 text-foreground/85">
                 <p className="font-medium">请先理解这件事，再决定要不要开</p>
                 <ul className="mt-1.5 space-y-1">
                   <li>本站是纯静态站点，<strong>没有服务端</strong>，所以站内不内置任何 Key。</li>
@@ -187,11 +187,11 @@ export function AiModeSettings() {
                 value={config.endpoint}
                 onChange={(e) => update({ endpoint: e.target.value })}
                 placeholder="https://openrouter.ai/api/v1/chat/completions"
-                className="mt-2.5 h-9 w-full rounded-md border bg-background px-2.5 text-[13px] outline-none focus-visible:border-primary"
+                className="mt-2.5 h-9 w-full rounded-md border bg-background px-2.5 text-sm outline-none focus-visible:border-primary"
                 aria-label="AI 接口地址"
               />
               {needsProxy(config.endpoint) ? (
-                <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-2.5 text-[11px] leading-5">
+                <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-2.5 text-xs leading-5">
                   这个通道<b>不能从浏览器直接调用</b>（CORS 预检会失败，表现为
                   <span className="font-mono">Failed to fetch</span>）。需要先部署代理：
                   <ul className="mt-1 list-disc pl-4">
@@ -218,7 +218,7 @@ export function AiModeSettings() {
                 value={config.model}
                 onChange={(e) => update({ model: e.target.value })}
                 placeholder="stealth/space-bunny-alpha"
-                className="mt-2 h-9 w-full rounded-md border bg-background px-2.5 font-mono text-[13px] outline-none focus-visible:border-primary"
+                className="mt-2 h-9 w-full rounded-md border bg-background px-2.5 font-mono text-sm outline-none focus-visible:border-primary"
                 aria-label="模型名称"
               />
 
@@ -226,7 +226,7 @@ export function AiModeSettings() {
               {looksLikeMissingNamespace(config.model, config.endpoint) ? (
                 <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-2.5">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
-                  <p className="text-[11px] leading-5">
+                  <p className="text-xs leading-5">
                     这个平台的模型 ID 必须写成
                     <strong className="font-mono">厂商/模型</strong>
                     的完整形式，只写模型名会报
@@ -235,7 +235,7 @@ export function AiModeSettings() {
                   <button
                     type="button"
                     onClick={() => update({ model: suggestFullModelId(config.model) })}
-                    className="rounded-full border border-amber-500/50 bg-background px-2.5 py-0.5 font-mono text-[11px] hover:bg-accent"
+                    className="rounded-full border border-amber-500/50 bg-background px-2.5 py-0.5 font-mono text-xs hover:bg-accent"
                   >
                     补全为 {suggestFullModelId(config.model)}
                   </button>
@@ -243,7 +243,7 @@ export function AiModeSettings() {
               ) : null}
 
               <div className="mt-2 flex flex-wrap gap-1.5">
-                <span className="self-center text-[11px] text-muted-foreground">常用：</span>
+                <span className="self-center text-xs text-muted-foreground">常用：</span>
                 {KNOWN_MODELS.map((m) => (
                   <button
                     key={m.id}
@@ -251,7 +251,7 @@ export function AiModeSettings() {
                     title={m.note}
                     onClick={() => update({ model: m.id })}
                     className={cn(
-                      'rounded-full border px-2.5 py-0.5 font-mono text-[11px] transition-colors',
+                      'rounded-full border px-2.5 py-0.5 font-mono text-xs transition-colors',
                       config.model === m.id
                         ? 'border-primary bg-primary/10 font-medium text-primary'
                         : 'text-muted-foreground hover:border-foreground/25'
@@ -277,7 +277,7 @@ export function AiModeSettings() {
                   placeholder="sk-…"
                   autoComplete="off"
                   spellCheck={false}
-                  className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2.5 font-mono text-[13px] outline-none focus-visible:border-primary"
+                  className="h-9 min-w-0 flex-1 rounded-md border bg-background px-2.5 font-mono text-sm outline-none focus-visible:border-primary"
                   aria-label="API Key"
                 />
                 <Button variant="outline" size="sm" onClick={() => setShowKey((v) => !v)}>
@@ -306,7 +306,7 @@ export function AiModeSettings() {
                 className="mt-2 w-full accent-[hsl(var(--primary))]"
                 aria-label="生成温度"
               />
-              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
                 站内问答要的是稳定而不是文采，建议保持 0.3 及以下。
               </p>
             </div>
@@ -316,7 +316,7 @@ export function AiModeSettings() {
                 <Button variant="outline" size="sm" onClick={runTest} disabled={testing}>
                   {testing ? '测试中…' : '测试连接'}
                 </Button>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   发一次最小请求，确认 Key / 模型 / 地址三者都对
                 </span>
               </div>
@@ -324,7 +324,7 @@ export function AiModeSettings() {
               {testResult ? (
                 <div
                   className={cn(
-                    'mt-3 rounded-lg border p-3 text-[12px] leading-5',
+                    'mt-3 rounded-lg border p-3 text-xs leading-5',
                     testResult.ok
                       ? 'border-score-4/40 bg-score-4/5 text-foreground/85'
                       : 'border-danger/40 bg-danger/5 text-foreground/85'
@@ -338,11 +338,11 @@ export function AiModeSettings() {
                     <p className="mt-1 text-muted-foreground">建议：{testResult.hint}</p>
                   ) : null}
                   {testResult.providerMessage ? (
-                    <p className="mt-1.5 break-all text-[11px] text-muted-foreground">
+                    <p className="mt-1.5 break-all text-xs text-muted-foreground">
                       服务商原始返回：{testResult.providerMessage}
                     </p>
                   ) : null}
-                  <p className="mt-1.5 break-all text-[11px] text-muted-foreground">
+                  <p className="mt-1.5 break-all text-xs text-muted-foreground">
                     实际请求：{testResult.endpointUsed} · {testResult.modelUsed}
                   </p>
                 </div>
@@ -351,7 +351,7 @@ export function AiModeSettings() {
 
             {ready ? (
               <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg bg-accent/40 p-3">
-                <p className="text-[12px] leading-5">
+                <p className="text-xs leading-5">
                   配置完成后，还要在助手里打开 AI 模式：点右下角助手 → 面板标题旁的
                   <strong className="text-foreground">「规则模式」</strong> 按钮切换。
                 </p>
@@ -361,7 +361,7 @@ export function AiModeSettings() {
                     writeAiConfig({ mode: 'live' })
                     setConfig(readAiConfig())
                   }}
-                  className="rounded-full bg-primary px-3 py-1 text-[11px] font-medium text-primary-foreground"
+                  className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground"
                 >
                   帮我切到 AI 模式
                 </button>
@@ -370,7 +370,7 @@ export function AiModeSettings() {
 
             <p
               className={cn(
-                'flex items-center gap-1.5 text-[11px]',
+                'flex items-center gap-1.5 text-xs',
                 ready ? 'text-score-4' : 'text-amber-700 dark:text-amber-400'
               )}
             >
@@ -389,7 +389,7 @@ export function AiModeSettings() {
           </div>
         ) : null}
 
-        <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
+        <p className="mt-4 text-xs leading-5 text-muted-foreground">
           无论开关如何，规则模式永远可用 —— 即使没有 Key、离线、或服务商挂了，助手仍能给出基于站内数据的答案。
           AI 模式的回答由外部模型生成，<strong className="text-foreground">可能出错</strong>，
           助手会在每条 AI 回答下方标注依据，请点开来源自行核对。

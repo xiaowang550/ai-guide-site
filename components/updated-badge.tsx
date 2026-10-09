@@ -21,7 +21,7 @@ export function UpdatedBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 text-[11px]',
+        'inline-flex items-center gap-1.5 text-xs',
         stale ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground',
         className
       )}

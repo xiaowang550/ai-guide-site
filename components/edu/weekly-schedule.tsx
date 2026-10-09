@@ -184,7 +184,7 @@ export function WeeklyScheduleBuilder({
                   <button
                     type="button"
                     onClick={() => setSkipDates((prev) => prev.filter((x) => x !== d))}
-                    className="inline-flex h-6 items-center gap-1 rounded-full border px-2 text-[11px] hover:border-primary/40"
+                    className="inline-flex h-6 items-center gap-1 rounded-full border px-2 text-xs hover:border-primary/40"
                     title="点击移除该停课日"
                   >
                     {d} ×
@@ -344,7 +344,7 @@ function DayRows({
               <span className="font-medium">{slot.lessonTitle}</span>
             )}
           </td>
-          <td className="px-3 py-2.5 text-[13px] leading-6 text-foreground/85">{slot.goal ?? '—'}</td>
+          <td className="px-3 py-2.5 text-sm leading-6 text-foreground/85">{slot.goal ?? '—'}</td>
         </tr>
       ))}
     </>
@@ -364,7 +364,7 @@ function Field({
     <div>
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <div className="mt-1.5">{children}</div>
-      {hint ? <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   )
 }

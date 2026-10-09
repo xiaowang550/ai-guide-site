@@ -50,7 +50,7 @@ export default function PathsPage() {
                   aria-hidden
                 />
               </span>
-              <p className="mt-2 text-[11px] text-muted-foreground">
+              <p className="mt-2 text-xs text-muted-foreground">
                 更新于 {formatDate(p.updatedAt)}
               </p>
             </Link>

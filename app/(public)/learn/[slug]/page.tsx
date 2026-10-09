@@ -264,7 +264,7 @@ function Block({
         {icon}
         {title}
       </h2>
-      <div className="text-[15px] leading-7 text-foreground/85">{children}</div>
+      <div className="text-base leading-7 text-foreground/85">{children}</div>
     </section>
   )
 }

@@ -34,11 +34,11 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
           rounded="rounded-none"
           className="opacity-90"
         />
-        <span className="absolute left-3 top-3 text-[11px] font-medium text-muted-foreground">
+        <span className="absolute left-3 top-3 text-xs font-medium text-muted-foreground">
           {tool.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}
         </span>
         {isFree ? (
-          <span className="absolute right-3 top-3 text-[11px] font-medium text-score-3">免费</span>
+          <span className="absolute right-3 top-3 text-xs font-medium text-score-3">免费</span>
         ) : null}
       </div>
 
@@ -47,7 +47,7 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
         <h3 className="flex items-baseline justify-between gap-3">
           <Link
             href={`/tools/${tool.id}`}
-            className="text-[15px] font-semibold leading-snug hover:text-primary"
+            className="text-base font-semibold leading-snug hover:text-primary"
           >
             {tool.name}
             <span className="absolute inset-0" aria-hidden />
@@ -55,12 +55,12 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
           <ScoreBadge score={tool.overallScore} showMax label={tool.name} />
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">{tool.vendor}</p>
-        <p className="mt-2 line-clamp-2 flex-1 text-[13px] leading-6 text-foreground/80">
+        <p className="mt-2 line-clamp-2 flex-1 text-sm leading-6 text-foreground/80">
           {tool.tagline}
         </p>
 
         {/* 最强维度：小色点 + 分数，不用药丸 */}
-        <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+        <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {top.map((c) => (
             <li key={c.key} className="inline-flex items-center gap-1">
               <ScoreDot score={c.score} />
@@ -69,7 +69,7 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
           ))}
         </ul>
 
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-hairline pt-2.5 text-[11px] text-muted-foreground">
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-hairline pt-2.5 text-xs text-muted-foreground">
           <UpdatedBadge date={tool.updatedAt} prefix="更新于" showStale={false} />
           <span className="inline-flex items-center gap-1 text-foreground/70 transition-colors group-hover:text-primary">
             {tool.chinaAccessible ? '大陆可直连' : '大陆需借助网络工具'}

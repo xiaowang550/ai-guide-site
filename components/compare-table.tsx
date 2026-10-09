@@ -38,7 +38,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
               <tr>
                 <th
                   scope="col"
-                  className="sticky left-0 z-10 w-28 bg-card px-3 py-3 text-left text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground"
+                  className="sticky left-0 z-10 w-28 bg-card px-3 py-3 text-left text-xs font-medium uppercase tracking-[0.1em] text-muted-foreground"
                 >
                   对比项
                 </th>
@@ -57,7 +57,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                         >
                           {t.name}
                         </Link>
-                        <span className="block text-[11px] font-normal text-muted-foreground">
+                        <span className="block text-xs font-normal text-muted-foreground">
                           {t.vendor}
                         </span>
                       </span>
@@ -211,7 +211,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                       title={capabilityDescription(meta.key)}
                     >
                       <span className="font-medium">{meta.label}</span>
-                      <span className="block text-[11px] text-muted-foreground">
+                      <span className="block text-xs text-muted-foreground">
                         {capabilityDescription(meta.key)}
                       </span>
                     </th>
@@ -263,7 +263,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                     >
                       {t.name}
                     </Link>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-xs text-muted-foreground">
                       依据覆盖 {cov.covered}/{cov.total}
                     </span>
                   </div>
@@ -279,14 +279,14 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                           key={meta.key}
                           className="grid gap-1 py-2 sm:grid-cols-[6rem_3rem_1fr] sm:gap-3"
                         >
-                          <dt className="text-[13px] text-muted-foreground">
+                          <dt className="text-sm text-muted-foreground">
                             {capabilityLabel(meta.key)}
                             {score === top && tools.length > 1 ? (
-                              <span className="ml-1 text-[10px] text-highlight">最高</span>
+                              <span className="ml-1 text-xs text-highlight">最高</span>
                             ) : null}
                           </dt>
-                          <dd className="text-[13px] tabular-nums">{score}/5</dd>
-                          <dd className="text-[12px] leading-5 text-muted-foreground">
+                          <dd className="text-sm tabular-nums">{score}/5</dd>
+                          <dd className="text-xs leading-5 text-muted-foreground">
                             {cap?.basis?.trim() || '（未写依据）'}
                           </dd>
                         </div>
@@ -331,7 +331,7 @@ function Row<T>({
     <tr className={`border-t border-hairline ${highlight ? 'bg-accent/30' : ''}`}>
       <th
         scope="row"
-        className="sticky left-0 z-10 w-28 bg-card px-3 py-3 align-top text-[13px] font-normal text-muted-foreground"
+        className="sticky left-0 z-10 w-28 bg-card px-3 py-3 align-top text-sm font-normal text-muted-foreground"
       >
         {label}
       </th>

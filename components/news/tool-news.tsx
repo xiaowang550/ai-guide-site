@@ -48,7 +48,7 @@ export function ToolNews({ id, initial }: { id: string; initial: NewsItem[] }) {
         </p>
       )}
       {(error || feed.stale) && (
-        <p className="mt-3 text-[11px] text-muted-foreground">
+        <p className="mt-3 text-xs text-muted-foreground">
           {error || '展示已获取消息，请以官方原文确认当前开放范围。'}
         </p>
       )}

@@ -95,7 +95,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-base text-foreground antialiased;
     font-family: var(--font-sans);
     font-feature-settings: 'tnum' 0;
   }
@@ -234,7 +234,7 @@
   }
 
   .band-kicker {
-    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-band-muted;
+    @apply text-xs font-medium uppercase tracking-[0.12em] text-band-muted;
   }
 
   /* ---------- 媒体卡：大圆角 + 预览区 + hover 微放大 ---------- */
@@ -306,7 +306,7 @@
 
   /* 小标签：全站统一用它替代"药丸 badge"做区块标识 */
   .eyebrow {
-    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground;
+    @apply text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground;
   }
 
   /* 带序号的分隔列表项，用于替代"三张功能卡"这类 AI 模板 */
@@ -352,7 +352,7 @@
   }
 
   .prose-site {
-    @apply text-[15px] leading-7 text-foreground/85;
+    @apply text-base leading-7 text-foreground/85;
   }
 
   .prose-site h2 {
@@ -385,11 +385,11 @@
   }
 
   .prose-site code {
-    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[13px];
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-sm;
   }
 
   .prose-site pre {
-    @apply my-5 overflow-x-auto rounded-lg border bg-muted/60 p-4 text-[13px] leading-6;
+    @apply my-5 overflow-x-auto rounded-lg border bg-muted/60 p-4 text-sm leading-6;
   }
 
   .prose-site pre code {
@@ -415,7 +415,7 @@
 
   /* 提示词里的变量高亮 */
   .prompt-var {
-    @apply rounded bg-primary/12 px-1 py-0.5 font-mono text-[12px] text-primary;
+    @apply rounded bg-primary/12 px-1 py-0.5 font-mono text-xs text-primary;
   }
 }
 
@@ -579,7 +579,7 @@
   page-break-inside: avoid;
 }
 
-.module-preview-controls{position:fixed;left:12px;bottom:12px;z-index:90;max-width:calc(100vw - 24px);padding:10px 14px;border:1px solid hsl(var(--border));border-radius:14px;background:hsl(var(--card));box-shadow:0 6px 24px #0001;font-size:12px;display:flex;gap:14px;align-items:center}
+.module-preview-controls{position:fixed;left:12px;bottom:12px;z-index:90;max-width:calc(100vw - 24px);padding:10px 14px;border:1px solid hsl(var(--border));border-radius:14px;background:hsl(var(--card));box-shadow:0 6px 24px #0001;font-size:16px;display:flex;gap:14px;align-items:center}
 .module-preview-controls button{color:hsl(var(--primary));padding:5px}.module-preview-controls details[open]{max-height:55vh;overflow:auto}.module-preview-controls details button{display:block}
 @media print{.module-preview-controls{display:none}}
 
@@ -593,7 +593,7 @@
 .site-header { padding-top:var(--safe-top); }
 .mobile-nav-panel { max-height:calc(100dvh - 72px - var(--safe-top)); overflow-y:auto; overscroll-behavior:contain; padding-bottom:var(--safe-bottom); }
 .assistant-launcher[data-dragging] button { cursor:grabbing !important; box-shadow:0 10px 28px #172b2233; }
-.assistant-discovery { position:fixed; width:min(260px,calc(100vw - 32px)); padding:14px 16px; border:1px solid hsl(var(--primary)/.2); border-radius:15px; background:hsl(var(--card)); box-shadow:0 8px 30px #173a2218; font-size:12px; }.assistant-discovery strong { display:block; color:hsl(var(--primary)); padding-right:20px; }.assistant-discovery p { margin-top:6px; color:hsl(var(--muted-foreground)); font-size:11px; }.assistant-discovery > button { position:absolute; right:4px; top:2px; width:32px; height:32px; font-size:18px; color:hsl(var(--muted-foreground)); }
+.assistant-discovery { position:fixed; width:min(260px,calc(100vw - 32px)); padding:14px 16px; border:1px solid hsl(var(--primary)/.2); border-radius:15px; background:hsl(var(--card)); box-shadow:0 8px 30px #173a2218; font-size:16px; }.assistant-discovery strong { display:block; color:hsl(var(--primary)); padding-right:20px; }.assistant-discovery p { margin-top:6px; color:hsl(var(--muted-foreground)); font-size:14px; }.assistant-discovery > button { position:absolute; right:4px; top:2px; width:32px; height:32px; font-size:18px; color:hsl(var(--muted-foreground)); }
 @media (pointer:coarse) {
   button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
   button,a { touch-action:manipulation; }

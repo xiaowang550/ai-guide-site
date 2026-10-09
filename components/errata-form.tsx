@@ -216,7 +216,7 @@ export function ErrataForm({ from }: { from?: string }) {
         </div>
 
         {queue.length === 0 ? (
-          <p className="mt-3 text-[13px] leading-6 text-muted-foreground">
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
             还没有内容。填好后加入这里，可以攒几条一起发。
             <span className="mt-1 block">列表只存在你这台设备的浏览器里，不会上传。</span>
           </p>
@@ -227,10 +227,10 @@ export function ErrataForm({ from }: { from?: string }) {
                 <li key={item.id} className="rounded-lg border p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate font-mono text-[11px] text-muted-foreground">
+                      <p className="truncate font-mono text-xs text-muted-foreground">
                         {item.pageUrl}
                       </p>
-                      <p className="mt-1 text-[13px] leading-5">
+                      <p className="mt-1 text-sm leading-5">
                         <span className="text-muted-foreground">{item.field}：</span>
                         {item.problem.slice(0, 40)}
                         {item.problem.length > 40 ? '…' : ''}
@@ -278,7 +278,7 @@ export function ErrataForm({ from }: { from?: string }) {
             </div>
 
             {mailto.tooLong ? (
-              <p className="mt-2 flex gap-1.5 text-[11px] text-amber-700 dark:text-amber-400">
+              <p className="mt-2 flex gap-1.5 text-xs text-amber-700 dark:text-amber-400">
                 <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
                 内容较长，邮件客户端可能截断，建议改用「复制全部」粘贴到邮件里。
               </p>
@@ -286,7 +286,7 @@ export function ErrataForm({ from }: { from?: string }) {
           </>
         )}
 
-        <p className="mt-4 border-t border-hairline pt-3 text-[11px] leading-5 text-muted-foreground">
+        <p className="mt-4 border-t border-hairline pt-3 text-xs leading-5 text-muted-foreground">
           本站没有后端，所以没有「提交」按钮 —— 数据必须由你亲手带走。
           流程：<span className="text-foreground">加入列表 → 复制或发邮件 → 我们核对 → 更新页面并在
           <Link href="/updates" className="link mx-1">

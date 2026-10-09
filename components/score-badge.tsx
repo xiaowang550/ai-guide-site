@@ -31,7 +31,7 @@ export function ScoreBadge({
         style={{ color: scoreColorVar(rounded) }}
       >
         {display}
-        {showMax && <span className="ml-px text-[11px] font-normal opacity-60">/5</span>}
+        {showMax && <span className="ml-px text-xs font-normal opacity-60">/5</span>}
       </span>
     )
   }
@@ -48,7 +48,7 @@ export function ScoreBadge({
           style={{ width: `${(rounded / 5) * 100}%`, backgroundColor: scoreColorVar(rounded) }}
         />
       </span>
-      <span className="text-[13px] font-semibold tabular-nums" style={{ color: scoreColorVar(rounded) }}>
+      <span className="text-sm font-semibold tabular-nums" style={{ color: scoreColorVar(rounded) }}>
         {display}
       </span>
     </span>

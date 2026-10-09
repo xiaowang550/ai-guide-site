@@ -35,11 +35,11 @@ export function Ladder({
               >
                 {tier.order}
               </span>
-              <span className="text-[11px] text-muted-foreground">{tier.id}</span>
+              <span className="text-xs text-muted-foreground">{tier.id}</span>
             </div>
             <h3 className="mt-3 text-base font-semibold leading-snug">{tier.name}</h3>
             <p className="mt-2 flex-1 text-sm leading-6 text-foreground/80">{tier.goal}</p>
-            <p className="mt-3 rounded-lg bg-muted/60 p-2.5 text-[11px] leading-5 text-muted-foreground">
+            <p className="mt-3 rounded-lg bg-muted/60 p-2.5 text-xs leading-5 text-muted-foreground">
               前置：{tier.requires}
             </p>
             <ul className="mt-3 space-y-1.5">

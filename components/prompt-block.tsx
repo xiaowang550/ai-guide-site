@@ -114,7 +114,7 @@ export function PromptBlock({
         </div>
       ) : null}
 
-      <pre className="overflow-x-auto p-4 text-[13px] leading-6">
+      <pre className="overflow-x-auto p-4 text-sm leading-6">
         <code className="whitespace-pre-wrap font-mono">{renderWithHighlight(filled)}</code>
       </pre>
 
@@ -124,7 +124,7 @@ export function PromptBlock({
         </p>
       )}
       {missing > 0 ? (
-        <p className="border-t px-4 py-2 text-[11px] text-muted-foreground">
+        <p className="border-t px-4 py-2 text-xs text-muted-foreground">
           还有 {missing} 个变量未填写，未填写的部分会原样保留 {'{{变量名}}'}
         </p>
       ) : null}
