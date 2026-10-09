@@ -4,129 +4,79 @@
 
 @layer base {
   :root {
-    /* 主色：沉稳的靛蓝（降饱和、降明度），用于链接与强调，避免"科技蓝"观感 */
-    --primary: 243 48% 42%;
-    --primary-foreground: 0 0% 100%;
-
-    /* 强调色：暖赭石，只用于「推荐 / 最强 / 必须」这类必须被看见的标记 */
-    --highlight: 20 72% 38%;
-    --highlight-foreground: 0 0% 100%;
-
-    /* 纸张底色：带一点暖调，长文阅读比纯白舒服 */
-    --background: 40 20% 99%;
-    --foreground: 222 22% 13%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 22% 13%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 22% 13%;
-
-    --secondary: 40 14% 96%;
-    --secondary-foreground: 222 20% 22%;
-
-    --muted: 40 12% 96%;
-    /* 次要文字提高对比：灰得读不清是 AI 站的通病 */
-    --muted-foreground: 222 9% 38%;
-
-    --accent: 243 40% 95%;
-    --accent-foreground: 243 45% 34%;
-
-    --danger: 355 62% 42%;
+    --primary: 157 25% 32%;
+    --primary-foreground: 40 30% 99%;
+    --highlight: 28 42% 38%;
+    --highlight-foreground: 40 30% 99%;
+    --background: 40 27% 97%;
+    --foreground: 155 14% 20%;
+    --card: 40 30% 99%;
+    --card-foreground: 155 14% 20%;
+    --popover: 40 30% 99%;
+    --popover-foreground: 155 14% 20%;
+    --secondary: 42 18% 93%;
+    --secondary-foreground: 155 14% 26%;
+    --muted: 42 18% 93%;
+    --muted-foreground: 155 6% 43%;
+    --accent: 148 21% 92%;
+    --accent-foreground: 157 25% 28%;
+    --danger: 355 48% 44%;
     --danger-foreground: 0 0% 100%;
-
-    --border: 222 14% 90%;
-    /* 发丝线：内容分隔用的更浅一层，替代"卡片描边" */
-    --hairline: 222 14% 92%;
-    --input: 222 14% 86%;
-    --ring: 243 48% 42%;
-
-    /* 0-5 分色阶：整体降饱和，偏印刷感而非仪表盘感 */
-    --score-0: 222 8% 58%;
-    --score-1: 355 55% 48%;
-    --score-2: 27 72% 44%;
-    --score-3: 141 40% 32%;
-    --score-4: 168 52% 26%;
-    --score-5: 202 62% 31%;
-
-    /* 圆角：卡片 10px、控件 6px，不再全站统一 12px */
-    --radius: 0.625rem;
-
-    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
-      'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
-      monospace;
-
-    /* 标题用衬线、正文用无衬线：中文长文站点的经典编辑排版搭配。
-       刻意不用 next/font 拉网络字体 —— 构建期联网会引入不确定性（曾因构建相关问题反复返工），
-       这里按平台优先级用系统衬线；装了思源宋体 / Noto Serif 的机器会自动用到更好的字形。 */
-    --font-serif: 'Source Han Serif SC', 'Noto Serif CJK SC', 'Noto Serif SC', 'Songti SC', 'STSong',
-      'Source Han Serif CN', SimSun, 'AR PL UMing CN', Georgia, 'Times New Roman', serif;
-
-    /* ---------- 反相区块（inverted band）----------
-       借鉴 Cobalt Hour / NOX Grid 那种「长页里插一块深色」的做法。
-       关键技巧：在 .band 内部重新定义语义变量，
-       区块内部的卡片、次要文字、边框会自动变成深色版，不需要逐个改 class。 */
-    --band: 220 22% 5%;
-    --band-fg: 40 14% 96%;
-    --band-muted: 220 8% 66%;
-    --band-elevated: 220 16% 10%;
-    --band-line: 220 14% 20%;
-    --band-accent: 244 40% 20%;
+    --border: 40 15% 87%;
+    --hairline: 40 15% 90%;
+    --input: 40 15% 83%;
+    --ring: 157 25% 32%;
+    --score-0: 155 5% 52%;
+    --score-1: 355 45% 46%;
+    --score-2: 28 52% 42%;
+    --score-3: 140 28% 36%;
+    --score-4: 163 33% 30%;
+    --score-5: 200 36% 35%;
+    --radius: 1rem;
+    --font-sans: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --font-serif: var(--font-sans);
+    --band: 148 21% 92%;
+    --band-fg: 155 14% 20%;
+    --band-muted: 155 6% 40%;
+    --band-elevated: 148 22% 96%;
+    --band-line: 148 15% 82%;
+    --band-accent: 148 24% 88%;
   }
-
   .dark {
-    /* 暗色页面里，反相区块要比页面底色亮一档才看得出来，
-       但不能亮到让区块里的链接掉到 4.5:1 以下 —— 这里的 16% 是
-       在「有层次」和「文字够清楚」之间取到的平衡点。
-       区块内链接单独提亮（见 .band 的 --primary 覆盖），不靠调暗整块背景。 */
-    --band: 220 15% 16%;
-    --band-fg: 40 16% 96%;
-    --band-muted: 220 10% 72%;
-    --band-elevated: 220 14% 17%;
-    --band-line: 220 12% 24%;
-    --band-accent: 244 34% 24%;
-    --primary: 244 72% 70%;
-    --primary-foreground: 222 45% 8%;
-
-    --highlight: 32 84% 60%;
-    --highlight-foreground: 222 45% 8%;
-
-    /* 暗色：近黑画布 + 三级表面分层（借鉴 motionsites 的 #121212/#202020/#303030 结构） */
-    --background: 222 24% 5%;
-    --foreground: 40 10% 94%;
-
-    --card: 222 20% 7.5%;
-    --card-foreground: 40 10% 94%;
-
-    --popover: 222 20% 8%;
-    --popover-foreground: 40 10% 94%;
-
-    /* 抬升表面：用于卡片内的嵌套块 */
-    --secondary: 222 16% 12%;
-    --secondary-foreground: 40 8% 92%;
-
-    --muted: 222 16% 11%;
-    --muted-foreground: 220 9% 68%;
-
-    --accent: 244 28% 18%;
-    --accent-foreground: 244 70% 84%;
-
-    --danger: 355 70% 64%;
-    --danger-foreground: 222 45% 8%;
-
-    /* 发丝线用「亮色的低明度版本」等效模拟半透明白：叠在近黑上与 rgba(255,255,255,.1) 观感一致 */
-    --border: 220 12% 22%;
-    --hairline: 220 12% 17%;
-    --input: 220 12% 26%;
-    --ring: 244 72% 70%;
-
-    --score-0: 220 8% 56%;
-    --score-1: 355 72% 64%;
-    --score-2: 30 82% 60%;
-    --score-3: 141 42% 48%;
-    --score-4: 168 48% 52%;
-    --score-5: 202 74% 64%;
+    --primary: 153 28% 70%;
+    --primary-foreground: 158 18% 13%;
+    --highlight: 30 48% 70%;
+    --highlight-foreground: 158 18% 13%;
+    --background: 158 12% 11%;
+    --foreground: 40 19% 92%;
+    --card: 158 11% 14%;
+    --card-foreground: 40 19% 92%;
+    --popover: 158 11% 15%;
+    --popover-foreground: 40 19% 92%;
+    --secondary: 158 9% 19%;
+    --secondary-foreground: 40 19% 92%;
+    --muted: 158 9% 18%;
+    --muted-foreground: 145 9% 66%;
+    --accent: 153 15% 22%;
+    --accent-foreground: 153 28% 76%;
+    --danger: 355 52% 68%;
+    --border: 158 8% 25%;
+    --hairline: 158 8% 22%;
+    --input: 158 8% 30%;
+    --ring: 153 28% 70%;
+    --score-0: 145 6% 60%;
+    --score-1: 355 52% 68%;
+    --score-2: 30 55% 66%;
+    --score-3: 141 31% 64%;
+    --score-4: 163 35% 65%;
+    --score-5: 200 43% 68%;
+    --band: 153 14% 18%;
+    --band-fg: 40 19% 92%;
+    --band-muted: 145 9% 66%;
+    --band-elevated: 153 13% 21%;
+    --band-line: 153 10% 30%;
+    --band-accent: 153 17% 25%;
   }
 
   * {
@@ -154,7 +104,7 @@
   /* 反相区块内的焦点环与边框反色，否则在深底上看不见 */
   .band :focus-visible {
     @apply ring-offset-transparent;
-    --ring: 244 72% 72%;
+    --ring: 153 28% 70%;
   }
 
   /* 卡片内部获得焦点（比如点进详情）时也要有反馈 */
@@ -270,8 +220,8 @@
      链接对底色的对比度会掉到 4.5:1 以下（Lighthouse 会判为不达标）。
      这里单独提亮到约 6:1，既保住区块层次感，也不牺牲可读性。 */
   .dark .band {
-    --primary: 244 74% 80%;
-    --primary-foreground: 224 50% 10%;
+    --primary: 153 28% 76%;
+    --primary-foreground: 158 18% 13%;
   }
 
   /* 反相区块内的卡片：抬升表面 + 发丝线 */
@@ -624,3 +574,13 @@
   break-inside: avoid;
   page-break-inside: avoid;
 }
+
+.module-preview-controls{position:fixed;left:12px;bottom:12px;z-index:90;max-width:calc(100vw - 24px);padding:10px 14px;border:1px solid hsl(var(--border));border-radius:14px;background:hsl(var(--card));box-shadow:0 6px 24px #0001;font-size:12px;display:flex;gap:14px;align-items:center}
+.module-preview-controls button{color:hsl(var(--primary));padding:5px}.module-preview-controls details[open]{max-height:55vh;overflow:auto}.module-preview-controls details button{display:block}
+@media print{.module-preview-controls{display:none}}
+
+.tool-filter-dialog{position:fixed;inset:auto 0 0;margin:0;width:100%;max-width:none;max-height:86dvh;padding:0;border:1px solid hsl(var(--border));border-radius:24px 24px 0 0;background:hsl(var(--card));color:hsl(var(--foreground));box-shadow:0 -12px 50px #0002}
+.tool-filter-dialog[open]{display:flex;flex-direction:column}.tool-filter-dialog::backdrop{background:rgb(20 35 28 / .32)}.tool-filter-body{min-height:0;overflow-y:auto;overscroll-behavior:contain}.tool-filter-dialog button,.tool-filter-dialog input,.tool-filter-dialog select{min-height:40px}
+@media(prefers-reduced-motion:no-preference){.tool-filter-dialog[open]{animation:filter-slide .16s ease-out}@keyframes filter-slide{from{transform:translateY(20px);opacity:.8}to{transform:translateY(0);opacity:1}}}
+
+.content-toolbar button{min-height:36px}

@@ -56,7 +56,7 @@ async function parse<T>(res: Response): Promise<T> {
 }
 
 export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(path, { credentials: 'same-origin', signal })
+  const res = await fetch(path, { credentials: 'same-origin', cache: 'no-store', signal })
   return parse<T>(res)
 }
 

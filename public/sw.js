@@ -10,7 +10,7 @@
  * activate 时会自动清掉旧版本缓存，避免用户卡在旧资源上。
  */
 
-const CACHE_VERSION = 'v1'
+const CACHE_VERSION = 'v5'
 const STATIC_CACHE = `ai-map-static-${CACHE_VERSION}`
 const PAGES_CACHE = `ai-map-pages-${CACHE_VERSION}`
 
@@ -54,6 +54,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
   // 只处理同源请求；跨域（例如 GitHub API）直接走网络
   if (url.origin !== self.location.origin) return
+
+  // API、后台和 RSC 响应不能进入离线缓存，尤其不能缓存登录态或管理数据。
+  if (url.pathname.startsWith('/api/') || url.pathname === '/admin' ||
+      url.pathname.startsWith('/admin/') || url.searchParams.has('admin-preview') || request.cache === 'no-store' ||
+      request.headers.get('RSC') === '1' || url.searchParams.has('_rsc')) return
 
   // 1) 带 hash 的静态资源：内容不变，缓存优先
   if (url.pathname.startsWith('/_next/static/')) {

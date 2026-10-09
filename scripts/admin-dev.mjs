@@ -1,3 +1,6 @@
+import { checkToolSources } from '../lib/news/tool-watch.ts'
+import { refreshNews } from '../lib/news/service.ts'
+import { NEWS_REFRESH_MS } from '../lib/news/types.ts'
 /**
  * 本地后台开发服务器。
  *
@@ -26,6 +29,10 @@ import { existsSync, readFileSync } from 'node:fs'
 import { extname, join, normalize, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { createCodexBridge } from './codex-bridge.mjs'
+import { readSiteConfig } from '../lib/admin/modules.ts'
+import { moduleForPath, pathEnabled } from '../lib/site-modules.ts'
+import { verifySession, parseCookies, SESSION_COOKIE } from '../lib/admin/auth.ts'
 import { handleApi } from '../lib/admin/api.ts'
 import { createSqliteDb } from '../lib/db/sqlite.ts'
 import { createD1Shim } from '../lib/db/d1-shim.ts'
@@ -80,9 +87,8 @@ async function writeWebResponse(res, response) {
     if (k === 'set-cookie') continue
     headers[k] = v
   }
-  const setCookies = typeof response.headers.getSetCookie === 'function'
-    ? response.headers.getSetCookie()
-    : []
+  const setCookies =
+    typeof response.headers.getSetCookie === 'function' ? response.headers.getSetCookie() : []
   if (setCookies.length > 0) headers['set-cookie'] = setCookies
 
   res.writeHead(response.status, headers)
@@ -122,11 +128,23 @@ async function serveStatic(req, res, pathname) {
     res.end(buf)
   } catch {
     res.writeHead(404, { 'content-type': 'text/html; charset=utf-8' })
-    res.end('<meta charset="utf-8"><h1>404</h1><p>本地开发服务器只提供 out/ 里的产物。先跑 <code>npm run build</code>。</p>')
+    res.end(
+      '<meta charset="utf-8"><h1>404</h1><p>本地开发服务器只提供 out/ 里的产物。先跑 <code>npm run build</code>。</p>',
+    )
   }
 }
 
 const db = await openDb()
+const codexBridge = await createCodexBridge(projectRoot, db)
+const refreshLocalNews = () =>
+  refreshNews(db)
+    .then(async (result) => ({ ...result, tools: await checkToolSources(db) }))
+    .then((result) => {
+      if (!result.skipped) console.log('[news] 自动同步', JSON.stringify(result))
+    })
+    .catch((error) => console.error('[news] 自动同步失败', error.message))
+void refreshLocalNews()
+setInterval(() => void refreshLocalNews(), NEWS_REFRESH_MS).unref()
 
 if (!existsSync(outDir)) {
   console.warn('[admin-dev] 提示：out/ 不存在，静态页面会 404。先运行 npm run build。')
@@ -156,6 +174,7 @@ const server = createServer(async (req, res) => {
 
       const response = await handleApi(webReq, {
         DB: createD1Shim(db),
+        CODEX_BRIDGE: codexBridge,
         SITE_SALT: process.env.SITE_SALT || 'local-dev-salt',
         ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
         ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
@@ -170,6 +189,21 @@ const server = createServer(async (req, res) => {
       return
     }
 
+    if (moduleForPath(url.pathname)) {
+      const config = await readSiteConfig(db)
+      const token = parseCookies(req.headers.cookie ?? null)[SESSION_COOKIE]
+      const ownerPreview =
+        url.searchParams.get('admin-preview') === '1' &&
+        (await verifySession(db, token))?.role === 'owner'
+      if (!pathEnabled(config, url.pathname) && !ownerPreview) {
+        res.writeHead(404, {
+          'content-type': 'text/html; charset=utf-8',
+          'cache-control': 'no-store',
+        })
+        res.end('<meta charset="utf-8"><h1>这个栏目暂时关闭</h1><a href="/">返回首页</a>')
+        return
+      }
+    }
     await serveStatic(req, res, url.pathname)
   } catch (e) {
     console.error('[admin-dev] 出错：', e)
@@ -184,6 +218,6 @@ server.listen(port, () => {
   console.log(
     process.env.ADMIN_PASSWORD
       ? `[admin-dev] 初始管理员密码来自环境变量 ADMIN_PASSWORD`
-      : `[admin-dev] 未设 ADMIN_PASSWORD。首次登录前请设置，或直接用 sqlite 建账号。`
+      : `[admin-dev] 未设 ADMIN_PASSWORD。首次登录前请设置，或直接用 sqlite 建账号。`,
   )
 })

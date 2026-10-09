@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
+import { useSiteModules } from './site-module-context'
+import { pathEnabled, moduleHref } from '@/lib/site-modules'
 import type { SearchDoc } from '@/data/types'
 import type { SearchDocWithWeight } from '@/lib/search'
 
@@ -24,15 +26,21 @@ export function useSearchIndex(enabled: boolean): {
   docs: SearchDocWithWeight[]
   state: IndexState
 } {
+  const { config } = useSiteModules()
   const [docs, setDocs] = useState<SearchDocWithWeight[]>(cache ?? [])
   const [state, setState] = useState<IndexState>(cache ? 'ready' : 'idle')
 
   useEffect(() => {
-    if (!enabled || cache) return
+    if (!enabled) return
+    if (cache) {
+      setDocs(cache)
+      setState('ready')
+      return
+    }
 
     if (!inflight) {
       setState('loading')
-      inflight = fetch(ENDPOINT, { cache: 'force-cache' })
+      inflight = fetch(ENDPOINT, { cache: 'no-store' })
         .then((r) => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`)
           return r.json() as Promise<SearchDoc[]>
@@ -65,7 +73,24 @@ export function useSearchIndex(enabled: boolean): {
     }
   }, [enabled])
 
-  return { docs, state }
+  const visibleDocs = useMemo(
+    () => [
+      ...docs.filter((doc) => pathEnabled(config, doc.href)),
+      ...config.modules
+        .filter((module) => module.kind !== 'builtin' && module.enabled)
+        .map((module) => ({
+          id: `module-${module.id}`,
+          type: 'module' as const,
+          title: module.title,
+          summary: module.description,
+          href: moduleHref(module),
+          keywords: [module.title, ...module.blocks.map((block) => block.title)],
+          tags: [],
+        })),
+    ],
+    [docs, config],
+  )
+  return { docs: visibleDocs, state }
 }
 
 /** 搜索页专用：一进入就加载 */

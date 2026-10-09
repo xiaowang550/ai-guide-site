@@ -10,7 +10,7 @@
  * 线上与本地跑的是同一段适配器代码，只是底下的引擎不同。
  */
 import type { Db, SqlParam } from './types.ts'
-import type { D1Database, D1PreparedStatement } from './d1.ts'
+import type { D1Database, D1PreparedStatement, D1Result } from './d1.ts'
 
 /**
  * 语句对象 → 原始 {sql, params} 的登记处。
@@ -40,8 +40,8 @@ export function createD1Shim(db: Db): D1Database {
         // first('col') 是 D1 取聚合单列的写法
         return (colName ? (row[colName] as T) : (row as T)) ?? null
       },
-      async all<T>(): Promise<T[]> {
-        return db.all<T>(state.sql, state.params)
+      async all<T>(): Promise<D1Result<T>> {
+        return { success: true, results: await db.all<T>(state.sql, state.params), meta: {} }
       },
       async run() {
         const res = await db.run(state.sql, state.params)
@@ -58,7 +58,7 @@ export function createD1Shim(db: Db): D1Database {
 
   return {
     prepare,
-    async batch<T>(statements: D1PreparedStatement[]): Promise<T[]> {
+    async batch<T>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
       const collected: { sql: string; params?: SqlParam[] }[] = []
       for (const s of statements) {
         const state = SHIM_REGISTRY.get(s)
@@ -73,7 +73,7 @@ export function createD1Shim(db: Db): D1Database {
       await db.batch(collected)
       // D1 的 batch 会返回每条语句的结果，本站的调用方从不读取它，
       // 所以返回空数组；泛型签名保留是为了满足 D1Database 的类型。
-      return [] as T[]
+      return [] as D1Result<T>[]
     },
     async exec(query: string) {
       await db.exec(query)

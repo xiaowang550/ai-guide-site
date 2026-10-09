@@ -1,15 +1,10 @@
 import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
+import './styles/surfaces.css'
+import './styles/learning.css'
 import { siteConfig, siteTitle } from '@/lib/site'
-import { SiteHeader } from '@/components/site-header'
-import { SiteFooter } from '@/components/site-footer'
 import { ThemeScript } from '@/components/theme-toggle'
-import { MotionLayer } from '@/components/motion/motion-layer'
-import { ServiceWorkerRegistrar } from '@/components/motion/service-worker-registrar'
-import { AssistantDock } from '@/components/assistant/assistant-dock'
-import { AnalyticsBeacon } from '@/components/analytics-beacon'
-import { GuidedTour } from '@/components/onboarding/guided-tour'
 
 /**
  * 进场淡入的开关：只有确认 JS 可用时才给 <html> 加 .js-reveal，
@@ -66,30 +61,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </noscript>
       </head>
       <body className="flex min-h-screen flex-col">
-        <MotionLayer />
-        {/* 离线能力：仅生产构建注册，失败不影响使用 */}
-        <ServiceWorkerRegistrar />
-        {/*
-          访问统计采集：只上报页面路径与事件名，不发 Cookie、不发指纹、不发 UA。
-          后端据此按「天 × 路径」聚合，算不出独立访客数 —— 对外承诺的
-          「不做用户画像」不能在统计口开后门。
-        */}
-        <AnalyticsBeacon />
-        {/* 站内助手浮窗：可拖动、可隐藏，在设置页可重新打开 */}
-        <AssistantDock />
-        {/* 首次进入的新手引导：任何一步都能跳过 */}
-        <GuidedTour />
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
-        >
-          跳到主要内容
-        </a>
-        <SiteHeader />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
+        {children}
         {/*
           必须在 body 末尾：HTML 一解析完就跑，抢在 hydration 之前把首屏点亮。
           放在 <head> 里此时 body 还不存在，元素一个都扫不到。

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import type { Tool } from '@/data/types'
+import type { CompareTool as Tool } from '@/lib/compare-tool'
 import { cn } from '@/lib/utils'
 import { ToolLogo } from '@/components/tool-logo'
 
@@ -28,7 +28,7 @@ export function ComparePicker({
     (t) =>
       !selected.includes(t.id) &&
       (query.trim() === '' ||
-        `${t.name}${t.nameEn}${t.vendor}`.toLowerCase().includes(query.trim().toLowerCase()))
+        `${t.name}${t.nameEn}${t.vendor}`.toLowerCase().includes(query.trim().toLowerCase())),
   )
 
   function toggle(id: string) {
@@ -37,14 +37,16 @@ export function ComparePicker({
         ? selected.filter((x) => x !== id)
         : selected.length >= MAX_COMPARE
           ? selected
-          : [...selected, id]
+          : [...selected, id],
     )
   }
 
   return (
     <div className="mb-6 border-t border-hairline pt-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="eyebrow">对比对象（{selected.length}/{MAX_COMPARE}）</span>
+        <span className="eyebrow">
+          对比对象（{selected.length}/{MAX_COMPARE}）
+        </span>
         {selected.length === 0 ? (
           <span className="text-sm text-muted-foreground">还没有选择工具</span>
         ) : null}
@@ -52,10 +54,7 @@ export function ComparePicker({
           const tool = tools.find((t) => t.id === id)
           if (!tool) return null
           return (
-            <span
-              key={id}
-              className="pill py-1 pl-1.5 pr-2.5 hover:border-foreground/25"
-            >
+            <span key={id} className="pill py-1 pl-1.5 pr-2.5 hover:border-foreground/25">
               <ToolLogo src={tool.logo} alt="" size={18} className="border-0 bg-transparent p-0" />
               {tool.name}
               <button
@@ -75,7 +74,7 @@ export function ComparePicker({
           disabled={selected.length >= MAX_COMPARE}
           className={cn(
             'inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
-            selected.length >= MAX_COMPARE && 'cursor-not-allowed opacity-50'
+            selected.length >= MAX_COMPARE && 'cursor-not-allowed opacity-50',
           )}
         >
           <Plus className="h-3 w-3" aria-hidden />
@@ -102,7 +101,9 @@ export function ComparePicker({
                 >
                   <ToolLogo src={t.logo} alt="" size={20} className="border-0 bg-transparent p-0" />
                   <span className="min-w-0 flex-1 truncate">{t.name}</span>
-                  <span className="tabular-nums text-muted-foreground">{t.overallScore.toFixed(1)}</span>
+                  <span className="tabular-nums text-muted-foreground">
+                    {t.overallScore.toFixed(1)}
+                  </span>
                 </button>
               </li>
             ))}

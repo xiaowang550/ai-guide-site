@@ -71,7 +71,7 @@ export function GuidedTour() {
   useEffect(() => {
     setMounted(true)
     const settings = readSettings()
-    if (!settings.onboardingDone) setActive(true)
+    if (new URLSearchParams(window.location.search).get('tour') === '1' && !settings.onboardingDone) setActive(true)
   }, [])
 
   const step = STEPS[index]

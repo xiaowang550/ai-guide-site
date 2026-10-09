@@ -386,8 +386,8 @@ export async function changePassword(
     iterations: toInt(admin.iterations, 210000),
   })
   if (!ok) return { ok: false, error: '当前密码不正确' }
-  if (newPassword.length < 12) {
-    return { ok: false, error: '新密码至少 12 位' }
+  if (newPassword.length < 8) {
+    return { ok: false, error: '新密码至少 8 位' }
   }
   const rec = await hashPassword(newPassword)
   await db.run(

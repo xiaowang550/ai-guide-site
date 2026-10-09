@@ -48,7 +48,7 @@ describe('页面标题', () => {
   })
 
   it('首页不覆盖 layout 的默认标题', () => {
-    const home = pages.find((p) => p.file === 'app/page.tsx')
+    const home = pages.find((p) => p.file === 'app/(public)/page.tsx')
     expect(home, '找不到首页').toBeDefined()
     expect(
       home?.title,
@@ -57,7 +57,7 @@ describe('页面标题', () => {
   })
 
   it('首页有 description 与 canonical（这两项不能丢）', () => {
-    const src = readFileSync('app/page.tsx', 'utf8')
+    const src = readFileSync('app/(public)/page.tsx', 'utf8')
     expect(src).toMatch(/description:/)
     expect(src).toMatch(/canonical:\s*'\/'/)
   })
@@ -66,7 +66,7 @@ describe('页面标题', () => {
     // 动态路由（[slug]）用 generateMetadata 按数据生成标题，
     // 静态源码里当然看不到字面量，所以不纳入这项检查
     const noTitle = pages.filter(
-      (p) => p.file !== 'app/page.tsx' && !p.file.includes('[slug]') && p.title === null
+      (p) => p.file !== 'app/(public)/page.tsx' && !p.file.includes('[slug]') && p.title === null
     )
     expect(
       noTitle.map((p) => p.file),

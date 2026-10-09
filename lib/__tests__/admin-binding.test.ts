@@ -60,7 +60,7 @@ describe('D1 绑定缺失', () => {
     }
   })
 
-  it('ADMIN_DEBUG 默认关闭：500 不泄露内部错误原文', async () => {
+  it('即使遗留 ADMIN_DEBUG=1，公开 500 也不泄露内部错误原文', async () => {
     // 默认情况下绝不能把 SQL / 环境变量名返回给前端。
     // 造一个「绑定形状正确、但每次查询都抛出含敏感信息的错误」的 D1Database。
     const SECRETY = 'D1_ERROR: near "SELECT token FROM sessions": syntax error'
@@ -91,13 +91,15 @@ describe('D1 绑定缺失', () => {
     expect(plainBody, '默认不能泄露内部错误').not.toMatch(/SELECT token/)
     expect(plainBody).toMatch(/服务端处理出错/)
 
-    const verbose = await handleApi(new Request('https://example.test/api/content/published'), {
+    const legacyEnv = {
       DB: explodingDb as never,
       SITE_SALT: 'test-salt',
       ADMIN_DEBUG: '1',
-    })
+    }
+    const verbose = await handleApi(new Request('https://example.test/api/content/published'), legacyEnv)
     const verboseBody = await verbose!.text()
-    expect(verboseBody, 'ADMIN_DEBUG=1 时应能看到原始错误').toMatch(/SELECT token/)
+    expect(verboseBody, '遗留调试变量不能泄露 SQL').not.toMatch(/SELECT token/)
+    expect(verboseBody).toMatch(/服务端处理出错/)
   })
 
   it('绑定正常时不会被误报成缺失', () => {
@@ -106,7 +108,7 @@ describe('D1 绑定缺失', () => {
       prepare: () => ({
         bind: () => fake.prepare(),
         first: async () => null,
-        all: async () => [],
+        all: async () => ({ success: true, results: [], meta: {} }),
         run: async () => ({ success: true }),
       }),
       batch: async () => [],

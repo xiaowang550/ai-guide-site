@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { ArrowLeft, ArrowRight, Compass, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { ApiError, apiSend } from './api-client'
 
 /**
@@ -16,6 +18,7 @@ import { ApiError, apiSend } from './api-client'
  *    前端不要再加工，否则很容易在显示时又漏出账号是否存在。
  */
 export function LoginView({ onSuccess }: { onSuccess: () => void }) {
+  const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -44,73 +47,104 @@ export function LoginView({ onSuccess }: { onSuccess: () => void }) {
   }
 
   return (
-    <div className="container py-16">
-      <div className="mx-auto max-w-sm">
-        <h1 className="text-xl font-semibold">管理员登录</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
-          这里的每一次操作都会记入审计日志，内容改动只有「发布」之后才会出现在公开站。
-        </p>
-
-        <form onSubmit={submit} className="mt-6 space-y-3">
-          <div>
-            <label htmlFor="u" className="block text-sm font-medium">
-              用户名
-            </label>
-            <input
-              id="u"
-              name="username"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded border border-hairline bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-            />
+    <div className="admin-login">
+      <div className="admin-login-story">
+        <Link href="/" className="flex items-center gap-3 text-sm font-semibold">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Compass className="h-5 w-5" />
+          </span>
+          AI 能力图谱
+        </Link>
+        <div className="login-intro mt-20">
+          <p className="admin-eyebrow">YOUR PRIVATE WORKSPACE</p>
+          <h2 className="mt-5 text-4xl font-semibold leading-relaxed tracking-tight">
+            每一次整理，
+            <br />
+            都让好内容走得更远。
+          </h2>
+          <p className="mt-6 max-w-sm text-sm leading-8 text-muted-foreground">
+            看看网站的浏览趋势，更新值得分享的方法，把读者的反馈变成下一次改进。
+          </p>
+          <div className="mt-12 flex items-center gap-2 text-xs text-primary">
+            <ShieldCheck className="h-4 w-4" />
+            仅供站点所有者使用
           </div>
-          <div>
-            <label htmlFor="p" className="block text-sm font-medium">
-              密码
-            </label>
-            <input
-              id="p"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded border border-hairline bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={busy || !username || !password}
-            className="w-full rounded bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        </div>
+      </div>
+      <div className="admin-login-form">
+        <div>
+          <p className="admin-eyebrow">WELCOME BACK</p>
+          <h1 className="mt-3 text-2xl font-semibold">登录管理工作台</h1>
+          <p className="mt-3 text-sm leading-7 text-muted-foreground">
+            用你的管理员账号，继续打理网站。
+          </p>
+          <form onSubmit={submit} className="mt-8 space-y-5">
+            <div>
+              <label htmlFor="u" className="mb-2 block text-xs font-medium">
+                管理员账号
+              </label>
+              <input
+                id="u"
+                name="username"
+                autoComplete="username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="admin-input"
+                placeholder="输入管理员账号"
+              />
+            </div>
+            <div>
+              <label htmlFor="p" className="mb-2 block text-xs font-medium">
+                密码
+              </label>
+              <div className="relative">
+                <input
+                  id="p"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="admin-input pr-12"
+                  placeholder="输入密码"
+                />
+                <button
+                  type="button"
+                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-3 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+            {error && (
+              <div role="alert" className="admin-error">
+                {error}
+                {remaining !== null && <p className="mt-1">还可尝试 {remaining} 次。</p>}
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={busy}
+              className="home-button w-full disabled:opacity-50"
+            >
+              {busy ? '正在登录…' : '进入工作台'}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+          <p className="mt-6 text-center text-[11px] leading-6 text-muted-foreground">
+            后台不开放注册，只有管理员可以访问管理数据。
+          </p>
+          <Link
+            href="/"
+            className="mt-10 inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-primary"
           >
-            {busy ? '登录中…' : '登录'}
-          </button>
-        </form>
-
-        {error ? (
-          <p className="mt-4 rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm leading-6">
-            {error}
-            {remaining !== null && remaining > 0 ? (
-              <span className="mt-1 block text-xs text-muted-foreground">
-                还可以尝试 {remaining} 次，超过后会临时锁定。
-              </span>
-            ) : null}
-          </p>
-        ) : null}
-
-        <div className="mt-8 rounded border border-hairline bg-muted/30 px-3 py-2.5 text-xs leading-6 text-muted-foreground">
-          <p className="font-medium text-foreground">首次登录前需要完成一次性设置</p>
-          <p className="mt-1">
-            在 Cloudflare Pages 项目里配置 <code>ADMIN_PASSWORD</code> 与{' '}
-            <code>SITE_SALT</code> 两个 Secret，然后首次登录会自动创建管理员账号。
-            详见 <code>docs/admin-backend.md</code>。
-          </p>
-          <p className="mt-1">
-            连续 5 次失败会临时锁定 15 分钟。限流按「账号 + IP 的 /24 网段」计算，
-            换 IP 可以绕过 —— 本站没有引入更重的反滥用设施，这一点如实说明。
-          </p>
+            <ArrowLeft className="h-3.5 w-3.5" />
+            返回公开网站
+          </Link>
         </div>
       </div>
     </div>

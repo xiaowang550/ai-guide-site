@@ -37,15 +37,14 @@ export function track(event: string, path?: string): void {
   if (typeof window === 'undefined') return
   try {
     const body = JSON.stringify({
-      path: path ?? window.location.pathname,
-      events: [{ name: event, path: window.location.pathname }],
+      events: [{ name: event, path: path ?? window.location.pathname }],
     })
     void fetch('/api/collect', {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body,
       keepalive: true,
-      credentials: 'same-origin',
+      credentials: 'omit',
     }).catch(() => {})
   } catch {
     /* 统计永远不能影响正常浏览 */
@@ -61,7 +60,7 @@ function trackPageView(path: string): void {
       headers: { 'content-type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
       body: JSON.stringify({ path }),
       keepalive: true,
-      credentials: 'same-origin',
+      credentials: 'omit',
     }).catch(() => {})
   } catch {
     /* 同上 */

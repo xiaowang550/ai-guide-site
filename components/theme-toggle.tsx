@@ -44,11 +44,11 @@ function apply(theme: Theme) {
  *     符合「手动设置优先、自动跟随兜底」的直觉
  */
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('system')
+  const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const saved = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'system'
+    const saved = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? 'light'
     setTheme(saved)
     apply(saved)
     setMounted(true)
@@ -82,6 +82,6 @@ export function ThemeToggle() {
 
 /** 注入在 <head> 里的防闪烁脚本 */
 export function ThemeScript() {
-  const script = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.toggle('dark',d);e.style.colorScheme=d?'dark':'light';}catch(e){}})();`
+  const script = `(function(){try{var t=localStorage.getItem('${STORAGE_KEY}')||'light';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;e.classList.toggle('dark',d);e.style.colorScheme=d?'dark':'light';}catch(e){}})();`
   return <script dangerouslySetInnerHTML={{ __html: script }} />
 }

@@ -54,3 +54,6 @@ admin-dev.err
 
 # 临时输出（验证过程用，不要进仓库）
 *.out
+
+# Cloudflare CLI 本地状态与构建缓存
+.wrangler/

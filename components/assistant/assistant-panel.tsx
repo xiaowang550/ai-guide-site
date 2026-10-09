@@ -67,7 +67,7 @@ export function AssistantPanel({
   async function askAi(text: string) {
     if (!aiConfig || !index) return
     if (!aiConfig.endpoint) {
-      setAiError('还没填接口地址：去「设置 → AI 模式」填一个 OpenAI 兼容地址，或先切回规则模式。')
+      setAiError('接口连接未就绪，可以切回站内规则模式继续查阅。')
       return
     }
     setAiThinking(true)
@@ -140,7 +140,7 @@ export function AssistantPanel({
 
   return (
     <div
-      className="mb-2 overflow-hidden rounded-xl border bg-popover shadow-2xl animate-slide-up"
+      className="mb-2 animate-slide-up overflow-hidden rounded-xl border bg-popover shadow-2xl"
       style={{ width }}
     >
       <div className="flex items-center gap-2 border-b px-3.5 py-2.5">
@@ -150,7 +150,9 @@ export function AssistantPanel({
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold leading-tight">站内助手</p>
           <p className="text-[11px] leading-tight text-muted-foreground">
-            {aiLive ? 'AI 模式 · 由外部模型生成，请核对来源' : '规则模式 · 只查本站数据 · 结论可溯源'}
+            {aiLive
+              ? 'AI 模式 · 由外部模型生成，请核对来源'
+              : '规则模式 · 只查本站数据 · 结论可溯源'}
           </p>
         </div>
         <button
@@ -158,7 +160,7 @@ export function AssistantPanel({
           onClick={onToggleAi}
           className="rounded-full border px-2 py-0.5 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           aria-label={aiLive ? '切回规则模式' : '切换到 AI 模式'}
-          title={aiLive ? '切回规则模式（不联网）' : '切到 AI 模式（需要先在设置页配置接口与 Key）'}
+          title={aiLive ? '切回规则模式（不联网）' : '切到已配置的 AI 模式'}
         >
           {aiLive ? 'AI 模式' : '规则模式'}
         </button>
@@ -174,8 +176,8 @@ export function AssistantPanel({
           type="button"
           onClick={onHide}
           className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-          aria-label="隐藏助手（可在设置中重新打开）"
-          title="隐藏助手，之后可在「设置」里重新打开"
+          aria-label="关闭助手面板"
+          title="关闭助手面板"
         >
           <X className="h-4 w-4" aria-hidden />
         </button>
@@ -190,21 +192,16 @@ export function AssistantPanel({
           </p>
         ) : aiConfig && aiLive && !aiConfigReady(aiConfig) ? (
           <div className="py-3">
-            <p className="text-[13px] leading-6 text-foreground/85">你切到了 AI 模式，但还没配置接口。</p>
-            <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
-              纯静态站点没有服务端，所以站内不会内置任何 Key —— 否则等于把 Key 公开给所有人。
-              你可以填自己的 Key，或部署一个自建代理。
+            <p className="text-[13px] leading-6 text-foreground/85">
+              当前连接未就绪，可以切回站内规则模式。
             </p>
-            <Link href="/settings" className="link-animate mt-3 inline-block text-[13px]">
-              去设置 AI 模式 →
-            </Link>
+            <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+              站内规则模式无需账号，直接查询工具、教程与概念。
+            </p>
           </div>
         ) : loadError ? (
           <div className="py-4 text-center">
             <p className="text-xs text-danger">{loadError}</p>
-            <Link href="/settings" className="mt-2 inline-block text-xs text-primary hover:underline">
-              去设置页看看
-            </Link>
           </div>
         ) : answerState ? (
           <div className="space-y-3">
@@ -229,7 +226,9 @@ export function AssistantPanel({
                     >
                       <span>→</span>
                       <span>{l.label}</span>
-                      {l.hint ? <span className="text-[11px] text-muted-foreground">{l.hint}</span> : null}
+                      {l.hint ? (
+                        <span className="text-[11px] text-muted-foreground">{l.hint}</span>
+                      ) : null}
                     </Link>
                   </li>
                 ))}
@@ -297,9 +296,6 @@ export function AssistantPanel({
       {aiError ? (
         <div className="border-t border-danger/40 bg-danger/5 px-3.5 py-2.5 text-[11px] leading-5 text-danger">
           {aiError}
-          <Link href="/settings" className="ml-1 underline underline-offset-2">
-            去设置
-          </Link>
         </div>
       ) : null}
 
@@ -324,7 +320,9 @@ export function AssistantPanel({
       </form>
 
       {staleHint ? (
-        <p className="border-t px-3.5 py-2 text-[11px] leading-4 text-muted-foreground">数据状态：{staleHint}</p>
+        <p className="border-t px-3.5 py-2 text-[11px] leading-4 text-muted-foreground">
+          数据状态：{staleHint}
+        </p>
       ) : null}
     </div>
   )

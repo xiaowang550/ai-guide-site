@@ -181,7 +181,7 @@ describe('改密码', () => {
     expect((await request(env, 'GET', '/api/admin/dashboard')).status, '改密码后旧会话仍然有效').toBe(401)
   })
 
-  it('旧密码错误时拒绝，且需要 12 位以上', async () => {
+  it('旧密码错误时拒绝，且需要 8 位以上', async () => {
     const env = await makeTestEnv({ withAdmin: true })
     await login(env)
 
@@ -196,7 +196,7 @@ describe('改密码', () => {
       newPassword: 'short',
     })
     expect(tooShort.status).toBe(400)
-    expect(tooShort.json.error).toContain('12')
+    expect(tooShort.json.error).toContain('8')
   })
 })
 

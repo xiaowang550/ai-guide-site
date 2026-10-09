@@ -10,26 +10,31 @@ import { ToolLogo } from '@/components/tool-logo'
 import { Badge } from '@/components/ui/badge'
 
 const LEVELS: (Difficulty | 'all')[] = ['all', 'beginner', 'intermediate', 'advanced']
+type GuideSummary = Pick<
+  Guide,
+  'id' | 'title' | 'type' | 'level' | 'durationMin' | 'tools' | 'outcome' | 'summary'
+>
+type GuideTool = Pick<Tool, 'id' | 'name' | 'logo'>
 
 /** 教程列表：按类型分区 + 难度筛选 */
-export function GuideExplorer({ guides, tools }: { guides: Guide[]; tools: Tool[] }) {
+export function GuideExplorer({ guides, tools }: { guides: GuideSummary[]; tools: GuideTool[] }) {
   const [level, setLevel] = useState<Difficulty | 'all'>('all')
 
   const filtered = useMemo(
     () => (level === 'all' ? guides : guides.filter((g) => g.level === level)),
-    [guides, level]
+    [guides, level],
   )
 
   const groups: { key: Guide['type']; title: string; desc: string }[] = [
     {
       key: 'method',
       title: '通用方法课',
-      desc: '不绑定任何工具，学的是怎么把话说清楚。学会这几篇，换任何模型都受用。',
+      desc: '学会提问、追问和核对，换工具也能用。',
     },
     {
       key: 'scenario',
       title: '场景实操课',
-      desc: '每篇都按「照着做完」的标准写：每步说清在哪做、输入什么、预期输出、出错怎么办。',
+      desc: '用自己的材料，完成一件真实任务。',
     },
   ]
 
@@ -50,15 +55,13 @@ export function GuideExplorer({ guides, tools }: { guides: Guide[]; tools: Tool[
               'rounded-full border px-3 py-1 text-xs transition-colors',
               level === l
                 ? 'border-primary bg-primary/10 font-medium text-primary'
-                : 'text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                : 'text-muted-foreground hover:border-primary/40 hover:text-foreground',
             )}
           >
             {l === 'all' ? '全部' : DIFFICULTY_LABELS[l]}
           </button>
         ))}
-        <span className="ml-auto text-xs text-muted-foreground">
-          共 {filtered.length} 篇
-        </span>
+        <span className="ml-auto text-xs text-muted-foreground">共 {filtered.length} 篇</span>
       </div>
 
       <div className="space-y-10">
@@ -87,21 +90,29 @@ function GuideCard({
   tools,
   index = 0,
 }: {
-  guide: Guide
-  tools: Tool[]
+  guide: GuideSummary
+  tools: GuideTool[]
   index?: number
 }) {
   const related = guide.tools
     .map((id) => tools.find((t) => t.id === id))
-    .filter((t): t is Tool => Boolean(t))
+    .filter((t): t is GuideTool => Boolean(t))
   return (
     <Link
       href={`/guides/${guide.id}`}
-      className="spotlight reveal group flex h-full flex-col border-b border-hairline pb-5 transition-colors hover:border-foreground/20"
+      className="learning-card group flex h-full flex-col"
       style={{ ['--d' as string]: `${Math.min(index, 8) * 45}ms` }}
     >
       <div className="flex items-start justify-between gap-2">
-        <Badge variant={guide.level === 'beginner' ? 'success' : guide.level === 'intermediate' ? 'secondary' : 'outline'}>
+        <Badge
+          variant={
+            guide.level === 'beginner'
+              ? 'success'
+              : guide.level === 'intermediate'
+                ? 'secondary'
+                : 'outline'
+          }
+        >
           {DIFFICULTY_LABELS[guide.level]}
         </Badge>
         <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -128,7 +139,10 @@ function GuideCard({
       ) : null}
       <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary">
         开始这篇教程
-        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
+        <ArrowRight
+          className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+          aria-hidden
+        />
       </span>
     </Link>
   )

@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { LayoutGrid, Rows3, Search, SlidersHorizontal, X } from 'lucide-react'
 import type { CapabilityKey, Platform, ToolCategory } from '@/data/types'
 import type { ToolListItem } from '@/lib/tool-list-item'
@@ -44,9 +44,22 @@ const DEFAULT_FILTERS: FilterState = {
   view: 'grid',
 }
 
-const ALL_PLATFORMS: Platform[] = ['web', 'ios', 'android', 'windows', 'mac', 'api', 'plugin', 'cli']
+const ALL_PLATFORMS: Platform[] = [
+  'web',
+  'ios',
+  'android',
+  'windows',
+  'mac',
+  'api',
+  'plugin',
+  'cli',
+]
 const ALL_RISKS: Risk[] = ['low', 'medium', 'high']
-const RISK_LABELS: Record<Risk, string> = { low: '幻觉风险低', medium: '幻觉风险中', high: '幻觉风险高' }
+const RISK_LABELS: Record<Risk, string> = {
+  low: '幻觉风险低',
+  medium: '幻觉风险中',
+  high: '幻觉风险高',
+}
 
 /** URL <-> state 同步（静态导出友好：用 history API，不触发路由重渲染） */
 function stateToParams(s: FilterState): string {
@@ -70,14 +83,22 @@ function paramsToState(params: URLSearchParams): Partial<FilterState> {
   const cap = params.get('cap')
   return {
     q: params.get('q') ?? '',
-    categories: csv(params.get('cat')) as ToolCategory[],
+    categories: csv(params.get('cat')).filter((value) =>
+      TOOL_CATEGORIES.includes(value as ToolCategory),
+    ) as ToolCategory[],
     free: params.get('free') === '1',
     chinaDirect: params.get('cn') === '1',
     capability: cap && CAPABILITY_META.some((c) => c.key === cap) ? (cap as CapabilityKey) : 'any',
-    minScore: Number(params.get('min')) || 4,
-    platforms: csv(params.get('plat')) as Platform[],
-    risks: csv(params.get('risk')) as Risk[],
-    sort: params.get('sort') ?? 'overall',
+    minScore: [3, 4, 5].includes(Number(params.get('min'))) ? Number(params.get('min')) : 4,
+    platforms: csv(params.get('plat')).filter((value) =>
+      ALL_PLATFORMS.includes(value as Platform),
+    ) as Platform[],
+    risks: csv(params.get('risk')).filter((value) => ALL_RISKS.includes(value as Risk)) as Risk[],
+    sort: ['overall', 'updated', 'chinese', ...CAPABILITY_META.map((item) => item.key)].includes(
+      params.get('sort') ?? '',
+    )
+      ? params.get('sort')!
+      : 'overall',
     dir: params.get('dir') === 'asc' ? 'asc' : 'desc',
     view: params.get('view') === 'table' ? 'table' : 'grid',
   }
@@ -87,12 +108,44 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  const filterDialog = useRef<HTMLDialogElement>(null),
+    filterButton = useRef<HTMLButtonElement>(null)
 
   // 挂载后从 URL 读取初始状态（避免静态导出时的 hydration 不一致）
   useEffect(() => {
-    setFilters({ ...DEFAULT_FILTERS, ...paramsToState(new URLSearchParams(window.location.search)) })
-    setHydrated(true)
+    const read = () => {
+      setFilters({
+        ...DEFAULT_FILTERS,
+        ...paramsToState(new URLSearchParams(window.location.search)),
+      })
+      setHydrated(true)
+    }
+    read()
+    window.addEventListener('popstate', read)
+    return () => window.removeEventListener('popstate', read)
   }, [])
+
+  useEffect(() => {
+    const dialog = filterDialog.current
+    if (!dialog) return
+    if (!mobileFilterOpen) {
+      if (dialog.open) dialog.close()
+      return
+    }
+    if (!dialog.open) dialog.showModal()
+    const trigger = filterButton.current
+    const oldOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onResize = () => {
+      if (innerWidth >= 1024) setMobileFilterOpen(false)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      document.body.style.overflow = oldOverflow
+      window.removeEventListener('resize', onResize)
+      trigger?.focus({ preventScroll: true })
+    }
+  }, [mobileFilterOpen])
 
   useEffect(() => {
     if (!hydrated) return
@@ -132,19 +185,19 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
   const activeChips: { label: string; onClear: () => void }[] = [
     ...filters.categories.map((c) => ({
       label: `分类：${CATEGORY_LABELS[c]}`,
-      onClear: () =>
-        setFilters((f) => ({ ...f, categories: f.categories.filter((x) => x !== c) })),
+      onClear: () => setFilters((f) => ({ ...f, categories: f.categories.filter((x) => x !== c) })),
     })),
     ...filters.platforms.map((p) => ({
       label: `平台：${PLATFORM_LABELS[p]}`,
-      onClear: () =>
-        setFilters((f) => ({ ...f, platforms: f.platforms.filter((x) => x !== p) })),
+      onClear: () => setFilters((f) => ({ ...f, platforms: f.platforms.filter((x) => x !== p) })),
     })),
     ...filters.risks.map((r) => ({
       label: RISK_LABELS[r],
       onClear: () => setFilters((f) => ({ ...f, risks: f.risks.filter((x) => x !== r) })),
     })),
-    ...(filters.free ? [{ label: '免费可用', onClear: () => setFilters((f) => ({ ...f, free: false })) }] : []),
+    ...(filters.free
+      ? [{ label: '免费可用', onClear: () => setFilters((f) => ({ ...f, free: false })) }]
+      : []),
     ...(filters.chinaDirect
       ? [{ label: '大陆可直连', onClear: () => setFilters((f) => ({ ...f, chinaDirect: false })) }]
       : []),
@@ -156,18 +209,24 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
           },
         ]
       : []),
-    ...(filters.q ? [{ label: `关键词：${filters.q}`, onClear: () => setFilters((f) => ({ ...f, q: '' })) }] : []),
+    ...(filters.q
+      ? [{ label: `关键词：${filters.q}`, onClear: () => setFilters((f) => ({ ...f, q: '' })) }]
+      : []),
   ]
 
   const filterPanel = (
     <div className="space-y-6">
       <FilterGroup title="关键词">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search
+            className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
           <Input
             value={filters.q}
             onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
             placeholder="工具名 / 厂商 / 标签"
+            maxLength={160}
             className="pl-8"
             aria-label="按关键词筛选工具"
           />
@@ -294,11 +353,13 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
         {/* 工具栏 */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Button
+            ref={filterButton}
             variant="outline"
             size="sm"
             className="lg:hidden"
             onClick={() => setMobileFilterOpen((v) => !v)}
             aria-expanded={mobileFilterOpen}
+            aria-controls="tool-filter-dialog"
           >
             <SlidersHorizontal className="h-4 w-4" aria-hidden />
             筛选
@@ -308,7 +369,8 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
           {/* 列表的 h2：既给标题层级（h1 → h2 → 卡片 h3），
               也顺带承担"结果计数"的职责，省掉一个单独的说明行 */}
           <h2 className="text-sm font-normal text-muted-foreground">
-            共 <span className="font-semibold text-foreground">{result.length}</span> / {tools.length} 个工具
+            共 <span className="font-semibold text-foreground">{result.length}</span> /{' '}
+            {tools.length} 个工具
           </h2>
 
           <div className="ml-auto flex items-center gap-2">
@@ -334,7 +396,9 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
               type="button"
               onClick={() => setFilters((f) => ({ ...f, dir: f.dir === 'desc' ? 'asc' : 'desc' }))}
               className="h-8 rounded-md border px-2 text-xs text-muted-foreground hover:bg-accent"
-              aria-label={filters.dir === 'desc' ? '当前降序，点击改为升序' : '当前升序，点击改为降序'}
+              aria-label={
+                filters.dir === 'desc' ? '当前降序，点击改为升序' : '当前升序，点击改为降序'
+              }
             >
               {filters.dir === 'desc' ? '降序 ↓' : '升序 ↑'}
             </button>
@@ -344,7 +408,9 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
                 onClick={() => setFilters((f) => ({ ...f, view: 'grid' }))}
                 className={cn(
                   'inline-flex h-8 w-9 items-center justify-center',
-                  filters.view === 'grid' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                  filters.view === 'grid'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground',
                 )}
                 aria-label="卡片视图"
                 aria-pressed={filters.view === 'grid'}
@@ -356,7 +422,9 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
                 onClick={() => setFilters((f) => ({ ...f, view: 'table' }))}
                 className={cn(
                   'inline-flex h-8 w-9 items-center justify-center',
-                  filters.view === 'table' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'
+                  filters.view === 'table'
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground',
                 )}
                 aria-label="表格视图"
                 aria-pressed={filters.view === 'table'}
@@ -372,6 +440,7 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
             {activeChips.map((chip) => (
               <button
                 key={chip.label}
+                aria-label={`移除${chip.label}筛选`}
                 type="button"
                 onClick={chip.onClear}
                 className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground"
@@ -390,9 +459,56 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
           </div>
         ) : null}
 
-        {mobileFilterOpen ? (
-          <div className="mb-4 border-t border-hairline pt-4 lg:hidden">{filterPanel}</div>
-        ) : null}
+        <dialog
+          id="tool-filter-dialog"
+          ref={filterDialog}
+          aria-labelledby="tool-filter-title"
+          className="tool-filter-dialog"
+          onCancel={() => setMobileFilterOpen(false)}
+          onClose={() => setMobileFilterOpen(false)}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              const rect = event.currentTarget.getBoundingClientRect()
+              if (
+                event.clientY < rect.top ||
+                event.clientX < rect.left ||
+                event.clientX > rect.right
+              )
+                setMobileFilterOpen(false)
+            }
+          }}
+        >
+          <div className="flex items-center justify-between border-b px-5 py-4">
+            <div>
+              <h2 id="tool-filter-title" className="text-base font-semibold">
+                筛选工具
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">按你实际要做的事，慢慢缩小范围。</p>
+            </div>
+            <button
+              className="flex h-10 w-10 items-center justify-center rounded-xl hover:bg-accent"
+              aria-label="关闭工具筛选"
+              onClick={() => setMobileFilterOpen(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="tool-filter-body p-5">{filterPanel}</div>
+          <div className="flex items-center gap-4 border-t bg-card px-5 py-4">
+            <button
+              className="min-h-11 text-sm text-muted-foreground"
+              onClick={() => setFilters(DEFAULT_FILTERS)}
+            >
+              清空
+            </button>
+            <button
+              className="min-h-11 flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground"
+              onClick={() => setMobileFilterOpen(false)}
+            >
+              查看 {result.length} 个工具
+            </button>
+          </div>
+        </dialog>
 
         {result.length === 0 ? (
           <EmptyState
@@ -451,7 +567,7 @@ function Chip({
         'rounded-full border px-2.5 py-1 text-xs transition-colors',
         active
           ? 'border-primary bg-primary/10 font-medium text-primary'
-          : 'text-muted-foreground hover:border-primary/40 hover:text-foreground'
+          : 'text-muted-foreground hover:border-primary/40 hover:text-foreground',
       )}
     >
       {children}

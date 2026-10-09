@@ -9,18 +9,16 @@ import type {
   Tool,
 } from './types'
 import { tools as rawTools } from './tools'
+import { applyToolReview } from './tool-reviews'
 import { concepts as rawConcepts } from './concepts'
 import { guides } from './guides'
 import { cases } from './cases'
 import { paths } from './paths'
-import { updates } from './updates'
 import { scenarios } from './scenarios'
 import { glossary } from './glossary'
 import { promptTemplates } from './prompts'
 import { eduPrograms, eduTiers } from './edu-programs'
 import { eduToolkits } from './edu-toolkits'
-import { eduSchools } from './edu-schools'
-import { eduBriefings } from './edu-briefings'
 import { eduFaq } from './edu-faq'
 import { eduPolicyRules } from './edu-policy'
 import { computeOverallScore } from '@/lib/score'
@@ -48,41 +46,37 @@ import { applyOverrides, parseOverrideFile } from '@/lib/content/apply-overrides
  */
 const overrides = parseOverrideFile(contentOverrides)
 
-export const tools: Tool[] = applyOverrides(rawTools, overrides).tools.map((tool) => ({
-  ...tool,
-  overallScore: computeOverallScore(tool.capabilities),
-}))
+export const tools: Tool[] = applyOverrides(rawTools, overrides)
+  .tools.map(applyToolReview)
+  .map((tool) => ({
+    ...tool,
+    overallScore: computeOverallScore(tool.capabilities),
+  }))
 
-export const toolsById: Record<string, Tool> = Object.fromEntries(
-  tools.map((t) => [t.id, t])
-)
+export const toolsById: Record<string, Tool> = Object.fromEntries(tools.map((t) => [t.id, t]))
 
 export const concepts: Concept[] = rawConcepts
 export const conceptsById: Record<string, Concept> = Object.fromEntries(
-  concepts.map((c) => [c.id, c])
+  concepts.map((c) => [c.id, c]),
 )
 
-export { guides, cases, paths, updates, scenarios, glossary, promptTemplates }
+export { guides, cases, paths, scenarios, glossary, promptTemplates }
 
-/** AI 教育供给模块（面向本地学校）：课程 / 教案包 / 试点 / 简报 / 规范 / FAQ */
-export {
-  eduPrograms,
-  eduTiers,
-  eduToolkits,
-  eduSchools,
-  eduBriefings,
-  eduFaq,
-  eduPolicyRules,
-}
+/** AI 教育供给模块（面向本地学校）：课程 / 教案包 / 规范 / FAQ */
+export { eduPrograms, eduTiers, eduToolkits, eduFaq, eduPolicyRules }
 
-export const guidesById: Record<string, Guide> = Object.fromEntries(guides.map((g) => [g.id, g]))
+export const guidesById: Record<string, (typeof guides)[number]> = Object.fromEntries(
+  guides.map((g) => [g.id, g]),
+)
 export const casesById: Record<string, CaseStudy> = Object.fromEntries(cases.map((c) => [c.id, c]))
-export const pathsById: Record<string, LearningPath> = Object.fromEntries(paths.map((p) => [p.id, p]))
+export const pathsById: Record<string, LearningPath> = Object.fromEntries(
+  paths.map((p) => [p.id, p]),
+)
 export const promptTemplatesById: Record<string, PromptTemplate> = Object.fromEntries(
-  promptTemplates.map((p) => [p.id, p])
+  promptTemplates.map((p) => [p.id, p]),
 )
 export const glossaryById: Record<string, GlossaryEntry> = Object.fromEntries(
-  glossary.map((g) => [g.id, g])
+  glossary.map((g) => [g.id, g]),
 )
 
 /** 按 id 取工具，找不到返回 undefined（不抛异常，避免页面崩溃） */
@@ -124,6 +118,36 @@ export function parseIdsParam(value: string | string[] | undefined): string[] {
 
 /** 站内搜索索引：全站聚合，服务端构建时生成，客户端仅做模糊匹配 */
 export const searchDocs: SearchDoc[] = [
+  {
+    id: 'my-learning-library',
+    type: 'module',
+    title: '我的学习夹',
+    subtitle: '免登录，本机保存',
+    summary: '收藏实用的工具、教程和案例，查看最近浏览过的内容。',
+    keywords: ['收藏', '学习夹', '最近浏览', '保存', '书签'],
+    tags: ['个人学习'],
+    href: '/saved',
+  },
+  {
+    id: 'advanced-hub',
+    type: 'path',
+    title: '模型与 Agent 进阶',
+    subtitle: '工作流、工具调用与验收',
+    summary: '六个练习、场景走读与 Dify、n8n、LangGraph 上手参考。',
+    keywords: ['Agent', '智能体', '模型选型', '工作流', 'Dify', 'n8n', 'LangGraph', '进阶'],
+    href: '/learn/advanced',
+    tags: ['进阶', 'Agent'],
+  },
+  {
+    id: 'ai-news',
+    type: 'news',
+    title: 'AI 实时资讯',
+    subtitle: '官方新模型与新功能',
+    summary: '查看近期 AI 官方消息，按主题和来源筛选。',
+    keywords: ['资讯', '新闻', '最新', '更新', '模型发布'],
+    href: '/updates',
+    tags: ['资讯'],
+  },
   ...tools.map<SearchDoc>((t) => ({
     id: t.id,
     type: 'tool',
@@ -174,14 +198,22 @@ export const searchDocs: SearchDoc[] = [
     href: `/paths/${p.id}`,
     tags: [],
   })),
-  // ---------- AI 教育供给：课程 / 教案包 / 简报 ----------
+  // ---------- 当前公开的课程与教案包 ----------
   ...eduPrograms.map<SearchDoc>((p) => ({
     id: p.id,
     type: 'program',
     title: p.title,
     subtitle: `${p.tier} · ${p.stage} · ${p.subject}`,
     summary: p.outcome,
-    keywords: [p.tier, p.stage, p.subject, p.format, p.audience, ...p.deliverables],
+    keywords: [
+      p.tier,
+      p.stage,
+      p.subject,
+      p.format,
+      p.audience,
+      ...p.deliverables,
+      ...(p.tier === 'S3' ? ['使用规范', '核验', '诚信', '安全'] : []),
+    ],
     href: `/edu/programs/${p.id}`,
     tags: [p.stage, p.subject, p.format],
   })),
@@ -190,19 +222,9 @@ export const searchDocs: SearchDoc[] = [
     type: 'toolkit',
     title: t.title,
     subtitle: `教案包 · ${t.stage} · ${t.subject}`,
-    summary: `${t.lessons} 课时教案，含课堂活动、讨论题、AI 使用规范要点与学生使用声明。`,
+    summary: t.lessonPlans[0].goal,
     keywords: [t.stage, t.subject, '教案包', '课堂活动', '使用规范', ...t.policyNotes],
     href: `/edu/toolkits/${t.id}`,
     tags: [t.stage, t.subject, '教案包'],
-  })),
-  ...eduBriefings.map<SearchDoc>((b) => ({
-    id: b.id,
-    type: 'briefing',
-    title: `${b.issue}：${b.summary}`,
-    subtitle: `简报 · ${b.audience === 'both' ? '通用' : b.audience === 'teachers' ? '教师' : '学校管理者'}`,
-    summary: b.changes.map((c) => c.title).join('；'),
-    keywords: b.changes.flatMap((c) => [c.kind, c.title]),
-    href: `/edu/briefings/${b.id}`,
-    tags: ['简报'],
   })),
 ]

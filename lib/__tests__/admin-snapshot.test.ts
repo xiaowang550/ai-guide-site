@@ -9,9 +9,8 @@ import type { Db } from '@/lib/db/types'
  *
  * 为什么单独测「查询次数」：这个接口每次 Cloudflare 构建都会被调一次，
  * 而它在 Workers 上。第一版是 1 次查 items + N 次逐条查 data，
- * 22 个工具 = 23 次 D1 往返 —— 既慢又吃子请求数（免费版有上限）。
- * 线上实测这个接口 500，而同样的 SQL 逐条用 REST 跑全都正常，
- * 说明问题出在往返次数而不是 SQL 本身。
+ * 用 JOIN 减少数据库往返，并验证草稿、发布和回滚后的快照。
+ * 线上 500 的根因是适配器把 D1Result 当数组，见 d1-contract.test.ts。
  */
 describe('readPublishedAll', () => {
   it('用一条查询读完所有已发布内容', async () => {

@@ -180,6 +180,7 @@ export interface Source {
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced'
 
 export interface Concept {
+  sources?: Source[]
   id: string
   term: string
   termEn?: string
@@ -216,6 +217,7 @@ export interface GlossaryEntry {
 // ---------- 教程 ----------
 
 export interface Guide {
+  sources?: Source[]
   id: string
   title: string
   type: 'method' | 'scenario'
@@ -289,6 +291,7 @@ export interface PathItem {
 // ---------- 案例 ----------
 
 export interface CaseStudy {
+  kind?: 'illustrative'
   id: string
   title: string
   industry: string
@@ -407,7 +410,8 @@ export interface UpdateRecord {
 
 // ---------- 搜索 ----------
 
-export type SearchDocType = 'tool' | 'concept' | 'guide' | 'case' | 'path' | 'program' | 'toolkit' | 'briefing'
+export type SearchDocType =
+  'tool' | 'concept' | 'guide' | 'case' | 'path' | 'program' | 'toolkit' | 'news' | 'module'
 
 export interface SearchDoc {
   id: string
@@ -480,12 +484,7 @@ export interface EduProgram {
   updatedAt: string
 }
 
-export type EduProgramFormat =
-  | '进校宣讲'
-  | '教师工作坊'
-  | '线上直播'
-  | '校本定制'
-  | '种子教师培养'
+export type EduProgramFormat = '进校宣讲' | '教师工作坊' | '线上直播' | '校本定制' | '种子教师培养'
 
 export interface EduProgramModule {
   title: string
@@ -497,6 +496,9 @@ export interface EduProgramModule {
 
 /** 课程与教案包：学校拿到即可开课 / 备课 */
 export interface EduToolkit {
+  mode: '认识 AI' | '了解与使用' | '教师备课'
+  materials: string[]
+  worksheetTemplate: string
   id: string
   title: string
   stage: string
@@ -624,14 +626,7 @@ export interface EduPolicyRule {
 
 export type EduStage = '小学' | '初中' | '高中' | '职高'
 export type EduSubject =
-  | '语文'
-  | '数学'
-  | '英语'
-  | '科学'
-  | '信息技术'
-  | '道德与法治'
-  | '综合实践'
-  | '通用'
+  '语文' | '数学' | '英语' | '科学' | '信息技术' | '道德与法治' | '综合实践' | '通用'
 export type EduIntensity = '仅教师可用' | '学生可用需声明' | '学生可受限使用' | '明确禁止'
 
 export interface EduPolicyClause {

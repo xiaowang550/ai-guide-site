@@ -2,14 +2,11 @@ import type { CapabilityKey } from '@/data/types'
 import { tools } from '@/data'
 import { concepts } from '@/data/concepts'
 import { guides } from '@/data/guides'
-import { updates } from '@/data/updates'
 import { promptTemplates } from '@/data/prompts'
 import { scenarios } from '@/data/scenarios'
 import { cases } from '@/data/cases'
 import { eduPrograms } from '@/data/edu-programs'
 import { eduToolkits } from '@/data/edu-toolkits'
-import { eduSchools } from '@/data/edu-schools'
-import { eduBriefings } from '@/data/edu-briefings'
 import { eduFaq } from '@/data/edu-faq'
 import { isCurrent } from './edu-shared'
 import { round2 } from './score'
@@ -142,8 +139,6 @@ export function buildFreshnessReport(options: BuildReportOptions = {}): Freshnes
     ...promptTemplates.map((p) => makeItem(p.id, p.title, '/search', 'guide', '2026-09-20', now)),
     ...eduPrograms.map((p) => makeItem(p.id, p.title, `/edu/programs/${p.id}`, 'edu', p.updatedAt, now)),
     ...eduToolkits.map((t) => makeItem(t.id, t.title, `/edu/toolkits/${t.id}`, 'edu', t.updatedAt, now)),
-    ...eduSchools.map((s) => makeItem(s.id, s.name, '/edu/schools', 'edu', s.updatedAt, now)),
-    ...eduBriefings.map((b) => makeItem(b.id, b.issue, `/edu/briefings/${b.id}`, 'edu', b.date, now)),
     ...eduFaq.map((f) => makeItem(f.id, f.question, '/edu/support', 'edu', f.updatedAt, now)),
     ...cases.map((c) => makeItem(c.id, c.title, `/cases/${c.id}`, 'case', c.updatedAt, now)),
   ]
@@ -227,7 +222,6 @@ export function latestContentUpdate(now: Date = new Date()): { date: string; day
     ...guides.map((g) => g.updatedAt),
     ...eduPrograms.map((p) => p.updatedAt),
     ...eduToolkits.map((t) => t.updatedAt),
-    ...updates.map((u) => u.date),
   ].sort()
   const latest = dates[dates.length - 1] ?? new Date(now).toISOString().slice(0, 10)
   return { date: latest, daysAgo: daysSince(latest, now) }

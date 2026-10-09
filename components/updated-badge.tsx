@@ -27,7 +27,7 @@ export function UpdatedBadge({
       )}
       title={
         stale
-          ? `本页数据已超过 ${STALE_DAYS} 天未复核，可能已过时，请在「更新雷达」查看最新变更`
+          ? `本页数据已超过 ${STALE_DAYS} 天未复核，可能已过时，请在「AI 实时资讯」查看官方最新消息`
           : `本页数据复核于 ${formatDate(date)}`
       }
     >

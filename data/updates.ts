@@ -1,4 +1,4 @@
-import type { UpdateRecord, UpdateType } from '@/data/types'
+import type { UpdateRecord, UpdateType } from './types.ts'
 
 /**
  * 更新雷达数据

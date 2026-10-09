@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
+import { deploymentHeaders, SECURITY_HEADERS } from '@/lib/deployment-headers'
 
 /**
  * Cloudflare Pages 部署配置门禁。
@@ -49,6 +50,46 @@ describe('Cloudflare Pages 配置', () => {
       expect(c, `缺少 ${h}`).toContain(h)
     }
   })
+  it('路径必须顶格，正文不能被误当成规则，静态头与函数头一致', () => {
+    const text = readFileSync(headersPath, 'utf8')
+    let path = ''
+    for (const line of text.split(/\r?\n/)) {
+      if (!line.trim() || line.trimStart().startsWith('#')) continue
+      if (/^\s/.test(line)) {
+        expect(path).not.toBe('')
+        expect(line.trim()).toMatch(/^[A-Za-z][A-Za-z-]*:\s*.+/)
+      } else {
+        expect(line).toMatch(/^\//)
+        expect(line).not.toBe('*/')
+        path = line
+      }
+    }
+    for (const [name, value] of Object.entries(SECURITY_HEADERS))
+      expect(text).toContain(`${name}: ${value}`)
+  })
+  it('函数响应保留原状态和正文，API/后台/私人预览不缓存，HTML 可重新验证', async () => {
+    for (const path of [
+      '/api/site',
+      '/admin/',
+      '/tools/?admin-preview=1',
+      '/tools/',
+      '/sw.js',
+      '/_next/static/app-a1.js',
+    ]) {
+      const response = deploymentHeaders(
+        new Response('body', { status: 200, headers: { 'content-type': 'text/html' } }),
+        new Request(`https://site.test${path}`),
+      )
+      expect(await response.text()).toBe('body')
+      expect(response.headers.get('x-frame-options')).toBe('SAMEORIGIN')
+      if (path.includes('/api/') || path.includes('/admin/') || path.includes('admin-preview'))
+        expect(response.headers.get('cache-control')).toBe('no-store')
+      else if (path === '/sw.js') expect(response.headers.get('cache-control')).toBe('no-cache')
+      else if (path.startsWith('/_next'))
+        expect(response.headers.get('cache-control')).toContain('immutable')
+      else expect(response.headers.get('cache-control')).toContain('must-revalidate')
+    }
+  })
 
   it('CSP 允许同源脚本但禁止 eval（本站不需要 eval）', () => {
     const c = readFileSync(headersPath, 'utf8')
@@ -61,11 +102,12 @@ describe('Cloudflare Pages 配置', () => {
     expect(csp, '不应允许 object-src').toContain("object-src 'none'")
   })
 
-  it('_redirects 覆盖了所有多段路由前缀', () => {
-    const c = readFileSync(redirectsPath, 'utf8')
-    for (const p of ['/tools/', '/learn/', '/guides/', '/cases/', '/edu/']) {
-      expect(c, `缺少 ${p} 的重写规则`).toContain(p)
-    }
+  it('目录式静态导出使用原生路由，不重写到会触发规范化跳转的 index.html', () => {
+    const rules = readFileSync(redirectsPath, 'utf8')
+      .split(/\r?\n/)
+      .filter((line) => line.trim() && !line.trimStart().startsWith('#'))
+    expect(rules).toEqual([])
+    expect(readFileSync('next.config.ts', 'utf8')).toMatch(/trailingSlash:\s*true/)
   })
 
   it('package.json 的 build 产物就是 out（Cloudflare 要填这个目录）', () => {

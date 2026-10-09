@@ -217,6 +217,14 @@ CREATE TABLE IF NOT EXISTS page_views (
 
 CREATE INDEX IF NOT EXISTS idx_pageviews_path ON page_views(path, day DESC);
 
+-- 实时浏览量按分钟聚合，只保留最近两天，不记录任何访客标识。
+CREATE TABLE IF NOT EXISTS page_view_minutes (
+  minute TEXT NOT NULL,
+  path TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (minute, path)
+);
+
 -- 关键使用事件：同样按天 × 事件名 × 路径聚合。
 -- 事件名是白名单里的枚举，不接受前端随意传字符串 —— 否则
 -- 一个写错的埋点名就会在库里堆出一堆垃圾行，且无法聚合。

@@ -44,7 +44,7 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <div className={cn('border-b bg-muted/20', className)}>
+    <div className={cn('page-heading border-b border-border/60', className)}>
       <div className="container py-10 sm:py-14">
         {breadcrumbs?.length ? <Breadcrumbs items={breadcrumbs} className="mb-4" /> : null}
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
@@ -86,16 +86,16 @@ export function Section({
 }) {
   const Heading = headingLevel
   return (
-    <section className={cn('py-9', className)}>
+    <section className={cn('py-10 sm:py-12', className)}>
       {title || eyebrow ? (
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3 border-b border-hairline pb-4">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 pb-2">
           <div>
             {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
             {title ? (
               <Heading
                 className={cn(
                   'title-serif',
-                  headingLevel === 'h2' ? 'mt-1.5 text-xl' : 'mt-1 text-lg'
+                  headingLevel === 'h2' ? 'mt-2 text-2xl' : 'mt-1 text-lg'
                 )}
               >
                 {title}

@@ -14,22 +14,28 @@ import type { Db, DbRow, RunResult, SqlParam } from './types.ts'
  *    `{ 'COUNT(*)': 0 }` 这样一行 —— 不会返回 null。所以业务代码要判断
  *    「行存在但计数为 0」，不能靠 null 判断「没有数据」。
  *
- * 2) 不支持 `exec()` 跑多语句脚本（建表脚本要自己按 `;` 拆分后 batch）。
- *    下面的 exec() 因此是一个仅供初始化使用的实现，标注了限制。
+ * 2) `all()` 返回 D1Result 对象，行数组在 `results` 字段里。
+ *    Db.all() 只返回行，所以适配器必须显式解包。
  */
+
+export interface D1Result<T = DbRow> {
+  success: boolean
+  results: T[]
+  meta: { changes?: number; last_row_id?: number }
+}
 
 /** D1 预处理语句的最小形状 */
 export interface D1PreparedStatement {
   bind(...values: SqlParam[]): D1PreparedStatement
   first<T = DbRow>(colName?: string): Promise<T | null>
-  all<T = DbRow>(): Promise<T[]>
+  all<T = DbRow>(): Promise<D1Result<T>>
   /** run 不返回行，所以不带泛型参数（D1 的 run 也只回 meta） */
   run(): Promise<{ success: boolean; meta?: { changes?: number; last_row_id?: number } }>
 }
 
 export interface D1Database {
   prepare(query: string): D1PreparedStatement
-  batch<T = DbRow>(statements: D1PreparedStatement[]): Promise<T[]>
+  batch<T = DbRow>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>
   exec(query: string): Promise<{ count: number; duration: number }>
 }
 
@@ -40,10 +46,9 @@ export interface D1Database {
  * 可操作的指引 —— 它是部署环节最容易漏的一步，而症状（某一个接口 500、
  * 日志里只有一句 undefined.prepare）完全指不回原因。
  *
- * 注意：Pages 用 Git 集成构建时，`wrangler.toml` 里的 `[[d1_databases]]`
- * **不会**注入到 Functions 运行时。绑定必须在 Dashboard 的
- * Settings → Functions → Bindings 里配。这一点曾让我误判过一次，
- * 详见 docs/admin-backend.md。
+ * Pages 支持通过 Wrangler 配置或 Dashboard 配置绑定。
+ * 使用 pages_build_output_dir 时，Wrangler 配置是部署的配置来源。
+ * 绑定缺失要核对实际部署配置，不能仅凭未登录接口的 401 判断。
  */
 export class D1BindingMissingError extends Error {
   constructor() {
@@ -80,7 +85,8 @@ export function createD1Db(database: D1Database): Db {
   return {
     async all<T = DbRow>(sql: string, params: SqlParam[] = []): Promise<T[]> {
       const stmt = database.prepare(sql)
-      return (params.length ? stmt.bind(...params) : stmt).all<T>()
+      const result = await (params.length ? stmt.bind(...params) : stmt).all<T>()
+      return result.results
     },
 
     async first<T = DbRow>(sql: string, params: SqlParam[] = []): Promise<T | null> {

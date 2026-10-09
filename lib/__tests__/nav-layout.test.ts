@@ -33,8 +33,8 @@ describe('顶栏排版', () => {
   const header = readFileSync('components/site-header.tsx', 'utf8')
   const theme = readFileSync('components/theme-toggle.tsx', 'utf8')
 
-  it('顶栏高度 56px（7 个文档站实测 56-64px，Tailwind/Prisma/Starlight 都是 56）', () => {
-    expect(header, '顶栏高度应固定为 h-14 = 56px').toContain('h-14')
+  it('顶栏保留舒适的点击与留白空间，高度固定为 72px', () => {
+    expect(header, '顶栏高度应固定为 72px').toContain('h-[72px]')
   })
 
   it('一级项间距：xl 段给满研究值 24px，窄段不低于 16px（原来 gap-1 = 4px）', () => {
@@ -55,11 +55,12 @@ describe('顶栏排版', () => {
   })
 
   it('一级项与搜索框、主题按钮同高（h-9），不再出现 24/32/36 混排', () => {
-    // 导航项链接与箭头按钮都要锁 h-9；否则高度不齐会破坏水平节奏
-    const linkH = mega.match(/'flex (h-\d+) items-center rounded-l-lg/)
-    const chevH = mega.match(/'flex (h-\d+) items-center rounded-r-lg/)
-    expect(linkH?.[1], '导航项链接没有固定高度').toBe('h-9')
-    expect(chevH?.[1], '箭头按钮与导航项文字高度不一致').toBe(linkH?.[1])
+    expect(mega).toContain('flex h-9 items-center gap-1.5')
+    expect(mega).toContain('rounded-xl')
+    expect(mega).not.toContain('rounded-l-lg')
+    expect(mega).not.toContain('rounded-r-lg')
+    expect(mega).toMatch(/<button[\s\S]*?data-nav-trigger[\s\S]*?\{item.label\}[\s\S]*?<ChevronDown[\s\S]*?<\/button>/)
+
   })
 
   it('一级项数量不超过 6（研究结论：建议 ≤6、硬上限 7；MDN 的 9 项不得不做短标签降级）', () => {

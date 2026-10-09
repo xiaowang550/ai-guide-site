@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Check, Copy } from 'lucide-react'
+import { copyText } from '@/lib/copy-text'
 import { cn } from '@/lib/utils'
 
 /** 可一键复制的文本块（学生使用声明、提示词、邮件模板都用它） */
@@ -16,21 +17,22 @@ export function CopyableText({
   className?: string
   title?: string
 }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false),
+    [copyError, setCopyError] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    [],
+  )
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
+    const ok = await copyText(text)
+    setCopied(ok)
+    setCopyError(!ok)
+    if (timer.current) clearTimeout(timer.current)
+    if (ok) timer.current = setTimeout(() => setCopied(false), 1800)
   }
 
   return (
@@ -48,7 +50,7 @@ export function CopyableText({
             'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors',
             copied
               ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90',
           )}
         >
           {copied ? (
@@ -59,6 +61,11 @@ export function CopyableText({
           {copied ? '已复制' : label}
         </button>
       </div>
+      {copyError && (
+        <p role="alert" className="px-4 py-3 text-xs leading-6 text-danger">
+          复制未成功，可以选中下方文字手动复制。
+        </p>
+      )}
       <pre className="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-[13px] leading-6 text-foreground/90">
         {text}
       </pre>

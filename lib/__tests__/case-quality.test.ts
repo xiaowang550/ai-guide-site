@@ -213,7 +213,7 @@ it('scenario 写清了背景与输入（不少于 60 字）', () => {
  * （或换成一个没有复制能力的文本块组件）。
  */
 describe('案例页提示词可复制', () => {
-  const page = readFileSync('app/cases/[slug]/page.tsx', 'utf8')
+  const page = readFileSync('app/(public)/cases/[slug]/page.tsx', 'utf8')
 
   it('案例详情页用了 CopyableText，而不是裸 <pre>', () => {
     expect(page, '案例详情页没有引入 CopyableText').toContain("from '@/components/copyable-text'")

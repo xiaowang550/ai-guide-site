@@ -103,44 +103,24 @@ node --experimental-strip-types scripts/seed-content.mjs --remote
 > D1 是**增量的编辑层**，不是内容的唯一存放处。
 > 新增工具应该走 git（代码变更，需要评审），而不是后台新建。
 
-### 第 4 步：加 D1 绑定（**必须在 Dashboard 做，wrangler.toml 不算**）
+### 第 4 步：确认 D1 绑定
 
-Cloudflare Pages → 你的项目 → **Settings → Bindings** → Add → **D1 database**，
-变量名必须写 **`DB`**，绑定到第 1 步创建的库。
+本项目的 `wrangler.toml` 包含 `pages_build_output_dir` 和 `[[d1_databases]]`，
+部署时以该文件为配置来源。确认 `binding = "DB"` 与入口读取的 `env.DB` 一致，
+并且 `database_id` 指向已创建并迁移内容的数据库。
 
-> **这一步没有捷径，而且漏掉之后的症状极具误导性。**
->
-> Pages 用 Git 集成构建时，`wrangler.toml` 里的 `[[d1_databases]]`
-> **不会注入到 Functions 运行时**。仓库里配好了、部署也成功了，
-> 但运行时拿到的 `env.DB` 仍然是 `undefined`。
->
-> 症状不是「后台打不开」，而是**几乎一切正常，只有一个接口 500**：
->
-> - 后台页面能打开、能显示登录表单
-> - `/api/admin/*` 全部返回 401，看起来「鉴权在工作」
-> - 只有 `GET /api/content/published` 返回 500「服务端处理出错」
->
-> 为什么鉴权接口看起来是好的：没带 Cookie 时 `verifySession` 直接
-> `return null`，**一次数据库查询都不会发**。所以「401」并不代表数据库可用。
->
-> 为什么错误提示指不回原因：最早的 `createD1Db` 只返回一个闭包，
-> 访问 `database.prepare` 要等第一次查询才发生，于是
-> `try { createD1Db(env.DB) } catch { 提示「数据库未配置」 }` 那个 catch
-> 永远抓不到东西。真正的异常是
-> `Cannot read properties of undefined (reading 'prepare')`，
-> 又被通用错误处理吞成「服务端处理出错，请查看服务端日志」。
->
-> 现在 `createD1Db` 会立刻校验绑定形状，缺失时所有接口都会返回
-> 「缺少名为 DB 的 D1 绑定」并附上 Dashboard 路径 —— 见
-> `lib/__tests__/admin-binding.test.ts`，那个测试是照着这次踩坑写的。
->
-> 验证绑定真的生效，要看**查询类接口**的结果，不能看鉴权接口：
->
-> ```bash
-> npm run admin:verify
-> ```
->
-> 其中第 1 项会真的查一次库。返回 200 才算绑定通了。
+Cloudflare 支持通过 Wrangler 文件或 Dashboard 配置绑定；使用 Wrangler 管理后，
+Dashboard 的对应字段通常只能查看，不能编辑，不需要重复添加绑定。
+参见 [Cloudflare Pages 配置文档](https://developers.cloudflare.com/pages/functions/wrangler-configuration/)。
+
+验证运行时绑定要用真正查询数据库的接口：
+
+```bash
+npm run admin:verify
+```
+
+其中公开快照接口返回 200 才能证明查询路径正常。
+未登录的 `/api/admin/dashboard` 返回 401 时没有查询数据库，不能据此判断绑定。
 
 ### 第 5 步：加两个 Secret
 
@@ -148,7 +128,7 @@ Cloudflare Pages → **Settings → Variables and Secrets** → Add → **Secret
 
 | 名称 | 值 | 说明 |
 |---|---|---|
-| `ADMIN_PASSWORD` | 一个 ≥12 位的强密码 | 只在 `admins` 表为空时用来建第一个账号 |
+| `ADMIN_PASSWORD` | 至少 8 位；密码只通过 Secret 或维护脚本配置 | 只在 `admins` 表为空时用来建第一个账号 |
 | `SITE_SALT` | 一串随机字符串 | 登录限流与反馈限流的哈希盐，换站点就该换 |
 
 `ADMIN_USERNAME` 已在 `wrangler.toml` 的 `[vars]` 里（默认 `admin`），可以改。
@@ -349,8 +329,8 @@ curl -s https://你的域名/admin/ | grep -c '内容管理后台'
 
 ### 只有公开快照接口 500，其他接口都正常
 
-**这是 D1 绑定缺失的典型症状**，因为没带 Cookie 时鉴权接口一次库都不查，
-所以它们照常返回 401，看着「后台是活的」。
+这个症状不能单独证明绑定缺失。没带 Cookie 时鉴权接口不查询数据库，
+因此仍可返回 401；真正的原因需要结合公开快照和 Functions 日志确认。
 
 先直接看那个接口的提示文案：
 
@@ -358,13 +338,24 @@ curl -s https://你的域名/admin/ | grep -c '内容管理后台'
 curl -s https://你的域名/api/content/published
 ```
 
-- 返回「缺少名为 DB 的 D1 绑定」→ 照第 4 步去 Dashboard 配绑定
+- 返回「缺少名为 DB 的 D1 绑定」→ 照第 4 步核对部署使用的 Wrangler 配置
 - 返回「服务端处理出错」→ 是别的问题，需要看 Functions 日志
 - 返回 200 → 绑定是通的，问题在你没看的那一层
 
 > 不要用 `/api/admin/dashboard` 的 401 来判断数据库是否可用。
 > 它在 token 为空时不会发出任何查询，401 和「库完全正常」无法区分。
 > 要判断绑定，用一个**真的会查库**的公开接口，或者直接跑 `npm run admin:verify`。
+
+### Functions 日志提示 `rows is not iterable`
+
+Cloudflare D1 的 `all()` 返回 `{ success, meta, results }`，行数组在 `results` 中，
+不是直接返回数组。适配器必须读取 `result.results`。
+本地 D1 模拟接口也必须使用相同格式，否则本地测试通过但线上查询会失败。
+参见 `lib/__tests__/d1-contract.test.ts` 和
+[Cloudflare D1 查询文档](https://developers.cloudflare.com/d1/worker-api/prepared-statements/)。
+
+排查错误请查看 Functions 日志。临时的公开 `ADMIN_DEBUG` 返回分支已移除，
+遗留变量不会再使响应泄露内部错误；可在 Dashboard 删除该临时 Secret。
 
 ### 首次登录一直失败
 
@@ -388,11 +379,16 @@ rm -rf data/generated .cache
 npm run build      # 会重新生成
 ```
 
-### 想加一个管理员账号
+### 维护唯一管理员账号
 
-目前只有 `admin:seed` 迁移和 `ADMIN_PASSWORD` 自动建号两条路径。
-加账号需要直接写库（用 `scripts/` 下的脚本或 D1 控制台执行
-`INSERT INTO admins …`，密码哈希用 `lib/admin/crypto.ts` 的 `hashPassword` 生成）。
+后台不开放账号注册，所有管理数据仅对已登录的所有者开放。
+维护账号可以用 `scripts/set-owner.mjs`，把用户名和密码通过 `ADMIN_USERNAME`
+与 `ADMIN_PASSWORD` 环境变量传入。脚本只保存密码哈希，会撤销旧会话，
+并确保数据库中仅保留该所有者账号。不要把实际密码写进代码或配置文件。
+
+后台「账号安全」也可以修改密码，修改后其他设备的会话会失效。
+
+新版公开布局、管理工作台和实时浏览量的扩展约定见 `docs/design-system.md`。
 
 ---
 

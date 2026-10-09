@@ -1,3 +1,4 @@
+import { advancedConcepts } from './advanced-concepts'
 import type { GlossaryEntry } from '@/data/types'
 
 /**
@@ -12,6 +13,15 @@ import type { GlossaryEntry } from '@/data/types'
  */
 
 export const glossary: GlossaryEntry[] = [
+  ...advancedConcepts.map((concept) => ({
+    id: concept.id,
+    term: concept.term,
+    termEn: concept.termEn ?? concept.term,
+    short: concept.definition,
+    detail: concept.whyItMatters,
+    conceptId: concept.id,
+    updatedAt: concept.updatedAt,
+  })),
   {
     id: 'transformer',
     term: 'Transformer 架构',
@@ -366,15 +376,6 @@ export const glossary: GlossaryEntry[] = [
     updatedAt: '2026-09-27',
   },
   {
-    id: 'prompt-injection',
-    term: '提示词注入',
-    termEn: 'Prompt Injection',
-    short: '攻击者把指令藏在网页、文档或图片里，试图劫持 AI 行为的攻击手法。',
-    detail:
-      '当 Agent 会自动读取网页或文件时，正文里藏的「忽略之前的指令」就可能被执行。防御思路是分层权限、关键动作人工确认、限制可读来源。给 AI 开放联网和文件权限时，这是必须评估的风险。',
-    updatedAt: '2026-09-28',
-  },
-  {
     id: 'seed',
     term: '随机种子',
     termEn: 'Seed',
@@ -537,5 +538,5 @@ export const glossary: GlossaryEntry[] = [
 ]
 
 export const glossaryById: Record<string, GlossaryEntry> = Object.fromEntries(
-  glossary.map((g) => [g.id, g] as [string, GlossaryEntry])
+  glossary.map((g) => [g.id, g] as [string, GlossaryEntry]),
 )

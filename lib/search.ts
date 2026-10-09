@@ -31,19 +31,34 @@ export interface SearchHit {
 export function searchDocs(docs: SearchDocWithWeight[], query: string, limit = 12): SearchHit[] {
   const q = query.trim()
   if (!q) return []
+  const normalized = q.toLocaleLowerCase()
+  const exact = (doc: SearchDoc) =>
+    doc.id.toLocaleLowerCase() === normalized ||
+    [doc.title, doc.subtitle ?? '', ...doc.keywords, ...doc.tags].some(
+      (value) =>
+        value.toLocaleLowerCase() === normalized ||
+        value
+          .toLocaleLowerCase()
+          .split(/[^a-z0-9\u4e00-\u9fff]+/)
+          .includes(normalized),
+    )
   return createFuse(docs)
     .search(q)
+    .sort(
+      (a, b) => Number(exact(b.item)) - Number(exact(a.item)) || (a.score ?? 1) - (b.score ?? 1),
+    )
     .slice(0, limit)
     .map((r) => ({ doc: r.item, score: r.score ?? 1 }))
 }
 
-export const SEARCH_TYPE_LABELS: Record<SearchDoc['type'], string> = {
-  tool: '工具',
-  concept: '概念',
-  guide: '教程',
-  case: '案例',
-  path: '路径',
-  program: '课程',
-  toolkit: '教案包',
-  briefing: '简报',
+export { SEARCH_TYPE_LABELS } from './search-labels'
+
+/** 先限定内容类型，再截断结果，避免大量工具命中挤掉教程或案例。 */
+export function searchDocsByType(
+  docs: SearchDocWithWeight[],
+  query: string,
+  type: SearchDoc['type'] | 'all',
+  limit = 60,
+): SearchHit[] {
+  return searchDocs(type === 'all' ? docs : docs.filter((doc) => doc.type === type), query, limit)
 }

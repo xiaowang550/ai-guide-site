@@ -1,4 +1,6 @@
 import type { Tool } from './types'
+import { moreTools } from './more-tools.ts'
+import { applyToolReview } from './tool-reviews.ts'
 
 /**
  * 工具库（站点唯一工具数据源）
@@ -13,7 +15,7 @@ import type { Tool } from './types'
  */
 
 /** 定价备注统一口径：价格随时可能调整，落地前以官方定价页为准。 */
-export const tools: Tool[] = [
+const baselineTools: Tool[] = [
   // ------------------------------------------------------------------
   // 1. ChatGPT
   // ------------------------------------------------------------------
@@ -2380,7 +2382,8 @@ export const tools: Tool[] = [
     capabilities: {
       writing: {
         score: 4,
-        basis: '文字里的续写、扩写、改写与全文总结是官方长期主推功能，中文语感自然，正式文书需逐句改',
+        basis:
+          '文字里的续写、扩写、改写与全文总结是官方长期主推功能，中文语感自然，正式文书需逐句改',
       },
       longform: {
         score: 4,
@@ -2854,7 +2857,7 @@ export const tools: Tool[] = [
   },
 ]
 
+export const tools: Tool[] = [...baselineTools, ...moreTools].map(applyToolReview)
+
 /** id → Tool 的索引，避免组件里反复 find */
-export const toolsById: Record<string, Tool> = Object.fromEntries(
-  tools.map((t) => [t.id, t])
-)
+export const toolsById: Record<string, Tool> = Object.fromEntries(tools.map((t) => [t.id, t]))

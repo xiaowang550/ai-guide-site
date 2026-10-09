@@ -65,7 +65,7 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
   })
 
   it('对比页从非 client 模块取常量', () => {
-    const page = readFileSync('app/compare/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/compare/page.tsx', 'utf8')
     expect(
       page,
       '对比页不能再从 components/compare-picker 导入常量'
@@ -86,12 +86,12 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
    */
   it('服务端页面不会把 client 模块的常量插值进模板字符串', () => {
     const serverPages = [
-      'app/compare/page.tsx',
-      'app/tools/[slug]/page.tsx',
-      'app/find/page.tsx',
-      'app/cases/[slug]/page.tsx',
-      'app/tools/page.tsx',
-      'app/cases/page.tsx',
+      'app/(public)/compare/page.tsx',
+      'app/(public)/tools/[slug]/page.tsx',
+      'app/(public)/find/page.tsx',
+      'app/(public)/cases/[slug]/page.tsx',
+      'app/(public)/tools/page.tsx',
+      'app/(public)/cases/page.tsx',
     ]
     const offenders: string[] = []
 
@@ -212,26 +212,20 @@ describe('3. 示例数据标识在所有出现指标的地方一致', () => {
    * 「试点学校 8 所 · 覆盖教师 680 人次」，和 schools 页顶部的示例数据警示
    * 完全脱节。同一份数据，一个页面标得很醒目、另一个页面像真成果。
    */
-  it('首页那行学校数字带示例标识，而不是当成真成果', () => {
-    const page = readFileSync('app/page.tsx', 'utf8')
-    expect(page, '首页缺少示例数据警示').toMatch(/AlertTriangle/)
-    expect(page, '示例时应把标签改成「试点学校」而非「已覆盖学校」').toContain(
-      "metrics.includesSample ? '试点学校'"
-    )
-    expect(
-      page,
-      '不能用无条件的「试点学校 8 所」写法 —— 含示例时必须显式区分'
-    ).not.toMatch(/^(\s*)试点学校 \{metrics\.schools\}/m)
+  it('公开首页不再展示暂停模块的示例学校成果', () => {
+    const page = readFileSync('app/(public)/page.tsx', 'utf8')
+    expect(page).not.toContain('metrics.schools')
+    expect(page).not.toContain('metrics.teachersReached')
+    expect(page).toContain('metrics.programs')
+    expect(page).toContain('metrics.toolkits')
   })
 
-  it('schools 页与首页用的是同一份 metrics（不会一边真一边假）', () => {
-    for (const p of ['app/page.tsx', 'app/edu/page.tsx', 'app/edu/schools/page.tsx']) {
-      expect(
-        readFileSync(p, 'utf8'),
-        `${p} 应使用 computeEduMetrics() 派生，不要自己数`
-      ).toContain('computeEduMetrics')
-    }
+  it('保留的学校记录在后台明确标记示例数据', () => {
+    const view = readFileSync('components/admin/school-modules-view.tsx', 'utf8')
+    expect(view).toContain('school.isSample')
+    expect(view).toContain('不代表实际覆盖成果')
   })
+
 })
 
 describe('4. 评分来源说明口径统一', () => {
@@ -243,8 +237,8 @@ describe('4. 评分来源说明口径统一', () => {
 
   it('四处页面都引用统一组件，不各写一遍', () => {
     for (const p of [
-      'app/compare/page.tsx',
-      'app/tools/[slug]/page.tsx',
+      'app/(public)/compare/page.tsx',
+      'app/(public)/tools/[slug]/page.tsx',
     ]) {
       expect(
         readFileSync(p, 'utf8'),
@@ -254,7 +248,7 @@ describe('4. 评分来源说明口径统一', () => {
   })
 
   it('对比页必须有评分来源说明（原先完全没有）', () => {
-    const page = readFileSync('app/compare/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/compare/page.tsx', 'utf8')
     expect(page).toContain('ScoringSourceNote')
     // 比的是 JSX 使用位置，不是 import 位置 ——
     // import 语句的先后顺序和页面上的呈现顺序无关。
@@ -266,9 +260,9 @@ describe('4. 评分来源说明口径统一', () => {
   })
 
   it('关于页与工具库页的措辞不与统一口径冲突', () => {
-    const toolsPage = readFileSync('app/tools/page.tsx', 'utf8')
+    const toolsPage = readFileSync('app/(public)/tools/page.tsx', 'utf8')
     expect(toolsPage).toContain('不做自建评测')
-    const about = readFileSync('app/about/page.tsx', 'utf8')
+    const about = readFileSync('app/(public)/about/page.tsx', 'utf8')
     expect(about).toContain('不做自建评测')
   })
 })
@@ -277,7 +271,7 @@ describe('5. 禁止学生使用时生成观察记录', () => {
   const base = { stage: '小学' as const, subject: '语文' as const }
 
   it('允许使用时仍是使用声明', () => {
-    for (const intensity of ['仅教师可用', '学生可用需声明', '学生可受限使用'] as const) {
+    for (const intensity of ['学生可用需声明', '学生可受限使用'] as const) {
       const doc = buildDeclaration({ ...base, intensity })
       expect(doc).toContain('AI 使用声明')
       expect(doc).toContain('我使用的工具')
@@ -326,7 +320,7 @@ describe('6. 本地工具不被套用 SaaS 上手模板', () => {
   })
 
   it('工具详情页按交付方式分支，且本地分支不出现注册与联网提示', () => {
-    const page = readFileSync('app/tools/[slug]/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/tools/[slug]/page.tsx', 'utf8')
     expect(page).toContain('isLocalOnly(tool)')
     expect(page, '缺少本地安装分支').toContain('本地安装，不需要注册')
 
@@ -349,7 +343,7 @@ describe('6. 本地工具不被套用 SaaS 上手模板', () => {
   })
 
   it('SaaS 工具仍走注册分支', () => {
-    const page = readFileSync('app/tools/[slug]/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/tools/[slug]/page.tsx', 'utf8')
     expect(page).toContain('注册与准备')
   })
 
@@ -389,7 +383,7 @@ describe('7. 替代品对比默认包含当前工具', () => {
   })
 
   it('工具详情页的两个对比入口都走统一函数', () => {
-    const page = readFileSync('app/tools/[slug]/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/tools/[slug]/page.tsx', 'utf8')
     const raw = [...page.matchAll(/href=\{`\/compare\?ids=\$\{([^}]+)\}`\}/g)].map((m) => m[1])
     expect(raw.length, '没找到对比链接').toBeGreaterThan(0)
     for (const expr of raw) {

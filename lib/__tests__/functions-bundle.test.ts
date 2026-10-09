@@ -101,7 +101,7 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
     expect(
       graph.nodeBuiltins,
       `Workers 运行时没有 node: 模块。涉及 ${graph.nodeBuiltins.join('、')}` +
-        '—— 请改用 WebCrypto（crypto.subtle），它在本项目里两侧都有'
+        '—— 请改用 WebCrypto（crypto.subtle），它在本项目里两侧都有',
     ).toEqual([])
   })
 
@@ -109,7 +109,7 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
     expect(
       graph.aliases,
       `Pages Functions 用 esbuild 打包，不保证解析 tsconfig 的 @/ 别名。涉及 ${graph.aliases.join('、')}` +
-        '—— 请改成相对导入（lib/admin 与 lib/db 内部本来就该用相对导入）'
+        '—— 请改成相对导入（lib/admin 与 lib/db 内部本来就该用相对导入）',
     ).toEqual([])
   })
 
@@ -117,7 +117,7 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
     expect(
       graph.externals,
       `Functions 只能依赖仓库内的文件。涉及 ${graph.externals.join('、')}` +
-        '—— 需要的能力优先用 Web 标准 API 实现'
+        '—— 需要的能力优先用 Web 标准 API 实现',
     ).toEqual([])
   })
 
@@ -126,13 +126,16 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
   })
 
   it('依赖链规模合理（防止无意中把整个 data/ 拖进来）', () => {
-    // 依赖链只该是 lib/admin + lib/db 那一小片。
-    // 如果这里突然出现 data/ 下的文件，说明某个模块引入了全量数据，
-    // 那会直接决定 Worker 打包体积。
-    expect(graph.files.length, `依赖链有 ${graph.files.length} 个文件：\n${graph.files.join('\n')}`)
-      .toBeLessThan(30)
-    expect(graph.files.some((f) => f.startsWith('data/')), 'Functions 不该依赖 data/ 下的数据')
-      .toBe(false)
+    // 依赖链只包含后台服务和必要的资讯/私有日志元数据。
+    // 完整的工具评分及前端聚合索引不得进入云端采集或管理依赖。
+    expect(
+      graph.files.length,
+      `依赖链有 ${graph.files.length} 个文件：\n${graph.files.join('\n')}`,
+    ).toBeLessThan(34) // 新增模块配置与管理服务，仍禁止导入完整前台数据。
+    expect(
+      graph.files.some((f) => /data[/\\](?:tools|index)\.ts$/.test(f)),
+      'Functions 不该依赖完整工具评分和前端聚合索引',
+    ).toBe(false)
   })
 
   it('本地 sqlite 适配器没有混进依赖链', () => {
@@ -155,7 +158,7 @@ describe('wrangler.toml 在数据库就绪前不能声明 D1 绑定', () => {
     expect(
       id,
       'database_id 存在但不是合法 UUID —— Cloudflare 会解析这个绑定并失败，' +
-        '导致整个部署失败，而构建日志只显示「No deployment available」'
+        '导致整个部署失败，而构建日志只显示「No deployment available」',
     ).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
   })
 

@@ -1,8 +1,8 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, Scale, ShieldAlert } from 'lucide-react'
+import { CheckCircle2, HelpCircle, ShieldAlert, ArrowRight } from 'lucide-react'
 import type { EduIntensity, EduStage, EduSubject } from '@/data/types'
 import {
   INTENSITY_OPTIONS,
@@ -13,214 +13,181 @@ import {
 } from '@/lib/edu-shared'
 import { eduPolicyRules } from '@/data/edu-policy'
 import { CopyableText } from '@/components/copyable-text'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 
-/**
- * AI 使用规范生成器：纯规则，不调用任何大模型 API。
- * 结果可复现，并显示命中了哪几条规则，便于学校质疑与修订。
- */
 export function PolicyGenerator() {
   const [stage, setStage] = useState<EduStage>('初中')
   const [subject, setSubject] = useState<EduSubject>('通用')
-  const [intensity, setIntensity] = useState<EduIntensity>('学生可用需声明')
-
+  const [intensity, setIntensity] = useState<EduIntensity>('仅教师可用')
   const input = useMemo(() => ({ stage, subject, intensity }), [stage, subject, intensity])
   const result = useMemo(() => generatePolicy(input), [input])
-  const ruleLabels = new Map(eduPolicyRules.map((r) => [r.id, r.label]))
-
+  const observation = intensity === '仅教师可用' || intensity === '明确禁止'
+  const declaration = result.declaration
+  const policyText = [
+    `${stage} · ${subject} · ${intensity}`,
+    ...result.sections.map(
+      (section) => `${section.title}\n${section.items.map((item) => `• ${item}`).join('\n')}`,
+    ),
+    `禁止事项\n${result.redLines.map((item) => `• ${item}`).join('\n')}`,
+    `作业与评价\n${result.homeworkAdjustments.map((item) => `• ${item}`).join('\n')}`,
+  ].join('\n\n')
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-      {/* 输入 */}
-      <div className="border-b border-hairline pb-5 lg:sticky lg:top-20 lg:self-start">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <Scale className="h-4 w-4" aria-hidden />
-          填三个条件
-        </h2>
-        <div className="mt-4 space-y-5">
-          <Group label="学段">
-            <div className="flex flex-wrap gap-1.5">
-              {STAGE_LABELS.map((s) => (
-                <Chip key={s} active={stage === s} onClick={() => setStage(s)}>
-                  {s}
-                </Chip>
-              ))}
-            </div>
-          </Group>
-
-          <Group label="学科">
-            <div className="flex flex-wrap gap-1.5">
-              {SUBJECT_OPTIONS.map((s) => (
-                <Chip key={s} active={subject === s} onClick={() => setSubject(s)}>
-                  {s}
-                </Chip>
-              ))}
-            </div>
-          </Group>
-
-          <Group label="使用强度">
-            <div className="space-y-1.5">
-              {INTENSITY_OPTIONS.map((i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setIntensity(i)}
-                  aria-pressed={intensity === i}
-                  className={cn(
-                    'block w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-                    intensity === i
-                      ? 'border-primary bg-primary/5 font-medium text-primary'
-                      : 'hover:border-primary/40'
-                  )}
-                >
-                  {i}
-                </button>
-              ))}
-            </div>
-          </Group>
+    <div>
+      <section className="school-policy-controls print:hidden" aria-label="生成规范的条件">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base">第一步：确定课堂的使用范围</h2>
+          <span className="text-xs text-muted-foreground">初中建议从教师演示开始</span>
         </div>
-
-        <div className="mt-5 border-t pt-4 text-[11px] leading-5 text-muted-foreground">
-          <p>命中规则：</p>
-          <ul className="mt-1.5 space-y-1">
-            {result.matchedRuleIds.map((id) => (
-              <li key={id}>
-                <Badge variant="secondary" className="font-normal">
-                  {ruleLabels.get(id) ?? id}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-          {result.fallbacks.map((f) => (
-            <p key={f} className="mt-2 text-amber-700 dark:text-amber-300">
-              {f}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="text-sm">
+            学段
+            <select
+              value={stage}
+              onChange={(event) => setStage(event.target.value as EduStage)}
+              className="mt-2 block w-full rounded-xl border bg-background p-3"
+            >
+              {STAGE_LABELS.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
+            学科
+            <select
+              value={subject}
+              onChange={(event) => setSubject(event.target.value as EduSubject)}
+              className="mt-2 block w-full rounded-xl border bg-background p-3"
+            >
+              {SUBJECT_OPTIONS.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm">
+            谁可以使用
+            <select
+              value={intensity}
+              onChange={(event) => setIntensity(event.target.value as EduIntensity)}
+              className="mt-2 block w-full rounded-xl border bg-background p-3"
+            >
+              {INTENSITY_OPTIONS.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </section>
+      <section className="mt-8" aria-live="polite">
+        <h2 className="mb-4 text-xl">第二步：用三个场景看懂边界</h2>
+        <div className="school-safety-map">
+          <div>
+            <CheckCircle2 className="mb-3 h-6 w-6 text-primary" aria-hidden />
+            <h3 className="text-base">可以这样做</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              {observation
+                ? '教师展示公开材料的 AI 示例；学生用纸面观察单找依据、提问题。'
+                : '在教师规定范围内辅助提纲、解释或练习；保留自己的初稿、核查与修改记录。'}
             </p>
-          ))}
-        </div>
-      </div>
-
-      {/* 输出 */}
-      <div className="min-w-0 space-y-6">
-        <section className="border-b border-hairline pb-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg">规范草案</h2>
-            <Badge variant="secondary">
-              {stage} · {subject} · {intensity}
-            </Badge>
+            <p className="mt-3 text-xs font-medium text-primary">
+              {observation ? '例：对照课文核查一份摘要' : '例：改提纲后，独立写出论证段'}
+            </p>
           </div>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            这是按本地通行做法生成的草案，供教研组讨论修改后发布。正式发布前请结合本校实际与上级要求调整。
+          <div>
+            <HelpCircle className="mb-3 h-6 w-6 text-amber-600 dark:text-amber-300" aria-hidden />
+            <h3 className="text-base">先向教师确认</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              确认任务是否允许、哪一部分必须独立完成、是否需要账号，以及学校和工具的使用条件。
+            </p>
+            <p className="mt-3 text-xs font-medium text-amber-700 dark:text-amber-300">
+              例：研究作业能否用 AI 整理思路
+            </p>
+          </div>
+          <div>
+            <ShieldAlert className="mb-3 h-6 w-6 text-danger" aria-hidden />
+            <h3 className="text-base">不可以这样做</h3>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              上传可识别的学生与家庭信息；把没有核实的内容当事实；把 AI 代写冒充独立完成。
+            </p>
+            <p className="mt-3 text-xs font-medium text-danger">例：上传班级成绩名单让工具排名</p>
+          </div>
+        </div>
+        {result.fallbacks.length > 0 && (
+          <div className="mt-4 rounded-xl bg-amber-500/10 p-4 text-sm leading-6">
+            {result.fallbacks.map((item) => (
+              <p key={item}>{item}</p>
+            ))}
+          </div>
+        )}
+      </section>
+      <section className="mt-8 grid gap-8 lg:grid-cols-2">
+        <div>
+          <h2 className="text-xl">第三步：带走可讨论的草案</h2>
+          <p className="mb-4 mt-2 text-sm leading-6 text-muted-foreground">
+            供教研组结合本校安排确认后使用。当前：{stage} · {subject} · {intensity}。
           </p>
-          <div className="mt-4 space-y-5">
+          <details className="school-details">
+            <summary>查看完整规范与禁止事项</summary>
             {result.sections.map((section) => (
-              <div key={section.title}>
+              <div key={section.title} className="mb-5">
                 <h3 className="text-sm font-semibold">{section.title}</h3>
-                <ul className="mt-2 space-y-1.5">
+                <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-6 text-muted-foreground">
                   {section.items.map((item) => (
-                    <li key={item} className="flex gap-2 text-sm leading-6 text-foreground/85">
-                      <span aria-hidden className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                      {item}
-                    </li>
+                    <li key={item}>{item}</li>
                   ))}
                 </ul>
               </div>
             ))}
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-danger/40 bg-danger/5 p-5">
-          <h2 className="flex items-center gap-2 text-lg text-danger">
-            <ShieldAlert className="h-5 w-5" aria-hidden />
-            红线：以下做法明确禁止
+            <h3 className="mb-2 text-sm font-semibold text-danger">以下做法明确禁止</h3>
+            <ul className="space-y-2 text-sm leading-6">
+              {result.redLines.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </details>
+          <details className="school-details mt-4" data-print-hide>
+            <summary>复制整份草案</summary>
+            <CopyableText text={policyText} label="复制规范草案" />
+          </details>
+          <details className="school-details mt-4">
+            <summary>作业与评价怎么调整</summary>
+            <ul className="space-y-3 text-sm leading-6 text-muted-foreground">
+              {result.homeworkAdjustments.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </details>
+        </div>
+        <div>
+          <h2 className="mb-3 text-xl">
+            {input.intensity === '明确禁止'
+              ? '配套的学生观察记录'
+              : observation
+                ? '配套的学生观察记录'
+                : '配套的学生使用声明'}
           </h2>
-          <ul className="mt-3 space-y-2">
-            {result.redLines.map((r) => (
-              <li key={r} className="flex gap-2 rounded-lg bg-card p-3 text-sm leading-6 text-foreground/90">
-                <AlertTriangle className="mt-1 h-3.5 w-3.5 shrink-0 text-danger" aria-hidden />
-                {r}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          <h2 className="mb-3 text-lg">作业与评价调整建议</h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {result.homeworkAdjustments.map((a) => (
-              <li key={a} className="flex items-start gap-2 border-t border-hairline py-3.5 text-sm leading-6">
-                <span aria-hidden className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                {a}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section>
-          {/* 标题跟着强度走：禁止学生使用时出现「使用声明」这个标题本身就是错的 */}
-          <h2 className="mb-3 text-lg">
-            {input.intensity === '明确禁止' ? '配套的学生观察记录' : '配套的学生使用声明'}
-          </h2>
+          <p className="mb-4 text-sm leading-6 text-muted-foreground">
+            {observation
+              ? '只观察教师演示时，记录发现和依据，无需填写本人使用了什么工具。'
+              : '记录辅助范围、核查依据和独立完成的部分。'}
+          </p>
           <CopyableText
-            text={result.declaration}
-            title={`${declarationTitle(input)}（可复制打印）`}
+            text={declaration}
+            title={declarationTitle(input)}
+            label={observation ? '复制观察记录' : '复制使用声明'}
           />
-          {input.intensity === '明确禁止' ? (
-            <p className="mt-2 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs leading-5">
-              你选了「明确禁止」，所以这里给的是观察记录而不是使用声明 ——
-              既然不允许学生使用 AI，就不该让学生去签一份「我用了 AI」的声明。
-              学生看教师演示并记录观察要点，是这个强度下合理的学习证据。
-            </p>
-          ) : null}
-        </section>
-
-        <p className="border-t pt-5 text-xs leading-6 text-muted-foreground">
-          本工具是纯规则引擎（{eduPolicyRules.length} 条规则），不调用任何大模型 API：
-          同样的三个条件永远得到同样的草案。规则本身也可以被质疑 ——
-          发现某条规则与本校情况冲突，请通过
-          <Link href="/edu/support" className="text-primary underline underline-offset-4">
-            {' '}
-            答疑与反馈
-          </Link>{' '}
-          提交，我们会修订规则并在简报中说明改动。
-        </p>
-      </div>
+        </div>
+      </section>
+      <details className="school-details mt-8">
+        <summary>查看草案采用的规则依据</summary>
+        <ul className="space-y-2 text-xs leading-6 text-muted-foreground">
+          {result.matchedRuleIds.map((id) => (
+            <li key={id}>{eduPolicyRules.find((rule) => rule.id === id)?.label ?? id}</li>
+          ))}
+        </ul>
+      </details>
+      <Link href="/edu/toolkits" className="section-link mt-7">
+        找到对应的课堂教案
+        <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
     </div>
-  )
-}
-
-function Group({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </h3>
-      {children}
-    </div>
-  )
-}
-
-function Chip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'rounded-full border px-2.5 py-1 text-xs transition-colors',
-        active
-          ? 'border-primary bg-primary/10 font-medium text-primary'
-          : 'text-muted-foreground hover:border-primary/40 hover:text-foreground'
-      )}
-    >
-      {children}
-    </button>
   )
 }

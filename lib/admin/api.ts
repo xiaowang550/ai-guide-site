@@ -1,3 +1,20 @@
+import {
+  readSiteConfig,
+  saveSiteModule,
+  archiveSiteModule,
+  saveSiteFeatures,
+  createBuildRequest,
+  listBuildRequests,
+  ModuleInputError,
+  ModuleConflictError,
+  type CodexBridge,
+} from './modules.ts'
+import { checkToolSources, readToolSourceStates } from '../news/tool-watch.ts'
+import { readNews, refreshNews, editNews } from '../news/service.ts'
+import { updates } from '../../data/updates.ts'
+import { schoolArchiveNames } from './school-archive-names.ts'
+import { eduSchools } from '../../data/edu-schools.ts'
+import { eduBriefings } from '../../data/edu-briefings.ts'
 /**
  * 管理后台 API —— 全部路由的实现。
  *
@@ -60,6 +77,7 @@ import {
 } from './content.ts'
 import type { ContentKind } from './capability-keys.ts'
 import { analyticsSummary, collect, recordMilestone, syncEventNames } from './analytics.ts'
+import { trafficReport, TRAFFIC_PERIODS, type TrafficPeriod } from './traffic.ts'
 import {
   FEEDBACK_STATUS_LABELS,
   feedbackCounts,
@@ -104,11 +122,8 @@ export interface AdminEnv {
    */
   ADMIN_PASSWORD?: string
   ADMIN_USERNAME?: string
-  /**
-   * 排查用：设为 '1' 时 500 响应会带上原始错误信息。默认关闭。
-   * 排查完必须删掉 —— 它会把 SQL 片段暴露给任何能触发 500 的人。
-   */
-  ADMIN_DEBUG?: string
+  NEWS_BACKGROUND?: (task: Promise<unknown>) => void
+  CODEX_BRIDGE?: CodexBridge
 }
 
 /** 站点盐缺失时的兜底 */
@@ -160,7 +175,7 @@ async function ensureBootstrapAdmin(db: Db, env: AdminEnv): Promise<void> {
   await db.run(
     `INSERT INTO admins (username, password_hash, salt, iterations, role, created_at)
      VALUES (?, ?, ?, ?, 'owner', ?)`,
-    [username, rec.hash, rec.salt, rec.iterations, nowIso()]
+    [username, rec.hash, rec.salt, rec.iterations, nowIso()],
   )
   await db.run('INSERT INTO audit_log (at, actor, action, target, detail) VALUES (?, ?, ?, ?, ?)', [
     nowIso(),
@@ -187,6 +202,137 @@ function matchPath(pattern: string, pathname: string): Record<string, string> | 
 // ── 路由表 ─────────────────────────────────────────────────────────────────
 
 const ROUTES: Route[] = [
+  {
+    method: 'GET',
+    pattern: '/api/site',
+    auth: 'public',
+    handler: async ({ db }) => json(await readSiteConfig(db)),
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/modules',
+    auth: 'required',
+    handler: async ({ db }) => json(await readSiteConfig(db, true)),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/modules',
+    auth: 'required',
+    handler: async ({ db, request, identity }) =>
+      moduleResponse(async () =>
+        saveSiteModule(db, null, await readJson(request), identity!.username),
+      ),
+  },
+  {
+    method: 'PATCH',
+    pattern: '/api/admin/modules/:id',
+    auth: 'required',
+    handler: async ({ db, request, identity }, p) =>
+      moduleResponse(async () =>
+        saveSiteModule(db, p.id, await readJson(request), identity!.username),
+      ),
+  },
+  {
+    method: 'DELETE',
+    pattern: '/api/admin/modules/:id',
+    auth: 'required',
+    handler: async ({ db, identity }, p) =>
+      moduleResponse(async () => {
+        await archiveSiteModule(db, p.id, identity!.username)
+        return { ok: true }
+      }),
+  },
+  {
+    method: 'PATCH',
+    pattern: '/api/admin/site-settings',
+    auth: 'required',
+    handler: async ({ db, request, identity }) =>
+      moduleResponse(async () => saveSiteFeatures(db, await readJson(request), identity!.username)),
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/builds',
+    auth: 'required',
+    handler: async ({ db, env }) =>
+      json({
+        items: await listBuildRequests(db),
+        bridge: env.CODEX_BRIDGE
+          ? await env.CODEX_BRIDGE.status()
+          : {
+              available: false,
+              message: '当前服务没有本地 Codex 执行器，可保存需求并复制到 Codex。',
+            },
+      }),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/builds',
+    auth: 'required',
+    handler: async ({ db, request, identity }) =>
+      moduleResponse(async () =>
+        createBuildRequest(db, await readJson(request), identity!.username),
+      ),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/builds/:id/run',
+    auth: 'required',
+    handler: async ({ db, env, identity }, p) => {
+      const item = (await listBuildRequests(db)).find((item) => item.id === p.id)
+      if (!item) return notFound()
+      if (!env.CODEX_BRIDGE) return fail(503, '当前服务没有 Codex 执行器。')
+      if (!(await env.CODEX_BRIDGE.status()).available)
+        return fail(503, 'Codex 尚未登录或执行器不可用。')
+      const busy = await db.first(
+        "SELECT id FROM feature_requests WHERE status IN ('queued','running') LIMIT 1",
+      )
+      if (busy) return fail(409, '已有任务正在运行，请等待完成。')
+      const claimed = await db.run(
+        "UPDATE feature_requests SET status='queued',updated_at=? WHERE id=? AND status IN ('draft','failed') AND NOT EXISTS(SELECT 1 FROM feature_requests WHERE status IN ('queued','running'))",
+        [nowIso(), p.id],
+      )
+      if (!claimed.changes) return fail(409, '任务已生成草稿或正在运行，请新建需求。')
+      await db.run('INSERT INTO audit_log(at,actor,action,target,detail) VALUES(?,?,?,?,?)', [
+        nowIso(),
+        identity!.username,
+        'codex-build',
+        p.id,
+        '在独立副本中生成代码草稿',
+      ])
+      const task = env.CODEX_BRIDGE.run(p.id, item.request)
+      if (env.NEWS_BACKGROUND) env.NEWS_BACKGROUND(task)
+      else void task.catch(() => {})
+      return json({ ok: true, status: 'queued' }, 202)
+    },
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/builds/:id/changes',
+    auth: 'required',
+    handler: async ({ db, env }, p) => {
+      const item = (await listBuildRequests(db)).find((item) => item.id === p.id)
+      if (!item) return notFound()
+      return json({
+        items:
+          env.CODEX_BRIDGE && item.status === 'ready' ? await env.CODEX_BRIDGE.changes(p.id) : [],
+      })
+    },
+  },
+  { method: 'GET', pattern: '/api/news', auth: 'public', handler: handlePublicNews },
+  { method: 'GET', pattern: '/api/admin/news', auth: 'required', handler: handleAdminNews },
+  {
+    method: 'POST',
+    pattern: '/api/admin/news/refresh',
+    auth: 'required',
+    handler: handleNewsRefresh,
+  },
+  { method: 'PATCH', pattern: '/api/admin/news/:id', auth: 'required', handler: handleNewsEdit },
+  {
+    method: 'GET',
+    pattern: '/api/admin/update-radar',
+    auth: 'required',
+    handler: async () => json({ publicEnabled: false, updates }),
+  },
   // ── 登录相关（无需登录）──
   {
     method: 'POST',
@@ -222,6 +368,13 @@ const ROUTES: Route[] = [
   },
 
   // ── 内容 ──
+  {
+    method: 'GET',
+    pattern: '/api/admin/school-modules',
+    auth: 'required',
+    handler: handleSchoolModules,
+  },
+  { method: 'GET', pattern: '/api/admin/analytics', auth: 'required', handler: handleTraffic },
   { method: 'GET', pattern: '/api/admin/content', auth: 'required', handler: handleListContent },
   {
     method: 'GET',
@@ -306,6 +459,16 @@ const ROUTES: Route[] = [
   },
 ]
 
+async function moduleResponse(action: () => Promise<unknown>) {
+  try {
+    return json(await action())
+  } catch (error) {
+    if (error instanceof ModuleInputError) return fail(400, error.message)
+    if (error instanceof ModuleConflictError) return fail(409, error.message)
+    throw error
+  }
+}
+
 // ── 入口 ───────────────────────────────────────────────────────────────────
 
 export async function handleApi(request: Request, env: AdminEnv): Promise<Response | null> {
@@ -323,9 +486,8 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
       return fail(
         500,
         'Pages 项目缺少名为 DB 的 D1 绑定。' +
-          '注意：Pages 用 Git 集成构建时，wrangler.toml 里的 [[d1_databases]] 不会注入到' +
-          'Functions 运行时，必须在 Dashboard → Settings → Functions → Bindings 里手动添加' +
-          '（变量名 DB，绑定到 ai-guide-site 这个 D1 数据库）。'
+          '请核对部署使用的 wrangler.toml 中 [[d1_databases]] 的 binding 和 database_id，' +
+          '或在 Dashboard → Settings → Bindings 中确认绑定。',
       )
     }
     return fail(500, '数据库未配置：Pages 项目的 D1 绑定名为 DB。')
@@ -367,6 +529,8 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
   const { route, params } = matched
 
   if (route.auth === 'required' && !identity) return unauthorized()
+  if (route.auth === 'required' && identity?.role !== 'owner')
+    return fail(403, '仅站点所有者可以访问管理后台。')
 
   const isMutation = request.method !== 'GET' && request.method !== 'HEAD'
   if (isMutation && !isSameOrigin(request)) {
@@ -387,26 +551,12 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
         500,
         '数据库已绑定但还没有建表。请执行：' +
           'npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql' +
-          '（然后 node --experimental-strip-types scripts/seed-content.mjs --remote 灌入内容）'
+          '（然后 node --experimental-strip-types scripts/seed-content.mjs --remote 灌入内容）',
       )
     }
     // 不把内部错误原文返回给前端：那可能包含 SQL 或环境变量名。
     // 完整信息写进日志，前端只看到「服务端出错」。
     console.error('[admin-api] 未处理的异常', url.pathname, message)
-    // 唯一例外：ADMIN_DEBUG=1 时把错误原文返回。
-    //
-    // 为什么需要它：出问题时我手上只有「服务端处理出错」这一句话，
-    // 而 tail / Dashboard 日志在本机都拿不到（token 没有 Pages 权限、
-    // dash.cloudflare.com 又连不上），于是只能靠猜 ——
-    // 先后猜过「SQL 有问题」「往返次数太多」「绑定没配」，三次全错。
-    // 一句错误原文就能直接结束猜测。
-    //
-    // 默认关闭。开启方式：Pages → Settings → Variables and Secrets →
-    // 加 ADMIN_DEBUG = 1（用 **Secret** 或普通变量都行，它不是敏感值）。
-    // 排查完记得删掉：它会让 500 的响应体带上 SQL 片段。
-    if (env.ADMIN_DEBUG === '1') {
-      return fail(500, `服务端处理出错（ADMIN_DEBUG）：${message.slice(0, 500)}`)
-    }
     return fail(500, '服务端处理出错，请查看服务端日志。')
   }
 }
@@ -445,7 +595,7 @@ async function handleLogin(ctx: RouteCtx): Promise<Response> {
       return fail(
         500,
         '数据库已绑定但还没有建表。请先执行：' +
-          'npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql'
+          'npx wrangler d1 execute ai-guide-site --remote --file=db/schema.sql',
       )
     }
     return fail(500, '服务端初始化失败，请查看服务端日志。')
@@ -483,7 +633,7 @@ async function handleLogin(ctx: RouteCtx): Promise<Response> {
       maxFailures: LOGIN_MAX_FAILURES,
     },
     200,
-    { 'set-cookie': cookie }
+    { 'set-cookie': cookie },
   )
 }
 
@@ -510,17 +660,33 @@ async function handleChangePassword(ctx: RouteCtx): Promise<Response> {
     ctx.identity!.username,
     oldPassword,
     newPassword,
-    ctx.token!
+    ctx.token!,
   )
   if (!res.ok) return fail(400, res.error ?? '修改失败')
   await ctx.db.run(
     'INSERT INTO audit_log (at, actor, action, target, detail) VALUES (?, ?, ?, ?, ?)',
-    [nowIso(), ctx.identity!.username, 'password.change', ctx.identity!.username, null]
+    [nowIso(), ctx.identity!.username, 'password.change', ctx.identity!.username, null],
   )
   return json({ ok: true })
 }
 
 // ── 处理器：仪表盘 ─────────────────────────────────────────────────────────
+
+async function handleSchoolModules(): Promise<Response> {
+  return json({
+    publicEnabled: false,
+    schools: eduSchools,
+    briefings: eduBriefings,
+    ...schoolArchiveNames,
+  })
+}
+
+async function handleTraffic(ctx: RouteCtx): Promise<Response> {
+  const period = new URL(ctx.request.url).searchParams.get('period') || '7d'
+  if (!TRAFFIC_PERIODS.includes(period as TrafficPeriod))
+    return fail(400, '请选择有效的统计时间范围。')
+  return json(await trafficReport(ctx.db, period as TrafficPeriod))
+}
 
 async function handleDashboard(ctx: RouteCtx): Promise<Response> {
   const [items, feedback, review, analytics] = await Promise.all([
@@ -535,7 +701,7 @@ async function handleDashboard(ctx: RouteCtx): Promise<Response> {
   const neverPublished = items.filter((i) => i.published_version === null)
 
   const lastPublish = await ctx.db.first<{ at: string; actor: string }>(
-    "SELECT at, actor FROM audit_log WHERE action = 'publish' ORDER BY at DESC LIMIT 1"
+    "SELECT at, actor FROM audit_log WHERE action = 'publish' ORDER BY at DESC LIMIT 1",
   )
 
   return json({
@@ -680,7 +846,10 @@ async function handleListFeedback(ctx: RouteCtx): Promise<Response> {
   return json({ items, counts: await feedbackCounts(ctx.db), labels: FEEDBACK_STATUS_LABELS })
 }
 
-async function handleUpdateFeedback(ctx: RouteCtx, params: Record<string, string>): Promise<Response> {
+async function handleUpdateFeedback(
+  ctx: RouteCtx,
+  params: Record<string, string>,
+): Promise<Response> {
   const body = await readJson<{ status?: unknown; note?: unknown }>(ctx.request)
   const result = await updateFeedback(ctx.db, {
     id: str(params.id, 64),
@@ -728,7 +897,10 @@ async function handleRegenerateReview(ctx: RouteCtx): Promise<Response> {
   return json({ ok: true, ...result })
 }
 
-async function handleResolveReview(ctx: RouteCtx, params: Record<string, string>): Promise<Response> {
+async function handleResolveReview(
+  ctx: RouteCtx,
+  params: Record<string, string>,
+): Promise<Response> {
   const body = await readJson<{ status?: unknown; note?: unknown }>(ctx.request)
   const status = str(body?.status, 20)
   if (!['done', 'dismissed', 'open'].includes(status)) {
@@ -766,7 +938,7 @@ async function handleAudit(ctx: RouteCtx): Promise<Response> {
   const rows = await ctx.db.all<Record<string, unknown>>(
     `SELECT id, at, actor, action, target, detail FROM audit_log
      ${clause} ORDER BY id DESC LIMIT ?`,
-    [...args, Math.min(Math.max(limit, 1), 500)]
+    [...args, Math.min(Math.max(limit, 1), 500)],
   )
   return json({ entries: rows })
 }
@@ -816,7 +988,7 @@ async function handleCollect(ctx: RouteCtx): Promise<Response> {
   const meta = requestMeta(ctx.request)
   const result = await collect(
     { path: body?.path, events: body?.events, ip: meta.ip, siteSalt: saltOf(ctx.env) },
-    ctx.db
+    ctx.db,
   )
   // 埋点失败不该影响访客，所以除非明确超限，一律 200。
   if (!result.ok) return json({ ok: true, accepted: 0 }, 202)
@@ -883,3 +1055,65 @@ export function createSqliteEnvForTests(db: Db, overrides: Partial<AdminEnv> = {
 }
 
 export { pruneExpiredSessions }
+
+async function handlePublicNews(ctx: RouteCtx): Promise<Response> {
+  const tool = ctx.url.searchParams.get('tool')?.slice(0, 80)
+  const limit = Number(ctx.url.searchParams.get('limit') ?? 60)
+  if (!Number.isInteger(limit) || limit < 1 || limit > 100)
+    return fail(400, '资讯数量范围为 1–100。')
+  const feed = await readNews(ctx.db, { tool, limit })
+  if (ctx.env.NEWS_BACKGROUND)
+    ctx.env.NEWS_BACKGROUND(
+      refreshNews(ctx.db)
+        .then(() => checkToolSources(ctx.db))
+        .catch((error) =>
+          console.error('[news] 同步失败', error instanceof Error ? error.message : '未知错误'),
+        ),
+    )
+  return json(feed)
+}
+async function handleAdminNews(ctx: RouteCtx): Promise<Response> {
+  return json({
+    ...(await readNews(ctx.db, { includeHidden: true, limit: 100 })),
+    toolSources: await readToolSourceStates(ctx.db),
+  })
+}
+async function handleNewsRefresh(ctx: RouteCtx): Promise<Response> {
+  const news = await refreshNews(ctx.db, { force: true })
+  return json({ ...news, tools: await checkToolSources(ctx.db) })
+}
+async function handleNewsEdit(ctx: RouteCtx, params: Record<string, string>): Promise<Response> {
+  const body = await readJson<Record<string, unknown>>(ctx.request)
+  if (
+    !body ||
+    Object.keys(body).some((key) => !['title', 'summary', 'takeaway', 'hidden'].includes(key))
+  )
+    return fail(400, '仅可编辑标题、摘要、阅读提示与公开状态。')
+  for (const [field, max] of [
+    ['title', 230],
+    ['summary', 300],
+    ['takeaway', 200],
+  ] as const) {
+    if (
+      body[field] !== undefined &&
+      (typeof body[field] !== 'string' || String(body[field]).length > max)
+    )
+      return fail(400, `${field} 格式或长度不符合要求。`)
+  }
+  if (body.hidden !== undefined && typeof body.hidden !== 'boolean')
+    return fail(400, '公开状态格式不正确。')
+  const saved = await editNews(
+    ctx.db,
+    params.id,
+    body as { title?: string; summary?: string; takeaway?: string; hidden?: boolean },
+  )
+  if (!saved) return notFound('资讯不存在。')
+  await ctx.db.run('INSERT INTO audit_log (at,actor,action,target,detail) VALUES (?,?,?,?,?)', [
+    nowIso(),
+    ctx.identity!.username,
+    'news-edit',
+    params.id,
+    JSON.stringify(Object.keys(body)),
+  ])
+  return json({ ok: true })
+}

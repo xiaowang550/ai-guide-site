@@ -3,7 +3,6 @@ import { siteConfig } from '@/lib/site'
 import { cases, concepts, guides, paths, tools } from '@/data'
 import { eduPrograms } from '@/data/edu-programs'
 import { eduToolkits } from '@/data/edu-toolkits'
-import { eduBriefings } from '@/data/edu-briefings'
 
 export const dynamic = 'force-static'
 
@@ -17,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/find',
     '/compare',
     '/learn',
+    '/learn/advanced',
     '/learn/glossary',
     '/guides',
     '/paths',
@@ -28,8 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/edu/programs',
     '/edu/toolkits',
     '/edu/policy',
-    '/edu/schools',
-    '/edu/briefings',
     '/edu/support',
   ]
 
@@ -38,10 +36,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${base}${route}`,
       lastModified: now,
       changeFrequency:
-        route === '' || route === '/updates' || route.startsWith('/edu/briefings')
-          ? ('weekly' as const)
-          : ('monthly' as const),
-      priority: route === '' ? 1 : route === '/edu' || route === '/find' || route === '/tools' ? 0.9 : 0.7,
+        route === '' || route === '/updates' ? ('weekly' as const) : ('monthly' as const),
+      priority:
+        route === '' ? 1 : route === '/edu' || route === '/find' || route === '/tools' ? 0.9 : 0.7,
     })),
     ...tools.map((t) => ({
       url: `${base}/tools/${t.id}`,
@@ -85,12 +82,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(t.updatedAt),
       changeFrequency: 'monthly' as const,
       priority: 0.7,
-    })),
-    ...eduBriefings.map((b) => ({
-      url: `${base}/edu/briefings/${b.id}`,
-      lastModified: new Date(b.date),
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
     })),
   ]
 }

@@ -45,6 +45,6 @@ database_id = "1816b80f-e9be-4017-bc28-84f424ebfc82"
 
 [vars]
 # 初始管理员用户名。密码走 Secret（ADMIN_PASSWORD），不进仓库、不进产物。
-ADMIN_USERNAME = "admin"
+ADMIN_USERNAME = "1302582367"
 # 提醒：SITE_SALT 与 ADMIN_PASSWORD 请在 Cloudflare 后台设为 Secret，
 # 不要写进这个文件。写在 [vars] 里会被提交进 git。

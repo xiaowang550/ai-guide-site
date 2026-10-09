@@ -2,22 +2,23 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import type { SearchDoc } from '@/data/types'
-import { SEARCH_TYPE_LABELS, searchDocs } from '@/lib/search'
+import { SEARCH_TYPE_LABELS, searchDocsByType } from '@/lib/search'
 import { useSearchIndex } from '@/components/use-search-index'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 
 const TYPES: (SearchDoc['type'] | 'all')[] = [
   'all',
+  'news',
+  'module',
   'tool',
   'program',
   'toolkit',
   'concept',
   'guide',
   'case',
-  'briefing',
   'path',
 ]
 
@@ -29,13 +30,19 @@ export function SearchPageClient() {
 
   // 静态导出：挂载后从地址栏读取 ?q=
   useEffect(() => {
-    const param = new URLSearchParams(window.location.search).get('q')
-    if (param) setQ(param)
+    const read = () => {
+      const params = new URLSearchParams(location.search)
+      setQ(params.get('q') ?? '')
+      const type = params.get('type')
+      setType(TYPES.includes(type as SearchDoc['type']) ? (type as SearchDoc['type']) : 'all')
+    }
+    read()
+    window.addEventListener('popstate', read)
+    return () => window.removeEventListener('popstate', read)
   }, [])
 
   const hits = useMemo(() => {
-    const all = searchDocs(docs, q, 60)
-    return type === 'all' ? all : all.filter((h) => h.doc.type === type)
+    return searchDocsByType(docs, q, type, 60)
   }, [docs, q, type])
 
   const grouped = useMemo(() => {
@@ -50,7 +57,9 @@ export function SearchPageClient() {
     e.preventDefault()
     const params = new URLSearchParams()
     if (q) params.set('q', q)
-    window.history.replaceState(null, '', `/search${params.toString() ? `?${params}` : ''}`)
+    if (type !== 'all') params.set('type', type)
+    const url = `/search${params.toString() ? `?${params}` : ''}`
+    if (location.pathname + location.search !== url) window.history.pushState(null, '', url)
   }
 
   return (
@@ -64,15 +73,28 @@ export function SearchPageClient() {
       <div className="container py-8">
         <form onSubmit={submit} className="flex flex-wrap gap-2">
           <div className="relative min-w-[240px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Search
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="输入关键词，例如：幻觉、PPT、免费、代码"
-              className="h-10 w-full rounded-lg border bg-background pl-9 pr-3 text-sm"
+              className="h-11 w-full rounded-xl border bg-background pl-9 pr-10 text-sm"
               aria-label="搜索关键词"
-              autoFocus
+              enterKeyHint="search"
             />
+            {q && (
+              <button
+                type="button"
+                aria-label="清除搜索关键词"
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center text-muted-foreground hover:text-primary"
+                onClick={() => setQ('')}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <button
             type="submit"
@@ -87,13 +109,21 @@ export function SearchPageClient() {
             <button
               key={t}
               type="button"
-              onClick={() => setType(t)}
+              onClick={() => {
+                setType(t)
+                const params = new URLSearchParams(location.search)
+                if (q.trim()) params.set('q', q.trim())
+                else params.delete('q')
+                if (t === 'all') params.delete('type')
+                else params.set('type', t)
+                window.history.replaceState(null, '', `/search${params.size ? '?' + params : ''}`)
+              }}
               aria-pressed={type === t}
               className={cn(
                 'rounded-full border px-3 py-1 text-xs transition-colors',
                 type === t
                   ? 'border-primary bg-primary/10 font-medium text-primary'
-                  : 'text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                  : 'text-muted-foreground hover:border-primary/40 hover:text-foreground',
               )}
             >
               {t === 'all' ? '全部' : SEARCH_TYPE_LABELS[t]}

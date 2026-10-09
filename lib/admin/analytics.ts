@@ -82,7 +82,19 @@ function isPlausiblePath(path: string): boolean {
 }
 
 export function today(): string {
-  return new Date().toISOString().slice(0, 10)
+  return calendarDay(Date.now())
+}
+
+/** 统计的日期边界固定为北京时间，不依赖服务器或浏览器时区。 */
+export function calendarDay(now: number): string {
+  return new Date(now + 8 * 3600_000).toISOString().slice(0, 10)
+}
+
+export async function ensureRealtimeTable(db: Db): Promise<void> {
+  await db.exec(`CREATE TABLE IF NOT EXISTS page_view_minutes (
+    minute TEXT NOT NULL, path TEXT NOT NULL, count INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (minute, path)
+  )`)
 }
 
 export interface CollectResult {
@@ -117,12 +129,16 @@ export async function collect(input: CollectInput, db: Db): Promise<CollectResul
   let accepted = 0
 
   const path = normalizePath(input.path)
-  if (path && isPlausiblePath(path)) {
-    await db.run(
-      `INSERT INTO page_views (day, path, count) VALUES (?, ?, 1)
-       ON CONFLICT(day, path) DO UPDATE SET count = count + 1`,
-      [day, path]
-    )
+  if (path && isPlausiblePath(path) && !/^\/(admin|api)(\/|$)/.test(path)) {
+    await ensureRealtimeTable(db)
+    const minute = new Date().toISOString().slice(0, 16)
+    await db.batch([
+      { sql: `INSERT INTO page_views (day, path, count) VALUES (?, ?, 1)
+        ON CONFLICT(day, path) DO UPDATE SET count = count + 1`, params: [day, path] },
+      { sql: `INSERT INTO page_view_minutes (minute, path, count) VALUES (?, ?, 1)
+        ON CONFLICT(minute, path) DO UPDATE SET count = count + 1`, params: [minute, path] },
+      { sql: 'DELETE FROM page_view_minutes WHERE minute < ?', params: [new Date(Date.now() - 48 * 3600_000).toISOString().slice(0, 16)] },
+    ])
     accepted++
   }
 
@@ -139,7 +155,7 @@ export async function collect(input: CollectInput, db: Db): Promise<CollectResul
     //   一个写错埋点的客户端就能污染最热的那一行数据。
     const normalized = rawPath === undefined || rawPath === null ? '/' : normalizePath(rawPath)
     if (normalized === null) continue
-    if (!isPlausiblePath(normalized)) continue
+    if (!isPlausiblePath(normalized) || /^\/(admin|api)(\/|$)/.test(normalized)) continue
 
     await db.run(
       `INSERT INTO events (day, name, path, count) VALUES (?, ?, ?, 1)
@@ -196,7 +212,7 @@ function fillDays(rows: { day: string; n: number }[], days: number): DailyPoint[
   const map = new Map(rows.map((r) => [toText(r.day), toInt(r.n)]))
   const out: DailyPoint[] = []
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86_400_000).toISOString().slice(0, 10)
+    const d = calendarDay(Date.now() - i * 86_400_000)
     out.push({ day: d, count: map.get(d) ?? 0 })
   }
   return out
@@ -216,27 +232,27 @@ export interface AnalyticsSummary {
 }
 
 export async function analyticsSummary(db: Db, days = 14): Promise<AnalyticsSummary> {
-  const windowDays = Math.min(Math.max(days, 1), 90)
+  const windowDays = Number.isFinite(days) ? Math.min(Math.max(Math.trunc(days), 1), 366) : 14
 
   const viewRows = await db.all<{ day: string; n: number }>(
     `SELECT day, SUM(count) AS n FROM page_views
       WHERE day >= ? GROUP BY day ORDER BY day`,
-    [new Date(Date.now() - (windowDays - 1) * 86_400_000).toISOString().slice(0, 10)]
+    [calendarDay(Date.now() - (windowDays - 1) * 86_400_000)]
   )
   const eventRows = await db.all<{ day: string; n: number }>(
     `SELECT day, SUM(count) AS n FROM events
       WHERE day >= ? GROUP BY day ORDER BY day`,
-    [new Date(Date.now() - (windowDays - 1) * 86_400_000).toISOString().slice(0, 10)]
+    [calendarDay(Date.now() - (windowDays - 1) * 86_400_000)]
   )
   const topPages = await db.all<{ path: string; n: number }>(
     `SELECT path, SUM(count) AS n FROM page_views
       WHERE day >= ? GROUP BY path ORDER BY n DESC LIMIT 15`,
-    [new Date(Date.now() - (windowDays - 1) * 86_400_000).toISOString().slice(0, 10)]
+    [calendarDay(Date.now() - (windowDays - 1) * 86_400_000)]
   )
   const eventAgg = await db.all<{ name: string; n: number; d: number }>(
     `SELECT name, SUM(count) AS n, COUNT(DISTINCT day) AS d FROM events
       WHERE day >= ? GROUP BY name ORDER BY n DESC`,
-    [new Date(Date.now() - (windowDays - 1) * 86_400_000).toISOString().slice(0, 10)]
+    [calendarDay(Date.now() - (windowDays - 1) * 86_400_000)]
   )
   const first = await db.first<{ d: string | null }>(
     `SELECT MIN(day) AS d FROM (SELECT MIN(day) AS day FROM page_views UNION ALL SELECT MIN(day) FROM events)`

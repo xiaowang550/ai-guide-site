@@ -23,9 +23,10 @@ describe('首屏内容不依赖 hydration 才可见', () => {
     const scriptAt = layout.indexOf('__html: REVEAL_EAGER')
     expect(scriptAt, 'REVEAL_EAGER 未被渲染').toBeGreaterThan(-1)
 
-    const footerAt = layout.indexOf('<SiteFooter />')
+    const childrenAt = layout.indexOf('{children}')
     const bodyCloseAt = layout.indexOf('</body>')
-    expect(scriptAt, '脚本必须排在 SiteFooter 之后').toBeGreaterThan(footerAt)
+    expect(childrenAt, '根布局必须渲染分区内容').toBeGreaterThan(-1)
+    expect(scriptAt, '脚本必须排在全部分区内容之后').toBeGreaterThan(childrenAt)
     expect(scriptAt, '脚本必须排在 </body> 之前').toBeLessThan(bodyCloseAt)
   })
 

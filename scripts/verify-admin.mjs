@@ -24,9 +24,10 @@ function record(name, status, detail) {
   console.log(`${icon} ${name}\n    ${detail}`)
 }
 
-async function get(path, headers = {}) {
+async function get(path, headers = {}, method = 'GET') {
   try {
     const res = await fetch(base + path, {
+      method,
       headers,
       signal: AbortSignal.timeout(20000),
     })
@@ -92,7 +93,7 @@ if (dash.status === 401) {
 }
 
 // ── 3. CSRF：写操作必须校验 Origin ──
-const noOrigin = await get('/api/admin/login', { 'X-Requested-With': 'XMLHttpRequest' })
+const noOrigin = await get('/api/admin/login', { 'X-Requested-With': 'XMLHttpRequest' }, 'POST')
 if (noOrigin.status === 403) {
   record('5. 写操作的同源校验', 'pass',
     '不带 Origin 的登录请求被 403 拒绝 —— CSRF 防线在生效。')

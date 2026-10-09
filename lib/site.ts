@@ -13,7 +13,7 @@ export const siteConfig = {
   tagline: '',
   description:
     '把每个 AI 工具的能力量化成 14 个维度，用场景决策器告诉你「现在该用哪个、为什么、怎么问」。不吹不黑：强项、弱项、别用它做，全部写清楚。',
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://example.com',
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ai-guide-site.pages.dev',
   locale: 'zh-CN',
   /**
    * 勘误反馈的 GitHub 仓库，格式 owner/repo。
@@ -79,7 +79,7 @@ export interface NavItem {
  * 分区划分原则：一个面板里放的是「同一件事的不同切面」，
  * 而不是把无关页面堆进去。分区太多会让顶栏挤爆，所以合并了语义相近的：
  *   - 决策器/对比 合进「工具库」分区（都是「选工具」）
- *   - 更新/关于/设置 合进「数据与站点」分区（都是「关于这个站本身」）
+ *   - 更新/关于 合进「数据与站点」分区（都是「关于这个站本身」）
  */
 export const megaNav: readonly NavItem[] = [
   {
@@ -87,7 +87,16 @@ export const megaNav: readonly NavItem[] = [
     label: '知识库',
     hint: 'AI 是什么',
     children: [
-      { href: '/learn/access', label: '海外工具打不开', hint: '三类原因与替代方案，不提供绕过方法' },
+      {
+        href: '/learn/access',
+        label: '海外工具打不开',
+        hint: '三类原因与替代方案，不提供绕过方法',
+      },
+      {
+        href: '/learn/advanced',
+        label: '模型与 Agent 进阶',
+        hint: '选模型、接资料、试流程，学会验收',
+      },
       { href: '/learn/glossary', label: '术语表', hint: '中英对照速查，搜一个词就能查到' },
     ],
   },
@@ -123,22 +132,20 @@ export const megaNav: readonly NavItem[] = [
     label: '学校服务',
     hint: '课程 / 教案包 / 规范',
     children: [
-      { href: '/edu/programs', label: '课程体系', hint: '教师四级 + 学生三层，注明版本与审查时间' },
-      { href: '/edu/toolkits', label: '课程与教案包', hint: '可直接开课，也能一键排出本周课时表' },
-      { href: '/edu/policy', label: 'AI 使用规范', hint: '按学段、学科、使用强度生成完整规范' },
-      { href: '/edu/schools', label: '试点与推广', hint: '覆盖情况与区域推进计划' },
-      { href: '/edu/briefings', label: '定期简报', hint: '这一期改了什么、为什么改' },
+      { href: '/edu/programs', label: '课程体系', hint: '初中认识、高中实践、教师教学' },
+      { href: '/edu/toolkits', label: '课程与教案包', hint: '选场景，取材料，按流程上课' },
+      { href: '/edu/policy', label: 'AI 使用规范', hint: '看懂使用边界，带走规范与记录' },
       { href: '/edu/support', label: '答疑与反馈', hint: '高频问题与反馈入口' },
     ],
   },
   {
-    href: '/freshness',
-    label: '数据与站点',
-    hint: '内容可不可信',
+    href: '/updates',
+    label: 'AI 资讯',
+    hint: '新模型、新功能与最新消息',
     children: [
-      { href: '/updates', label: '更新雷达', hint: '每次改了什么、依据是什么' },
+      { href: '/freshness', label: '内容复核状态', hint: '资料更新时间与待复核内容' },
+      { href: '/saved', label: '我的学习夹', hint: '收藏实用方法，回到最近看过的内容' },
       { href: '/about', label: '我们怎么打分', hint: '评分方法、可信度、以及我们不做的事' },
-      { href: '/settings', label: '设置', hint: '助手偏好、停用入口、重置引导' },
     ],
   },
 ]
@@ -160,8 +167,6 @@ export const eduNav = [
   { href: '/edu/programs', label: '课程体系' },
   { href: '/edu/toolkits', label: '课程与教案包' },
   { href: '/edu/policy', label: 'AI 使用规范' },
-  { href: '/edu/schools', label: '试点与推广' },
-  { href: '/edu/briefings', label: '定期简报' },
   { href: '/edu/support', label: '答疑与反馈' },
 ] as const
 

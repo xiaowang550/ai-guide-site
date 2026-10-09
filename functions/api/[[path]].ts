@@ -19,17 +19,18 @@ import type { AdminEnv } from '../../lib/admin/api'
 import type { D1Database } from '../../lib/db/d1'
 
 interface PagesContext {
+  waitUntil?: (work: Promise<unknown>) => void
   env: {
     DB?: D1Database
     SITE_SALT?: string
     ADMIN_PASSWORD?: string
     ADMIN_USERNAME?: string
-    /** 排查用，见 lib/admin/api.ts 里的 ADMIN_DEBUG 说明 */
-    ADMIN_DEBUG?: string
   }
 }
 
-export const onRequest = async (context: PagesContext & { request: Request }): Promise<Response> => {
+export const onRequest = async (
+  context: PagesContext & { request: Request },
+): Promise<Response> => {
   const { request, env } = context
 
   if (!env.DB) {
@@ -42,7 +43,7 @@ export const onRequest = async (context: PagesContext & { request: Request }): P
       {
         status: 500,
         headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
-      }
+      },
     )
   }
 
@@ -51,7 +52,7 @@ export const onRequest = async (context: PagesContext & { request: Request }): P
     SITE_SALT: env.SITE_SALT ?? '',
     ADMIN_PASSWORD: env.ADMIN_PASSWORD,
     ADMIN_USERNAME: env.ADMIN_USERNAME,
-    ADMIN_DEBUG: env.ADMIN_DEBUG,
+    NEWS_BACKGROUND: context.waitUntil ? (work) => context.waitUntil!(work) : undefined,
   }
 
   const response = await handleApi(request, adminEnv)

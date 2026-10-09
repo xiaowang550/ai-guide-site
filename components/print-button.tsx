@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -10,13 +11,30 @@ import { Button } from '@/components/ui/button'
  * 是「打印出来带进教室」，而网页默认会把导航、按钮、深色区块一起印出来。
  * 配合 globals.css 里的 @media print，纸面上只剩内容。
  */
-export function PrintButton({
-  className,
-  label = '打印',
-}: {
-  className?: string
-  label?: string
-}) {
+export function PrintButton({ className, label = '打印' }: { className?: string; label?: string }) {
+  useEffect(() => {
+    let expanded: HTMLDetailsElement[] = []
+    const beforePrint = () => {
+      expanded = Array.from(
+        document.querySelectorAll<HTMLDetailsElement>('main details:not([open])'),
+      )
+      expanded.forEach((details) => {
+        details.open = true
+      })
+    }
+    const afterPrint = () => {
+      expanded.forEach((details) => {
+        details.open = false
+      })
+      expanded = []
+    }
+    window.addEventListener('beforeprint', beforePrint)
+    window.addEventListener('afterprint', afterPrint)
+    return () => {
+      window.removeEventListener('beforeprint', beforePrint)
+      window.removeEventListener('afterprint', afterPrint)
+    }
+  }, [])
   return (
     <Button
       type="button"

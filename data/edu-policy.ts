@@ -12,6 +12,73 @@ import type { EduPolicyRule } from './types'
  * - 规则会随使用反馈滚动修订，修订时改这份文件即可，不影响组件
  */
 export const eduPolicyRules: EduPolicyRule[] = [
+  {
+    id: 'rule-all-common-boundaries',
+    label: '通用 · 材料、核验与人工判断',
+    stages: ['小学', '初中', '高中', '职高'],
+    subjects: ['通用'],
+    intensities: ['仅教师可用', '学生可用需声明', '学生可受限使用', '明确禁止'],
+    clauses: [
+      {
+        title: '共同边界',
+        items: [
+          '仅使用公开、虚构或已去标识的材料，不输入可识别的学生与家庭信息。',
+          'AI 提供的是建议；事实、出处和答案需回到教材或原始材料核查。',
+          '学生成绩、学情判断与最终评价由教师负责，不以工具输出直接作决定。',
+        ],
+      },
+    ],
+    redLines: [
+      '上传含学生姓名、成绩明细或家庭信息的材料。',
+      '直接采用未核实的事实、答案或虚构来源。',
+      '把 AI 代写冒充要求独立完成的作业。',
+    ],
+  },
+  {
+    id: 'rule-secondary-teacher-only',
+    label: '中学 · 教师演示与学生观察',
+    stages: ['初中', '高中', '职高'],
+    subjects: ['通用'],
+    intensities: ['仅教师可用'],
+    clauses: [
+      {
+        title: '适用范围',
+        items: [
+          '教师可辅助备课、材料整理与课堂演示，进入课堂前亲自核对。',
+          '学生只做纸面观察、讨论与独立练习，不要求注册账号或自行使用工具。',
+        ],
+      },
+      {
+        title: '课堂检查',
+        items: [
+          '教师准备预存示例或打印材料，断网时仍可开展观察活动。',
+          '检查学生能否指出依据与局限，不要求学生提交本人 AI 提问记录。',
+        ],
+      },
+    ],
+    redLines: ['以教师演示为名，实际要求学生自行注册、对话或上传作业。'],
+  },
+  {
+    id: 'rule-secondary-student-banned',
+    label: '中学 · 禁止范围与观察替代',
+    stages: ['初中', '高中', '职高'],
+    subjects: ['通用'],
+    intensities: ['明确禁止'],
+    clauses: [
+      {
+        title: '禁止范围',
+        items: [
+          '本任务禁止学生使用 AI 辅助，学生按要求独立完成。',
+          '如课程包含教师演示，学生仅观察并记录发现与依据；教师使用范围仍需学校确认。',
+        ],
+      },
+      {
+        title: '学习证据',
+        items: ['用独立作答、观察单和课堂解释检查学习结果，不要求签署本人使用声明。'],
+      },
+    ],
+    redLines: ['在明确禁止的任务中让工具代写、改写或完成解答。'],
+  },
   // ---------- 小学：默认以教师为主，学生使用需声明且范围很窄 ----------
   {
     id: 'rule-primary-teacher-only',
@@ -82,10 +149,7 @@ export const eduPolicyRules: EduPolicyRule[] = [
       },
       {
         title: '教师责任',
-        items: [
-          '课堂演示前必须预演，确保投屏内容无误',
-          '对未使用工具的学生不得降低评分',
-        ],
+        items: ['课堂演示前必须预演，确保投屏内容无误', '对未使用工具的学生不得降低评分'],
       },
     ],
     redLines: [
@@ -177,7 +241,7 @@ export const eduPolicyRules: EduPolicyRule[] = [
     label: '初中及以上 · 考试与评优期间的临时规则',
     stages: ['初中', '高中', '职高'],
     subjects: ['通用'],
-    intensities: ['学生可用需声明', '明确禁止'],
+    intensities: ['学生可用需声明', '学生可受限使用'],
     clauses: [
       {
         title: '生效窗口',
@@ -194,10 +258,7 @@ export const eduPolicyRules: EduPolicyRule[] = [
         ],
       },
     ],
-    redLines: [
-      '考试期间用工具完成任何形式的作业',
-      '在考试窗口期上传试卷或答案到在线工具',
-    ],
+    redLines: ['考试期间用工具完成任何形式的作业', '在考试窗口期上传试卷或答案到在线工具'],
   },
 
   // ---------- 学科专项 ----------
@@ -221,10 +282,7 @@ export const eduPolicyRules: EduPolicyRule[] = [
         items: ['保留提纲版本记录，说明每一稿改了什么、为什么改'],
       },
     ],
-    redLines: [
-      '用 AI 生成的作文或片段直接提交',
-      '让 AI 代替学生完成阅读感受类主观题',
-    ],
+    redLines: ['用 AI 生成的作文或片段直接提交', '让 AI 代替学生完成阅读感受类主观题'],
   },
   {
     id: 'rule-subject-math',
@@ -348,13 +406,10 @@ export const eduPolicyRules: EduPolicyRule[] = [
         ],
       },
     ],
-    redLines: [
-      '用工具对具体学生做心理或性格判断',
-      '鼓励学生把与 AI 的私密对话作为倾诉渠道',
-    ],
+    redLines: ['用工具对具体学生做心理或性格判断', '鼓励学生把与 AI 的私密对话作为倾诉渠道'],
   },
 ]
 
 export const eduPolicyRulesById: Record<string, EduPolicyRule> = Object.fromEntries(
-  eduPolicyRules.map((r) => [r.id, r])
+  eduPolicyRules.map((r) => [r.id, r]),
 )

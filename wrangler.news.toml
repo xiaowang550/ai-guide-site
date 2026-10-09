@@ -1,0 +1,12 @@
+name = "ai-guide-news-refresh"
+main = "workers/news-refresh.ts"
+compatibility_date = "2025-09-01"
+workers_dev = false
+
+[triggers]
+crons = ["*/30 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ai-guide-site"
+database_id = "1816b80f-e9be-4017-bc28-84f424ebfc82"

@@ -86,13 +86,15 @@ export function generatePolicy(input: PolicyInput): PolicyResult {
   const matched = eduPolicyRules.filter(
     (rule) =>
       rule.stages.includes(input.stage) &&
-      (rule.subjects.length === 0 || rule.subjects.includes('通用') || rule.subjects.includes(input.subject)) &&
-      rule.intensities.includes(input.intensity)
+      (rule.subjects.length === 0 ||
+        rule.subjects.includes('通用') ||
+        rule.subjects.includes(input.subject)) &&
+      rule.intensities.includes(input.intensity),
   )
 
   // 兜底规则：至少给出一条通则，避免空结果
   const general = eduPolicyRules.filter(
-    (rule) => rule.stages.includes(input.stage) && rule.subjects.includes('通用')
+    (rule) => rule.stages.includes(input.stage) && rule.subjects.includes('通用'),
   )
   const used = matched.length > 0 ? matched : general
   const fallbacks =
@@ -122,7 +124,9 @@ function dedupe(items: string[]): string[] {
   return Array.from(new Set(items))
 }
 
-function dedupeSections(sections: { title: string; items: string[] }[]): { title: string; items: string[] }[] {
+function dedupeSections(
+  sections: { title: string; items: string[] }[],
+): { title: string; items: string[] }[] {
   const map = new Map<string, string[]>()
   for (const s of sections) {
     const list = map.get(s.title) ?? []
@@ -133,7 +137,7 @@ function dedupeSections(sections: { title: string; items: string[] }[]): { title
 }
 
 const INTENSITY_LABEL: Record<EduIntensity, string> = {
-  仅教师可用: '仅教师在教学准备环节使用',
+  仅教师可用: '仅教师在教学准备与课堂演示中使用',
   学生可用需声明: '学生可使用，但每次使用必须声明并接受核对',
   学生可受限使用: '学生可在明确范围内使用，超出范围需教师单独授权',
   明确禁止: '本范围内禁止学生使用，只允许教师演示',
@@ -154,13 +158,14 @@ const INTENSITY_LABEL: Record<EduIntensity, string> = {
  * 页面标题也随强度变化，见 declarationTitle()。
  */
 export function buildDeclaration(input: PolicyInput): string {
-  if (input.intensity === '明确禁止') return buildObservationRecord(input)
+  if (input.intensity === '明确禁止' || input.intensity === '仅教师可用')
+    return buildObservationRecord(input)
   return `AI 使用声明（${input.stage} · ${input.subject}）
 
 本人${INTENSITY_LABEL[input.intensity]}。
 我使用的工具：____________________（写明工具名称与版本/日期）
 我用在以下环节：____________________（如：查资料、整理提纲、检查错题）
-我的核对方式：____________________（至少写一种：换一种问法再问 / 找到了原始来源 / 用课本知识反证）
+我的核对方式：____________________（至少写一种：找到原始来源并对照 / 用教材知识核查 / 独立计算验证）
 以下部分由我本人独立完成：____________________
 我确认：以上内容没有直接复制工具输出，也没有请人代写。若有不实，愿承担相应责任。
 
@@ -177,7 +182,7 @@ export function buildDeclaration(input: PolicyInput): string {
 export function buildObservationRecord(input: PolicyInput): string {
   return `AI 使用观察记录（${input.stage} · ${input.subject}）
 
-本范围内禁止学生使用 AI。以下是观看教师演示时的观察记录。
+本任务学生不独立使用 AI。以下为获准的教师演示观察记录。
 
 演示课次与日期：____________________
 演示工具：____________________（写明工具名称与版本/日期）
@@ -193,30 +198,27 @@ export function buildObservationRecord(input: PolicyInput): string {
  * 页面标题不能写死成「AI 使用声明」—— 禁止使用时出现这个标题本身就是错的。
  */
 export function declarationTitle(input: PolicyInput): string {
-  return input.intensity === '明确禁止' ? 'AI 使用观察记录' : 'AI 使用声明'
+  return input.intensity === '明确禁止' || input.intensity === '仅教师可用'
+    ? 'AI 使用观察记录'
+    : 'AI 使用声明'
 }
 
 export function buildHomeworkAdjustments(input: PolicyInput): string[] {
-  const base = [
-    '过程留痕：作业需附提问记录或修改记录，只交最终成品不予采信',
-    '口头答辩：随机抽问两个细节，验证是否本人完成',
-    '评分拆分：将评分拆为「过程 40% + 结果 60%」，过程部分给明确的可观察标准',
-  ]
-  if (input.intensity === '明确禁止') {
+  if (input.intensity === '明确禁止' || input.intensity === '仅教师可用') {
     return [
-      ...base,
-      '本范围以「教师演示 + 学生观察记录」替代个人产出，评分只看观察记录与课堂表现',
-    ]
-  }
-  if (input.intensity === '仅教师可用') {
-    return [
-      ...base,
-      '学生产出的完整性由教师把关：教师须核对工具输出中的事实与数字后再使用',
+      input.intensity === '明确禁止'
+        ? '学生独立完成任务；如有获准的教师演示，另附观察记录。'
+        : '学生观察教师示例，提交观察单与独立完成的课堂练习。',
+      '口头解释：请学生指出一处原文依据或需要核查的内容。',
+      '评价围绕本课目标确定，不要求学生提供本人 AI 提问记录或使用声明。',
+      '教师复核示例中的事实、出处与答案，准备断网替代材料。',
     ]
   }
   return [
-    ...base,
-    '声明使用：学生须在作业末尾附 AI 使用声明，声明本身计入过程分',
+    '保留过程：按任务提交独立初稿、建议取舍与修改理由。',
+    '检查独立学习：用课内说明、变式题或现场表达核对学生是否理解。',
+    '评价标准围绕本课目标制定，提前说明必须独立完成的部分。',
+    '说明使用范围：按教师要求附使用声明，不以 AI 成品质量代替学习结果。',
     `学科要求：${SUBJECT_TOOLKIT_HINT[input.subject]}`,
   ]
 }

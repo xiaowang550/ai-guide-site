@@ -290,7 +290,7 @@ export function ErrataForm({ from }: { from?: string }) {
           本站没有后端，所以没有「提交」按钮 —— 数据必须由你亲手带走。
           流程：<span className="text-foreground">加入列表 → 复制或发邮件 → 我们核对 → 更新页面并在
           <Link href="/updates" className="link mx-1">
-            更新雷达
+            AI 实时资讯
           </Link>
           记录</span>。
         </p>

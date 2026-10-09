@@ -1,4 +1,5 @@
 import { searchDocs } from '@/data'
+import { lessonSummaries } from '@/data/lesson-summaries'
 
 /**
  * 全站搜索索引（静态 JSON）。
@@ -11,7 +12,18 @@ import { searchDocs } from '@/data'
 export const dynamic = 'force-static'
 
 export function GET() {
-  return new Response(JSON.stringify(searchDocs), {
+  const compact = searchDocs.map((doc) => {
+    const title =
+      doc.type === 'guide'
+        ? (lessonSummaries[doc.id]?.title ?? doc.title)
+        : doc.title
+    return {
+      ...doc,
+      title,
+      keywords: title === doc.title ? doc.keywords : [...doc.keywords, doc.title],
+    }
+  })
+  return new Response(JSON.stringify(compact), {
     headers: {
       'content-type': 'application/json; charset=utf-8',
       // 内容随构建产物固定，可以长期缓存

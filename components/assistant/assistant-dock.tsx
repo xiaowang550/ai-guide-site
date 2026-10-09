@@ -7,10 +7,7 @@ import { Sparkles } from 'lucide-react'
 import { readAiConfig, writeAiConfig, type AiConfig } from '@/lib/ai-client'
 import type { AssistantDock } from '@/lib/settings'
 import { readSettings, subscribeSettings, writeSettings } from '@/lib/settings'
-import {
-  computeDockPosition,
-  DOCK_BUTTON_SIZE,
-  panelWidthFor } from '@/lib/dock-position'
+import { computeDockPosition, DOCK_BUTTON_SIZE, panelWidthFor } from '@/lib/dock-position'
 import { cn } from '@/lib/utils'
 
 /**
@@ -24,8 +21,6 @@ import { cn } from '@/lib/utils'
 const AssistantPanel = dynamic(() => import('./assistant-panel').then((m) => m.AssistantPanel), {
   ssr: false,
 })
-
-
 
 export function AssistantDock() {
   const [enabled, setEnabled] = useState(true)
@@ -71,7 +66,7 @@ export function AssistantDock() {
         { x: rect.left, y: rect.top },
         { width: window.innerWidth, height: window.innerHeight },
         open,
-        { width: rect.width, height: rect.height }
+        { width: rect.width, height: rect.height },
       )
       if (Math.abs(next.left - rect.left) > 1 || Math.abs(next.top - rect.top) > 1) {
         el.style.left = `${next.left}px`
@@ -130,7 +125,7 @@ export function AssistantDock() {
       { x, y },
       { width: window.innerWidth, height: window.innerHeight },
       open,
-      { width: rect.width, height: rect.height }
+      { width: rect.width, height: rect.height },
     )
     el.style.left = `${next.left}px`
     el.style.top = `${next.top}px`
@@ -147,7 +142,7 @@ export function AssistantDock() {
       { x: rect.left, y: rect.top },
       { width: window.innerWidth, height: window.innerHeight },
       open,
-      { width: rect.width, height: rect.height }
+      { width: rect.width, height: rect.height },
     )
     const x = next.left
     const y = next.top
@@ -177,11 +172,12 @@ export function AssistantDock() {
           }}
           onHide={() => {
             setOpen(false)
-            setEnabled(false)
-            writeSettings({ assistant: false, assistantPanelOpen: false })
+            writeSettings({ assistantPanelOpen: false })
           }}
           aiConfig={aiConfig}
-          onToggleAi={() => setAiConfig(writeAiConfig({ mode: aiConfig?.mode === 'live' ? 'rules' : 'live' }))}
+          onToggleAi={() =>
+            setAiConfig(writeAiConfig({ mode: aiConfig?.mode === 'live' ? 'rules' : 'live' }))
+          }
         />
       ) : null}
 
@@ -195,7 +191,7 @@ export function AssistantDock() {
         aria-expanded={open}
         className={cn(
           'inline-flex h-[52px] w-[52px] items-center justify-center rounded-full border bg-card shadow-lg transition-colors',
-          open ? 'border-primary/40 bg-primary text-primary-foreground' : 'hover:border-primary/40'
+          open ? 'border-primary/40 bg-primary text-primary-foreground' : 'hover:border-primary/40',
         )}
       >
         <Sparkles className="h-5 w-5 text-primary" aria-hidden />

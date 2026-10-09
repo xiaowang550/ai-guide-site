@@ -105,20 +105,20 @@ describe('立场守卫：不提供绕过网络限制的内容', () => {
   })
 
   it('可访问性页面存在且明确声明了不提供什么', () => {
-    const page = readFileSync('app/learn/access/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/learn/access/page.tsx', 'utf8')
     expect(page, '缺少「不提供」声明').toContain('不提供')
     expect(page, '应说明法律风险').toContain('法律风险')
     expect(page, '应说明不做厂商带货').toContain('带货')
   })
 
   it('可访问性页面给出了替代方案，而不是只说「打不开」', () => {
-    const page = readFileSync('app/learn/access/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/learn/access/page.tsx', 'utf8')
     expect(page).toContain('alternatives')
     expect(page, '应给出处理步骤而不是只讲问题').toContain('按这个顺序处理')
   })
 
   it('区分了三类原因（混成一句「需要网络工具」等于没给读者下一步）', () => {
-    const page = readFileSync('app/learn/access/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/learn/access/page.tsx', 'utf8')
     expect(page).toContain('unserved')
     expect(page).toContain('tos-restricted')
     expect(page).toContain('network-dependent')
@@ -126,12 +126,12 @@ describe('立场守卫：不提供绕过网络限制的内容', () => {
 
   it('诚实说明「可直连不等于一定稳定」', () => {
     // 过度承诺是另一种形式的吹黑，与不吹不黑冲突
-    const page = readFileSync('app/learn/access/page.tsx', 'utf8')
+    const page = readFileSync('app/(public)/learn/access/page.tsx', 'utf8')
     expect(page, '应澄清可直连不等于稳定').toMatch(/不等于|不保证|也会/)
   })
 
   it('工具详情页不再出现「需借助网络工具」这种无行动价值的说法', () => {
-    const detail = readFileSync('app/tools/[slug]/page.tsx', 'utf8')
+    const detail = readFileSync('app/(public)/tools/[slug]/page.tsx', 'utf8')
     expect(detail, '应改为指向替代方案').toContain('见下方替代方案')
     expect(detail, '「需借助网络工具」等于没说下一步').not.toContain('需借助网络工具')
   })

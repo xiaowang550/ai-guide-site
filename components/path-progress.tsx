@@ -90,7 +90,7 @@ export function PathProgress({ path }: { path: LearningPath }) {
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           {percent === 100
-            ? '全部完成。可以去更新雷达看看有没有新变化，或者挑战下一条路径。'
+            ? '全部完成。可以去AI 实时资讯看看有没有新变化，或者挑战下一条路径。'
             : `完成度 ${percent}%。勾选状态只保存在你自己的浏览器里，不会上传。`}
         </p>
       </div>

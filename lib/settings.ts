@@ -9,17 +9,13 @@
  * - onboarding：新手引导是否已完成 / 被跳过
  *
  * 站点是纯静态的，没有账号体系，所以设置跟着浏览器走；换设备不会同步，
- * 这一点在 /settings 页面上对用户说明。
+ * 管理员可以在后台查看本机偏好。
  */
 export type AssistantDock =
-  | 'bottom-right'
-  | 'bottom-left'
-  | 'top-right'
-  | 'top-left'
-  | { x: number; y: number }
+  'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | { x: number; y: number }
 
 export interface SiteSettings {
-  /** 助手浮窗是否可见（用户关闭后可在 /settings 重新打开） */
+  /** 助手浮窗是否可见（全站开关由后台控制，本机偏好由管理员维护） */
   assistant: boolean
   /** 助手停靠位置：预设方位或拖拽后的自定义坐标 */
   assistantDock: AssistantDock
@@ -59,7 +55,8 @@ export function readSettings(): SiteSettings {
     if (!raw) return DEFAULT_SETTINGS
     const parsed = JSON.parse(raw) as Partial<SiteSettings>
     return {
-      assistant: typeof parsed.assistant === 'boolean' ? parsed.assistant : DEFAULT_SETTINGS.assistant,
+      assistant:
+        typeof parsed.assistant === 'boolean' ? parsed.assistant : DEFAULT_SETTINGS.assistant,
       assistantPanelOpen:
         typeof parsed.assistantPanelOpen === 'boolean'
           ? parsed.assistantPanelOpen
@@ -68,7 +65,9 @@ export function readSettings(): SiteSettings {
         typeof parsed.onboardingDone === 'boolean'
           ? parsed.onboardingDone
           : DEFAULT_SETTINGS.onboardingDone,
-      assistantDock: isDock(parsed.assistantDock) ? parsed.assistantDock : DEFAULT_SETTINGS.assistantDock,
+      assistantDock: isDock(parsed.assistantDock)
+        ? parsed.assistantDock
+        : DEFAULT_SETTINGS.assistantDock,
     }
   } catch {
     return DEFAULT_SETTINGS

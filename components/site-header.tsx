@@ -3,14 +3,20 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Compass, Menu, X } from 'lucide-react'
+import { Bookmark, Compass, Menu, X } from 'lucide-react'
 import { primaryNav, secondaryNav, siteConfig } from '@/lib/site'
+import { useSiteModules } from './site-module-context'
+import { pathEnabled } from '@/lib/site-modules'
 import { cn } from '@/lib/utils'
 import { MegaNav } from '@/components/mega-nav'
 import { CommandSearch } from '@/components/command-search'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 export function SiteHeader() {
+  const { config } = useSiteModules()
+  const custom = config.modules.some(
+    (module) => module.kind !== 'builtin' && module.enabled && module.navigation,
+  )
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -22,11 +28,15 @@ export function SiteHeader() {
     href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container flex h-14 items-center gap-3">
-        <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold" aria-label={`${siteConfig.name} 首页`}>
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Compass className="h-4 w-4" aria-hidden />
+    <header className="site-header sticky top-0 z-40 border-b border-border/60 bg-background">
+      <div className="container flex h-[72px] items-center gap-4">
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-2 font-semibold"
+          aria-label={`${siteConfig.name} 首页`}
+        >
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Compass className="h-[18px] w-[18px]" aria-hidden />
           </span>
           {/* 窄屏用 sr-only 而不是 hidden：hidden 会让链接在移动端失去可访问名称 */}
           <span className="hidden text-[15px] sm:inline">{siteConfig.name}</span>
@@ -62,24 +72,36 @@ export function SiteHeader() {
             16rem 是按「11 个汉字 + 图标 + / 快捷键」实算出来的，
             比它窄占位文字就会被截成「搜索工具、概念、…」。
           */}
-          <CommandSearch className="w-[7rem] shrink-0 md:w-[16rem] lg:w-[7rem] xl:w-auto xl:max-w-md xl:flex-1" />
+          <CommandSearch className="w-9 shrink-0 sm:w-[7rem] md:w-[16rem] lg:w-[7rem] xl:w-auto xl:max-w-md xl:flex-1" />
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          {pathEnabled(config, '/saved') && (
+            <Link
+              href="/saved"
+              title="我的学习夹"
+              aria-label="打开我的学习夹"
+              className="hidden h-9 w-9 items-center justify-center rounded-xl border text-muted-foreground hover:bg-accent xl:inline-flex"
+            >
+              <Bookmark className="h-4 w-4" />
+            </Link>
+          )}
           {/* 「帮我选」用实心底色，和导航里的灰字链接区分开。
               之前它和「教程」「案例」长得一模一样，扫一眼分不清哪个是浏览、
               哪个是要动手 —— 它其实是全站唯一的行动入口。 */}
-          <Link
-            href="/find"
-            className={cn(
-              'hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors md:inline-flex',
-              pathname.startsWith('/find')
-                ? 'bg-highlight text-highlight-foreground'
-                : 'bg-primary text-primary-foreground hover:bg-primary/90'
-            )}
-          >
-            帮我选
-          </Link>
+          {pathEnabled(config, '/find') && (
+            <Link
+              href="/find"
+              className={cn(
+                'hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors md:inline-flex',
+                pathname.startsWith('/find')
+                  ? 'bg-highlight text-highlight-foreground'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90',
+              )}
+            >
+              帮我选
+            </Link>
+          )}
           <div className="hidden shrink-0 sm:block">
             <ThemeToggle />
           </div>
@@ -91,7 +113,11 @@ export function SiteHeader() {
             aria-controls="mobile-nav"
             aria-label={menuOpen ? '关闭菜单' : '打开菜单'}
           >
-            {menuOpen ? <X className="h-4 w-4" aria-hidden /> : <Menu className="h-4 w-4" aria-hidden />}
+            {menuOpen ? (
+              <X className="h-[18px] w-[18px]" aria-hidden />
+            ) : (
+              <Menu className="h-[18px] w-[18px]" aria-hidden />
+            )}
           </button>
         </div>
       </div>
@@ -100,28 +126,35 @@ export function SiteHeader() {
         <div id="mobile-nav" className="border-t bg-background lg:hidden">
           <nav aria-label="移动端导航" className="container py-3">
             <ul className="grid gap-1 sm:grid-cols-2">
-              {primaryNav.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
-                      isActive(item.href)
-                        ? 'bg-accent font-medium text-accent-foreground'
-                        : 'hover:bg-muted'
-                    )}
-                  >
-                    {item.label}
-                    <span className="text-xs text-muted-foreground">{item.hint}</span>
-                  </Link>
-                </li>
-              ))}
-              <li className="sm:col-span-2 mt-1 border-t pt-1">
+              {primaryNav
+                .filter((item) => pathEnabled(config, item.href))
+                .map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
+                        isActive(item.href)
+                          ? 'bg-accent font-medium text-accent-foreground'
+                          : 'hover:bg-muted',
+                      )}
+                    >
+                      {item.label}
+                      <span className="text-xs text-muted-foreground">{item.hint}</span>
+                    </Link>
+                  </li>
+                ))}
+              <li className="mt-1 border-t pt-1 sm:col-span-2">
                 <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   更多
                 </p>
                 <ul className="mt-1 grid gap-0.5 sm:grid-cols-2">
-                  {secondaryNav.map((item) => (
+                  {[
+                    ...secondaryNav.filter((item) => pathEnabled(config, item.href)),
+                    ...(custom
+                      ? [{ href: '/modules/', label: '学习与实践模块', hint: '新资料与练习' }]
+                      : []),
+                  ].map((item) => (
                     <li key={item.href}>
                       <Link
                         href={item.href}
@@ -129,7 +162,7 @@ export function SiteHeader() {
                           'flex items-baseline justify-between rounded-lg px-3 py-1.5 text-sm',
                           isActive(item.href)
                             ? 'bg-accent font-medium text-accent-foreground'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                         )}
                       >
                         {item.label}

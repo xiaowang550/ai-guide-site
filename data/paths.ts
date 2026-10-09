@@ -1,3 +1,4 @@
+import { advancedPath } from './advanced-learning'
 import type { LearningPath, PathPhase } from '@/data/types'
 
 /**
@@ -13,6 +14,7 @@ import type { LearningPath, PathPhase } from '@/data/types'
  */
 
 export const paths: LearningPath[] = [
+  advancedPath,
   {
     id: 'zero-to-pro',
     title: '零基础 7 天入门',
@@ -50,7 +52,11 @@ export const paths: LearningPath[] = [
           '能一次拿到结构稳定、字数可控、可以直接复制进自己文档的输出；出现格式跑偏时，能说出该改提示词里的哪一句。',
         items: [
           { label: '让输出稳定下来的五个约束', href: '/guides/reliable-output', type: 'guide' },
-          { label: '上下文窗口：为什么长对话会变笨', href: '/learn/context-window', type: 'concept' },
+          {
+            label: '上下文窗口：为什么长对话会变笨',
+            href: '/learn/context-window',
+            type: 'concept',
+          },
           { label: 'token 和上下文的关系', href: '/learn/token', type: 'concept' },
           { label: '周报模板：可直接复制的结构', href: '/guides/weekly-report', type: 'guide' },
           { label: '案例：8 页 PPT 的页标题怎么定', href: '/cases/ppt-sales-deck', type: 'case' },
@@ -64,7 +70,11 @@ export const paths: LearningPath[] = [
           { label: '幻觉：它为什么会编', href: '/learn/hallucination', type: 'concept' },
           { label: '坏提示词怎么改', href: '/guides/bad-prompt-fix', type: 'guide' },
           { label: '开源模型和闭源模型的差别', href: '/learn/open-vs-closed', type: 'concept' },
-          { label: '案例：不许调和矛盾的综述提示词', href: '/cases/research-literature', type: 'case' },
+          {
+            label: '案例：不许调和矛盾的综述提示词',
+            href: '/cases/research-literature',
+            type: 'case',
+          },
         ],
       },
     ],
@@ -86,7 +96,11 @@ export const paths: LearningPath[] = [
           { label: '提示词四要素复习', href: '/guides/prompt-basics', type: 'guide' },
           { label: '周报教程：把一次性的活变成流程', href: '/guides/weekly-report', type: 'guide' },
           { label: '案例：周报提示词逐条拆解', href: '/cases/weekly-report-ops', type: 'case' },
-          { label: '案例：分层任务单（每周重复型工作）', href: '/cases/teaching-materials', type: 'case' },
+          {
+            label: '案例：分层任务单（每周重复型工作）',
+            href: '/cases/teaching-materials',
+            type: 'case',
+          },
           { label: '案例：分镜表模板', href: '/cases/short-video-scripts', type: 'case' },
         ],
       },
@@ -96,7 +110,11 @@ export const paths: LearningPath[] = [
           '能把一份 80 页 PDF 在半小时内变成一页要点，并在要点旁边标出哪三处必须回原文核对。',
         items: [
           { label: '长 PDF 摘要教程', href: '/guides/long-pdf-summary', type: 'guide' },
-          { label: '多模态：上传 PDF 时它实际在读什么', href: '/learn/multimodal', type: 'concept' },
+          {
+            label: '多模态：上传 PDF 时它实际在读什么',
+            href: '/learn/multimodal',
+            type: 'concept',
+          },
           { label: '上下文窗口与截断', href: '/learn/context-window', type: 'concept' },
           { label: 'NotebookLM：以上传文件为主的思路', href: '/tools/notebooklm', type: 'tool' },
           { label: '案例：文献综述的表格输出', href: '/cases/research-literature', type: 'case' },
@@ -152,13 +170,17 @@ export const paths: LearningPath[] = [
       {
         title: '第 2 段：给模型接上它自己的数据',
         outcome:
-          '能把一份私有文档集做成可检索的片段，并让问答结果带回出处；能说清在什么规模下 RAG 不如微调。',
+          '能把一份私有文档集做成可检索的片段，并让问答结果带回出处；能分清补充事实材料与调整模型输出行为这两类需求。',
         items: [
           { label: 'RAG 的完整流程', href: '/learn/rag', type: 'concept' },
           { label: 'embedding 决定了检索质量上限', href: '/learn/embedding', type: 'concept' },
           { label: '向量库选型', href: '/learn/vector-database', type: 'concept' },
           { label: 'NotebookLM：零代码的对照实现', href: '/tools/notebooklm', type: 'tool' },
-          { label: '微调：什么时候值得，什么时候不值', href: '/learn/fine-tuning', type: 'concept' },
+          {
+            label: '微调：什么时候值得，什么时候不值',
+            href: '/learn/fine-tuning',
+            type: 'concept',
+          },
         ],
       },
       {
@@ -170,7 +192,11 @@ export const paths: LearningPath[] = [
           { label: 'MCP：工具是怎么被接进来的', href: '/learn/mcp', type: 'concept' },
           { label: 'Cursor：编辑器内的工作方式', href: '/tools/cursor', type: 'tool' },
           { label: 'Claude：长任务上的处理习惯', href: '/tools/claude', type: 'tool' },
-          { label: '案例：老代码定位的三段式提示词', href: '/cases/code-legacy-review', type: 'case' },
+          {
+            label: '案例：老代码定位的三段式提示词',
+            href: '/cases/code-legacy-review',
+            type: 'case',
+          },
         ],
       },
       {
@@ -179,7 +205,11 @@ export const paths: LearningPath[] = [
           '能用 AI 完成一次有明确范围的改动并逐行自查 diff，能说出哪些改动绝对不允许交给它（数据库迁移、权限、金额计算）。',
         items: [
           { label: '提示词工程在代码场景的映射', href: '/learn/prompt', type: 'concept' },
-          { label: 'bad prompt 修复：需求说不清是主因', href: '/guides/bad-prompt-fix', type: 'guide' },
+          {
+            label: 'bad prompt 修复：需求说不清是主因',
+            href: '/guides/bad-prompt-fix',
+            type: 'guide',
+          },
           { label: '迭代与纠错：多轮改到能跑', href: '/guides/iterate-and-correct', type: 'guide' },
           { label: 'Copilot：补全与改写的边界', href: '/tools/copilot', type: 'tool' },
           { label: 'ChatGPT：脱离编辑器时的做法', href: '/tools/chatgpt', type: 'tool' },
@@ -202,19 +232,17 @@ export const paths: LearningPath[] = [
   },
 ]
 
-export const pathsById: Record<string, LearningPath> = paths.reduce<
-  Record<string, LearningPath>
->((acc, item) => {
-  acc[item.id] = item
-  return acc
-}, {})
+export const pathsById: Record<string, LearningPath> = paths.reduce<Record<string, LearningPath>>(
+  (acc, item) => {
+    acc[item.id] = item
+    return acc
+  },
+  {},
+)
 
 /** 路径内每个 phase 的条目数之和，用于展示「多少个页面」 */
 export function countPathItems(path: LearningPath): number {
-  return path.phases.reduce(
-    (sum, phase: PathPhase) => sum + phase.items.length,
-    0
-  )
+  return path.phases.reduce((sum, phase: PathPhase) => sum + phase.items.length, 0)
 }
 
 export function findPath(id: string): LearningPath | undefined {

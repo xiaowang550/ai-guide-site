@@ -24,7 +24,7 @@ const SKIP = ['__tests__', 'node_modules', '.next', 'out', '.git']
  * 这里必须按目录名精确比对，不能用 `full.includes(s)` 做子串匹配。
  * 原来的写法有一个真实的漏洞：`out/` 是要跳过的构建目录，
  * 但子串匹配会把路径里含 "out" 的任何目录一起跳掉 ——
- * `app/about/`（a-b-**out**）、`app/outline/`、`app/scouts/` 全部中招。
+ * `app/(public)/about/`（a-b-**out**）、`app/outline/`、`app/scouts/` 全部中招。
  *
  * 后果不是「漏扫几个文件」，而是这个门禁对它唯一该拦的页面完全失明：
  * 关于页里当时写着「我们自己的实测：用固定的测试任务跑一遍」，
@@ -99,7 +99,7 @@ describe('评分口径：不得声称做过自建实测', () => {
    * 防止再次出现「某个页面因为目录名巧合而没被扫到」。
    *
    * 这条断言就是为上面那个漏洞写的：门禁用子串匹配跳目录，
-   * `app/about/` 因为含 "out" 被静默跳过，于是关于页里
+   * `app/(public)/about/` 因为含 "out" 被静默跳过，于是关于页里
    * 「我们自己的实测」这种虚假陈述一直没人拦。
    *
    * 断言方式不看具体文件名（那会随目录结构变），而是要求
@@ -150,8 +150,8 @@ describe('评分口径：不得声称做过自建实测', () => {
   })
 
   it('工具详情与列表页都明确写出「不做自建评测」', () => {
-    const detail = readFileSync('app/tools/[slug]/page.tsx', 'utf8')
-    const list = readFileSync('app/tools/page.tsx', 'utf8')
+    const detail = readFileSync('app/(public)/tools/[slug]/page.tsx', 'utf8')
+    const list = readFileSync('app/(public)/tools/page.tsx', 'utf8')
     expect(detail, '工具详情页缺少口径说明').toContain('不做自建评测')
     expect(list, '工具列表页缺少口径说明').toContain('不做自建评测')
   })

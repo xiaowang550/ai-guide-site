@@ -18,7 +18,7 @@ npm run serve     # 本地预览 http://localhost:4000
 
 ```
 out/_headers       # 缓存策略 + 安全响应头
-out/_redirects     # 目录式 URL 重写
+out/_redirects     # 保留原生目录式 URL 路由
 ```
 
 站内测试 `lib/__tests__/cloudflare-config.test.ts` 会在构建前检查这两个文件的内容是否正确。
@@ -37,23 +37,23 @@ out/_redirects     # 目录式 URL 重写
 
 ### 第 3 步：填构建设置（关键，逐项照抄）
 
-| 字段 | 填什么 | 为什么 |
-|---|---|---|
-| **Project name** | `ai-guide-site` | 会生成 `ai-guide-site.pages.dev` |
-| **Production branch** | `main` | 与本地一致 |
-| **Framework preset** | **`None`** | 本站不用 Next.js 运行时，preset 选错会让 Cloudflare 尝试 SSR |
-| **Build command** | `npm run build` | 产出 `out/` |
-| **Build output directory** | **`out`** | 不是 `public`，也不是 `.next` |
-| **Root directory** | 留空 | 仓库根目录即项目根 |
+| 字段                       | 填什么          | 为什么                                                       |
+| -------------------------- | --------------- | ------------------------------------------------------------ |
+| **Project name**           | `ai-guide-site` | 会生成 `ai-guide-site.pages.dev`                             |
+| **Production branch**      | `main`          | 与本地一致                                                   |
+| **Framework preset**       | **`None`**      | 本站不用 Next.js 运行时，preset 选错会让 Cloudflare 尝试 SSR |
+| **Build command**          | `npm run build` | 产出 `out/`                                                  |
+| **Build output directory** | **`out`**       | 不是 `public`，也不是 `.next`                                |
+| **Root directory**         | 留空            | 仓库根目录即项目根                                           |
 
 ### 第 4 步：环境变量
 
 点 **Environment variables** → **Add variable**，加两个：
 
-| 名称 | 值 | 说明 |
-|---|---|---|
+| 名称                   | 值                                | 说明                                                                                       |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------------------------------------ |
 | `NEXT_PUBLIC_SITE_URL` | `https://ai-guide-site.pages.dev` | 换成你最终的域名。影响 sitemap / canonical / opengraph，**上线后要改成正式域名再部署一次** |
-| `NODE_VERSION` | `22` | 让 Cloudflare 用 Node 22 构建，与本地一致 |
+| `NODE_VERSION`         | `22`                              | 让 Cloudflare 用 Node 22 构建，与本地一致                                                  |
 
 > `NEXT_PUBLIC_FEEDBACK_REPO` **不用设** —— `lib/site.ts` 里有默认值 `xiaowang550/ai-guide-site`。
 > 如果将来想指向别的仓库，才需要加这个变量。
@@ -68,14 +68,14 @@ out/_redirects     # 目录式 URL 重写
 
 Cloudflare 的构建日志全绿**不等于**站点正常。以下每一项都实际打开页面确认：
 
-| # | 检查 | 怎么看 | 出问题怎么办 |
-|---|---|---|---|
-| 1 | 首页能打开且样式正常 | 打开域名 | 看构建日志的 `产物校验` 是否通过 |
-| 2 | 工具详情页能打开 | `/tools/kimi/` | 若 404，检查 `_redirects` 是否进了产物 |
-| 3 | **响应头正确** | 打开 `curl -I https://你的域名/tools/` | 没有 `_headers` 里的策略就是文件没被识别 |
-| 4 | **离线可用** | 浏览器 DevTools → Application → Service Workers 应有本站 | `/sw.js` 被缓存或 404，见下文排查 |
-| 5 | 站内搜索能用 | 首页点搜索图标 | 搜索索引 `/search-index.json` 是按需拉取的，404 就是产物不全 |
-| 6 | 控制台无报错 | DevTools → Console | CSP 拦了资源会在这里出现 |
+| #   | 检查                 | 怎么看                                                   | 出问题怎么办                                                 |
+| --- | -------------------- | -------------------------------------------------------- | ------------------------------------------------------------ |
+| 1   | 首页能打开且样式正常 | 打开域名                                                 | 看构建日志的 `产物校验` 是否通过                             |
+| 2   | 工具详情页能打开     | `/tools/kimi/`                                           | 若 404，检查对应目录的 index.html 是否在产物中               |
+| 3   | **响应头正确**       | 打开 `curl -I https://你的域名/tools/`                   | 没有 `_headers` 里的策略就是文件没被识别                     |
+| 4   | **离线可用**         | 浏览器 DevTools → Application → Service Workers 应有本站 | `/sw.js` 被缓存或 404，见下文排查                            |
+| 5   | 站内搜索能用         | 首页点搜索图标                                           | 搜索索引 `/search-index.json` 是按需拉取的，404 就是产物不全 |
+| 6   | 控制台无报错         | DevTools → Console                                       | CSP 拦了资源会在这里出现                                     |
 
 命令行快速验证：
 
@@ -114,8 +114,8 @@ curl -I https://你的域名/search-index.json
 ### 目录式 URL 404
 
 Cloudflare Pages 默认就能把 `/tools/` 映射到 `out/tools/index.html`，
-`public/_redirects` 只是显式声明。如果仍然 404，在 Cloudflare 后台的
-**Settings → Builds & deployments → Header redirects and rewrites** 里确认文件已加载。
+`public/_redirects` 保留注释，避免通配符重写与平台的规范化跳转冲突。
+如果仍然 404，检查对应目录下的 `index.html` 是否存在，以及部署是否上传完整的 `out/`。
 
 ### 构建失败，报 Node 版本不对
 

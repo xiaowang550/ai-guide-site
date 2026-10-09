@@ -1,3 +1,4 @@
+import { archivedEduToolkits } from '@/archive/edu/elementary-toolkits'
 import { describe, expect, it } from 'vitest'
 import {
   AUDIENCE_LABELS,
@@ -155,7 +156,7 @@ describe('试点学校数据契约', () => {
         expect(PROGRAM_IDS.has(id), `${s.id} -> 未知课程 ${id}`).toBe(true)
       }
       for (const id of s.deliveredToolkits) {
-        expect(TOOLKIT_IDS.has(id), `${s.id} -> 未知教案包 ${id}`).toBe(true)
+        expect(TOOLKIT_IDS.has(id) || archivedEduToolkits.some(t=>t.id===id), `${s.id} -> 未知历史教案包 ${id}`).toBe(true)
       }
       expect(s.teachersReached).toBeGreaterThanOrEqual(s.seedTeachers)
       expect(s.seedTeachers).toBeGreaterThan(0)

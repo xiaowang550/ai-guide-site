@@ -1,8 +1,9 @@
 ﻿'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { Check, Copy, ExternalLink } from 'lucide-react'
 import type { PromptTemplate, Tool } from '@/data/types'
+import { copyText } from '@/lib/copy-text'
 import { cn } from '@/lib/utils'
 
 /**
@@ -21,24 +22,25 @@ export function PromptBlock({
   className?: string
 }) {
   const [values, setValues] = useState<Record<string, string>>({})
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false),
+    [copyError, setCopyError] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    [],
+  )
   const [activeTool, setActiveTool] = useState<string>(defaultToolId ?? tools[0]?.id ?? '')
 
   const filled = useMemo(() => fillTemplate(template.body, values), [template.body, values])
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(filled)
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = filled
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
+    const ok = await copyText(filled)
+    setCopied(ok)
+    setCopyError(!ok)
+    if (timer.current) clearTimeout(timer.current)
+    if (ok) timer.current = setTimeout(() => setCopied(false), 1800)
   }
 
   const missing = template.variables.filter((v) => !values[v.key]?.trim()).length
@@ -73,10 +75,14 @@ export function PromptBlock({
             'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium transition-colors',
             copied
               ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-              : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              : 'bg-primary text-primary-foreground hover:bg-primary/90',
           )}
         >
-          {copied ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+          {copied ? (
+            <Check className="h-3.5 w-3.5" aria-hidden />
+          ) : (
+            <Copy className="h-3.5 w-3.5" aria-hidden />
+          )}
           {copied ? '已复制' : '复制'}
         </button>
         {tools.length > 0 ? (
@@ -112,6 +118,11 @@ export function PromptBlock({
         <code className="whitespace-pre-wrap font-mono">{renderWithHighlight(filled)}</code>
       </pre>
 
+      {copyError && (
+        <p role="alert" className="px-4 py-3 text-xs leading-6 text-danger">
+          复制未成功，可以选中下方文字手动复制。
+        </p>
+      )}
       {missing > 0 ? (
         <p className="border-t px-4 py-2 text-[11px] text-muted-foreground">
           还有 {missing} 个变量未填写，未填写的部分会原样保留 {'{{变量名}}'}
@@ -144,6 +155,6 @@ function renderWithHighlight(text: string) {
       </span>
     ) : (
       <span key={i}>{part}</span>
-    )
+    ),
   )
 }

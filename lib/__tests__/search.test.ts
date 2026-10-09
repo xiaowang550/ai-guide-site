@@ -6,8 +6,9 @@ const DOCS = siteDocs
 
 describe('搜索索引', () => {
   it('索引包含全部内容类型', () => {
-    const types = new Set(DOCS.map((d) => d.type))
-    for (const t of ['tool', 'concept', 'guide', 'case', 'path', 'program', 'toolkit', 'briefing']) {
+    // 自定义模块在运行时加入索引，不存在于构建时的静态 DOCS。
+    const types = new Set([...DOCS.map((d) => d.type), 'module'])
+    for (const t of ['tool', 'concept', 'guide', 'case', 'path', 'program', 'toolkit', 'news']) {
       expect(types.has(t as (typeof DOCS)[number]['type']), `缺少类型 ${t}`).toBe(true)
     }
   })
@@ -43,7 +44,7 @@ describe('searchDocs（模糊搜索）', () => {
     expect(hits.length).toBeGreaterThan(0)
     expect(
       hits.some((h) => h.doc.id === 'rag' && h.doc.type === 'concept'),
-      `RAG 搜索结果: ${hits.map((h) => h.doc.id).join(',')}`
+      `RAG 搜索结果: ${hits.map((h) => h.doc.id).join(',')}`,
     ).toBe(true)
   })
 
@@ -58,10 +59,12 @@ describe('searchDocs（模糊搜索）', () => {
     expect(byVendor.some((h) => h.doc.id === 'doubao')).toBe(true)
   })
 
-  it('教育模块内容可被搜到（课程 / 教案包 / 简报）', () => {
+  it('教育模块内容可被搜到（课程 / 教案包；暂停模块不进入结果）', () => {
     expect(searchDocs(DOCS, '教案包').some((h) => h.doc.type === 'toolkit')).toBe(true)
     expect(searchDocs(DOCS, '使用规范').some((h) => h.doc.type === 'program')).toBe(true)
-    expect(searchDocs(DOCS, '简报').some((h) => h.doc.type === 'briefing')).toBe(true)
+    expect(searchDocs(DOCS, '简报').some((hit) => hit.doc.href.startsWith('/edu/briefings'))).toBe(
+      false,
+    )
   })
 
   it('结果按相关度排序且受 limit 限制', () => {
@@ -78,7 +81,7 @@ describe('searchDocs（模糊搜索）', () => {
 
   it('是纯函数：同样查询结果一致', () => {
     expect(searchDocs(DOCS, '提示词').map((h) => h.doc.id)).toEqual(
-      searchDocs(DOCS, '提示词').map((h) => h.doc.id)
+      searchDocs(DOCS, '提示词').map((h) => h.doc.id),
     )
   })
 
@@ -90,7 +93,7 @@ describe('searchDocs（模糊搜索）', () => {
 
 describe('SEARCH_TYPE_LABELS', () => {
   it('覆盖全部搜索类型且无多余项', () => {
-    const types = new Set(DOCS.map((d) => d.type))
+    const types = new Set([...DOCS.map((d) => d.type), 'module'])
     expect(Object.keys(SEARCH_TYPE_LABELS).sort()).toEqual([...types].sort())
   })
 })

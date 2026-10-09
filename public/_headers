@@ -10,11 +10,10 @@
 # 规则与 scripts/serve-out.mjs 的 cacheControl() 保持一致。
 
 /*
-  安全响应头。
-  本站不引入任何第三方脚本、不用 eval、不嵌入外部框架，所以 CSP 可以收得很紧。
-  'unsafe-inline' 仅保留给 style —— Tailwind 与内联的关键帧动画需要它。
-  style-src 的 https: 是为了允许助手面板里用户自填的字体/CSS（如果将来开放）。
-*/
+# 安全响应头。
+# 本站不引入任何第三方脚本、不用 eval、不嵌入外部框架，所以 CSP 可以收得很紧。
+# 'unsafe-inline' 仅保留给 style —— Tailwind 与内联的关键帧动画需要它。
+# style-src 的 https: 是为了允许助手面板里用户自填的字体/CSS（如果将来开放）。
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
@@ -22,44 +21,53 @@
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
 
 # Service Worker：必须允许，否则离线能力在 Cloudflare 上不生效
-  /sw.js
+/sw.js
   Cache-Control: no-cache
   Service-Worker-Allowed: /
 
-/*
-  静态资源（带内容 hash）可以永久缓存。
-  文件名变了内容一定变，所以不存在「缓存了旧内容」的问题。
-*/
-  /_next/static/*
+# 静态资源（带内容 hash）可以永久缓存。
+# 文件名变了内容一定变，所以不存在「缓存了旧内容」的问题。
+/_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 
 # HTML 不缓存：内容站必须让访客尽快拿到最新页面，
 # 配合 ETag 还能省流量（304 比重新下载省得多）
-  /
+/
   Cache-Control: public, max-age=0, must-revalidate
-  /tools/*
+/tools/*
   Cache-Control: public, max-age=0, must-revalidate
-  /learn/*
+/learn/*
   Cache-Control: public, max-age=0, must-revalidate
-  /guides/*
+/guides/*
   Cache-Control: public, max-age=0, must-revalidate
-  /cases/*
+/cases/*
   Cache-Control: public, max-age=0, must-revalidate
-  /edu/*
+/edu/*
   Cache-Control: public, max-age=0, must-revalidate
-  /find/*
+/find/*
   Cache-Control: public, max-age=0, must-revalidate
-  /compare/*
+/compare/*
   Cache-Control: public, max-age=0, must-revalidate
 
 # 索引 JSON：内容随数据变，给一小时
-  /*.json
+/*.json
   Cache-Control: public, max-age=3600
 
 # logo 与图标：一个月
-  /logos/*
+/logos/*
   Cache-Control: public, max-age=2592000
-  /icon.svg
+/icon.svg
   Cache-Control: public, max-age=2592000
-  /manifest.webmanifest
+/manifest.webmanifest
   Cache-Control: public, max-age=3600
+
+/admin
+  Cache-Control: no-store
+/admin/*
+  Cache-Control: no-store
+/saved/*
+  Cache-Control: public, max-age=0, must-revalidate
+/modules/*
+  Cache-Control: public, max-age=0, must-revalidate
+/updates/*
+  Cache-Control: public, max-age=0, must-revalidate

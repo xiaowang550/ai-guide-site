@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState } from 'react'
-import type { Tool } from '@/data/types'
+import type { CompareTool as Tool } from '@/lib/compare-tool'
 import { ComparePicker } from '@/components/compare-picker'
 import { CompareTable } from '@/components/compare-table'
 
