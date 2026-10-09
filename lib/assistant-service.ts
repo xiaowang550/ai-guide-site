@@ -113,7 +113,7 @@ async function checkConnection(
   const fetcher = env.ASSISTANT_FETCH ?? fetch
   const options = () => ({
     headers: { Authorization: 'Bearer ' + key },
-    redirect: 'error' as const,
+    redirect: 'manual' as const,
     signal: AbortSignal.timeout(15000),
   })
   try {
@@ -225,7 +225,7 @@ export async function assistantTest(db: Db, env: AssistantEnv, request: Request)
     try {
       const response = await (env.ASSISTANT_FETCH ?? fetch)(report.baseUrl + '/chat/completions', {
         method: 'POST',
-        redirect: 'error',
+        redirect: 'manual',
         signal: watch.controller.signal,
         headers: {
           Authorization: 'Bearer ' + key,
@@ -638,7 +638,7 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         : ZEN_BASE + '/chat/completions'
     response = await fetcher(url, {
       method: 'POST',
-      redirect: 'error',
+      redirect: 'manual',
       signal: controller.signal,
       headers: {
         Authorization: 'Bearer ' + key,
