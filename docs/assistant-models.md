@@ -19,3 +19,9 @@
 参考：[官方模型 API](https://openrouter.ai/api/v1/models)、[OpenRouter 流式接口](https://openrouter.ai/docs/api_reference/streaming)、[账号模型目录](https://openrouter.ai/docs/client-sdks/typescript/api-reference/models/models)、[推理与输出预算](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)、[OpenRouter 额度](https://openrouter.ai/docs/api_reference/limits)、[太空兔端点](https://openrouter.ai/api/v1/models/stealth/space-bunny-alpha/endpoints)、[OpenCode 模型](https://opencode.ai/zen/v1/models)。
 
 手机与鼠标都可以直接拖动小芽入口，移动超过 8px 才按拖动处理，松手不会误开面板。位置保存在当前浏览器并跨标签页同步；键盘、旋转与缩放变化只临时夹紧到可视区，不覆盖原位置。桌面可拖动面板标题栏；手机打开面板和模型菜单不会主动聚焦输入框，主要触控区域至少 44px，输入字号避免系统自动放大，并根据可视窗口调整高度。
+
+首次教学与零基础路线：新访客自动进入约一分钟的提示词体验，同一免费模型分别生成简单与详细要求，显式点击才消耗请求；可随时关闭、按本地自然日选择今天不再弹出，完成后选择零基础或自由探索。历史已完成引导的浏览器不重复自动打扰，教程页可手动重播。
+
+教程中的 `/start/` 提供六个陪练：第一次对话、详细要求、文生图、图生文、语音转文字、真实任务。仅保存浏览器内的步骤与自我确认，不保存输入、模型回答、图片或录音。文生图目前交给官方外部作图工具完成，明确说明外部账号和额度；本站不伪造生成图片。图生文只发送本次压缩的 JPEG/PNG/WebP 数据，最多 240000 字符，不代理抓取图片 URL，仍执行零价、额度与并发限制。语音识别由浏览器服务提供，必须点击并授权；不支持或服务失败时引导使用手机键盘语音输入，也可明确标注手工练习。
+
+新内置栏目在现有后台懒初始化时加入，不覆盖其他栏目、密钥或全站开关；教程入口的归属已调整，旧使用帮助网址保持可访问。

@@ -8,6 +8,7 @@ import { UpdatedBadge } from '@/components/updated-badge'
 import { lessonSummaries } from '@/data/lesson-summaries'
 import { QuickPractice } from '@/components/learning/quick-practice'
 import { WorkflowVisual } from '@/components/learning/workflow-visual'
+import { ModuleSection } from '@/components/module-visibility'
 
 export const metadata: Metadata = {
   title: '教程：AI 怎么用',
@@ -26,6 +27,30 @@ export default function GuidesPage() {
         meta={<UpdatedBadge date={latestUpdatedAt(tools)} prefix="内容更新于" />}
       />
       <div className="container py-8">
+        <div className="mb-8 grid gap-4 md:grid-cols-2">
+          <ModuleSection id="beginner">
+            <Link href="/start/" className="rounded-2xl border bg-accent/60 p-6">
+              <p className="eyebrow">从零开始 · 进度自动保留</p>
+              <h2 className="mt-3 text-xl">零基础一对一</h2>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                对话 → 提示词 → 作图 → 看图 → 语音 → 完成真实任务。小芽只讲你现在这一小步。
+              </p>
+              <span className="mt-4 inline-block text-sm text-primary">开始或继续学习 →</span>
+            </Link>
+          </ModuleSection>
+          <Link href="/learn/access/" className="rounded-2xl border bg-card p-6">
+            <p className="eyebrow">使用前先排除障碍</p>
+            <h2 className="mt-3 text-xl">海外工具打不开？</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              认识地区、账号与机构网络等限制，找到适合自己的可用替代工具。
+            </p>
+            <span className="mt-4 inline-block text-sm text-primary">查看使用帮助 →</span>
+          </Link>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 重播需要完整初始化首次体验，不能复用已经关闭的路由状态。 */}
+        <a href="/?tour=1" className="mb-8 inline-flex min-h-11 items-center text-sm text-primary">
+          重新体验一分钟提示词对比 →
+        </a>
         <div className="learning-start">
           <div>
             <p className="eyebrow">不用先读完所有教程</p>

@@ -22,6 +22,7 @@ import { pathEnabled } from './site-modules.ts'
 import { sha256Base64Url, toBase64Url, fromBase64Url } from './admin/crypto.ts'
 import { json, fail, readJson } from './admin/http.ts'
 import type { Db } from './db/types.ts'
+import { validAssistantImage } from './assistant-image.ts'
 
 export interface AssistantEnv {
   AI_CREDENTIALS_KEY?: string
@@ -525,15 +526,19 @@ async function siteContext(db: Db, query: string, page: string): Promise<Assista
 }
 export async function assistantChat(db: Db, env: AssistantEnv, request: Request) {
   const length = Number(request.headers.get('content-length') ?? 0)
-  if (length > 64000) return fail(413, '这次输入过长，请缩短后再试。')
+  if (length > 280000) return fail(413, '这次输入过长，请缩短或压缩图片后再试。')
   const raw = await request.text()
-  if (raw.length > 16000) return fail(413, '这次输入过长，请缩短后再试。')
-  let body: { model?: unknown; messages?: unknown; page?: unknown }
+  if (raw.length > 260000) return fail(413, '这次输入过长，请缩短或压缩图片后再试。')
+  let body: { model?: unknown; messages?: unknown; page?: unknown; image?: unknown }
   try {
     body = JSON.parse(raw)
   } catch {
     return fail(400, '消息格式不正确。')
   }
+  if (body?.image !== undefined && !validAssistantImage(body.image))
+    return fail(400, '请使用压缩后的 JPG、PNG 或 WebP 图片，暂不接收图片网址。')
+  if (raw.length - (typeof body?.image === 'string' ? body.image.length : 0) > 16000)
+    return fail(413, '这次文字输入过长，请缩短后再试。')
   if (!body || !Array.isArray(body.messages) || !body.messages.length || body.messages.length > 12)
     return fail(400, '请提供有效的对话。')
   const messages = body.messages as { role: string; content: string }[]
@@ -553,6 +558,8 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
     model = current.models.find((m) => m.id === body.model)
   if (!current.enabled) return fail(503, 'AI 体验暂时关闭，站内查找仍可使用。')
   if (!model?.available) return fail(400, '请选择当前目录中的免费文字模型。')
+  if (body.image && (!model.vision || model.provider !== 'openrouter'))
+    return fail(400, '请选择支持看图的免费 OpenRouter 模型。')
   if (current.stale && model.provider === 'openrouter')
     return fail(503, '免费价格目录正在更新，请稍后重试。')
   const key = await credential(db, env, model.provider)
@@ -653,7 +660,20 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       },
       body: JSON.stringify({
         model: model.provider === 'openrouter' ? model.id : 'space-bunny-free',
-        messages: [{ role: 'system', content: system }, ...messages],
+        messages: [
+          { role: 'system', content: system },
+          ...messages.map((m, i) =>
+            body.image && i === messages.length - 1
+              ? {
+                  role: m.role,
+                  content: [
+                    { type: 'text', text: m.content },
+                    { type: 'image_url', image_url: { url: body.image } },
+                  ],
+                }
+              : m,
+          ),
+        ],
         stream: true,
         ...(model.provider === 'openrouter'
           ? generationOptions(model.reasoning || model.id === 'openrouter/free')

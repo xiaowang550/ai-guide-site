@@ -28,6 +28,25 @@ afterEach(() => {
   }
 })
 describe('模块发布与所有者权限', () => {
+  it('已有后台平滑加入零基础栏目，保留原先开关和模块内容', async () => {
+    const env = await makeTestEnv()
+    await request(env, 'GET', '/api/site')
+    await env.db.run("DELETE FROM site_modules WHERE id='beginner'")
+    await env.db.run('UPDATE site_features SET data=? WHERE id=1', [
+      JSON.stringify({ assistant: false, onboarding: false }),
+    ])
+    const current = await request(env, 'GET', '/api/site')
+    expect(current.json.modules.some((m: { id: string }) => m.id === 'beginner')).toBe(true)
+    expect(current.json.features).toEqual({ assistant: false, onboarding: false })
+    expect(pathEnabled(current.json, '/start/')).toBe(true)
+    const guidesOff = {
+      ...current.json,
+      modules: current.json.modules.map((m: { id: string; enabled: boolean }) =>
+        m.id === 'guides' ? { ...m, enabled: false } : m,
+      ),
+    }
+    expect(pathEnabled(guidesOff, '/learn/access')).toBe(false)
+  })
   it('匿名可读公开配置，所有新管理接口与执行器都需要 owner 登录', async () => {
     const env = await makeTestEnv()
     const publicResponse = await request(env, 'GET', '/api/site')

@@ -25,6 +25,19 @@ export interface PublicSiteConfig {
 }
 export const builtinModules: SiteModule[] = [
   {
+    id: 'beginner',
+    title: '零基础一对一',
+    description: '对话、文生图、图生文、语音转文字与真实任务',
+    kind: 'builtin',
+    enabled: true,
+    home: false,
+    navigation: false,
+    order: 18,
+    blocks: [],
+    version: 1,
+    updatedAt: '',
+  },
+  {
     id: 'saved',
     title: '学习夹',
     description: '本机收藏与最近浏览',
@@ -149,6 +162,8 @@ export const DEFAULT_SITE_CONFIG: PublicSiteConfig = {
 }
 export function moduleForPath(path: string): string | null {
   const clean = path.split('?')[0].replace(/\/+$/, '') || '/'
+  if (clean === '/start') return 'beginner'
+  if (clean === '/learn/access') return 'guides'
   if (clean === '/saved') return 'saved'
   if (clean === '/learn/advanced') return 'advanced'
   if (clean === '/learn' || clean.startsWith('/learn/')) return 'knowledge'
@@ -177,6 +192,7 @@ export function pathEnabled(config: PublicSiteConfig, path: string): boolean {
 }
 export function moduleHref(module: SiteModule): string {
   const routes: Record<string, string> = {
+    beginner: '/start',
     saved: '/saved',
     knowledge: '/learn',
     advanced: '/learn/advanced',

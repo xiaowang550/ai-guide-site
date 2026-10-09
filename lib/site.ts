@@ -88,11 +88,6 @@ export const megaNav: readonly NavItem[] = [
     hint: 'AI 是什么',
     children: [
       {
-        href: '/learn/access',
-        label: '海外工具打不开',
-        hint: '三类原因与替代方案，不提供绕过方法',
-      },
-      {
         href: '/learn/advanced',
         label: '模型与 Agent 进阶',
         hint: '选模型、接资料、试流程，学会验收',
@@ -105,6 +100,8 @@ export const megaNav: readonly NavItem[] = [
     label: '教程',
     hint: 'AI 怎么用',
     children: [
+      { href: '/start', label: '零基础一对一', hint: '从对话、作图到看图与语音，手把手练习' },
+      { href: '/learn/access', label: '海外工具打不开', hint: '看懂原因，选择适合自己的替代工具' },
       // 「学习路径」原来占一个一级项，收进教程面板。
       // 原因是对齐 7 个文档站的实测：一级项之间普遍留 24-32px，
       // 而 7 个中文项每项要 70-110px，留到这个间距后中间那段搜索框

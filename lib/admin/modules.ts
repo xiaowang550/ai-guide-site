@@ -16,7 +16,7 @@ export async function ensureModules(db: Db) {
   try {
     if (
       await db.first(
-        "SELECT id FROM site_features WHERE id=1 AND EXISTS(SELECT 1 FROM site_modules WHERE id='saved')",
+        "SELECT id FROM site_features WHERE id=1 AND EXISTS(SELECT 1 FROM site_modules WHERE id='saved') AND EXISTS(SELECT 1 FROM site_modules WHERE id='beginner')",
       )
     )
       return

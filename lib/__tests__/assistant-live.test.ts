@@ -198,6 +198,39 @@ describe('助手私有配置与公开推理', () => {
 })
 
 describe('连接诊断与断流恢复', () => {
+  it('看图练习调用已核验的免费视觉模型，图片不写入数据库或变成外部抓取', async () => {
+    const { env, fetcher } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    const vision = {
+      ...MODEL,
+      architecture: { input_modalities: ['text', 'image'], output_modalities: ['text'] },
+    }
+    fetcher.mockImplementation(async (input, _init) => {
+      if (String(input).endsWith('/key')) return json({ data: {} })
+      if (String(input).endsWith('/chat/completions'))
+        return new Response(
+          'data: {"choices":[{"delta":{"content":"图片中的时间是四点。"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n',
+        )
+      return json({ data: [vision] })
+    })
+    const image = 'data:image/jpeg;base64,' + btoa('\xff\xd8\xff\xe0private-image-test')
+    expect((await request(env, 'POST', '/api/assistant/chat', { ...message, image })).status).toBe(
+      200,
+    )
+    const call = fetcher.mock.calls.find(([url]) => String(url).endsWith('/chat/completions'))!
+    const payload = JSON.parse(String(call[1]?.body))
+    expect(payload.messages.at(-1).content[1].image_url.url).toBe(image)
+    expect(payload.provider.max_price).toEqual({ prompt: 0, completion: 0 })
+    expect(JSON.stringify(await env.db.all('SELECT * FROM assistant_store'))).not.toContain(image)
+    expect(
+      (
+        await request(env, 'POST', '/api/assistant/chat', {
+          ...message,
+          image: 'https://internal.test/picture',
+        })
+      ).status,
+    ).toBe(400)
+  })
   it('填写官方首页和完整接口地址均规范化，拒绝将 Key 发往代理、HTTP 或跳转目标', async () => {
     expect(normalizeAssistantUrl('https://openrouter.ai', 'openrouter')).toBe(
       'https://openrouter.ai/api/v1',

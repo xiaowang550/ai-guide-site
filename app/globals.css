@@ -593,6 +593,7 @@
 .site-header { padding-top:var(--safe-top); }
 .mobile-nav-panel { max-height:calc(100dvh - 72px - var(--safe-top)); overflow-y:auto; overscroll-behavior:contain; padding-bottom:var(--safe-bottom); }
 .assistant-launcher[data-dragging] button { cursor:grabbing !important; box-shadow:0 10px 28px #172b2233; }
+.assistant-discovery { position:fixed; width:min(260px,calc(100vw - 32px)); padding:14px 16px; border:1px solid hsl(var(--primary)/.2); border-radius:15px; background:hsl(var(--card)); box-shadow:0 8px 30px #173a2218; font-size:12px; }.assistant-discovery strong { display:block; color:hsl(var(--primary)); padding-right:20px; }.assistant-discovery p { margin-top:6px; color:hsl(var(--muted-foreground)); font-size:11px; }.assistant-discovery > button { position:absolute; right:4px; top:2px; width:32px; height:32px; font-size:18px; color:hsl(var(--muted-foreground)); }
 @media (pointer:coarse) {
   button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
   button,a { touch-action:manipulation; }

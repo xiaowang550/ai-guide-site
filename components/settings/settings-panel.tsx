@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { Compass, RotateCcw } from 'lucide-react'
-import { DEFAULT_SETTINGS, readSettings, resetSettings, subscribeSettings, writeSettings, type SiteSettings } from '@/lib/settings'
+import {
+  DEFAULT_SETTINGS,
+  readSettings,
+  resetSettings,
+  subscribeSettings,
+  writeSettings,
+  type SiteSettings,
+} from '@/lib/settings'
 import { AiModeSettings } from '@/components/settings/ai-mode-settings'
 import { ErrataQueuePanel } from '@/components/errata-queue-panel'
 import { cn } from '@/lib/utils'
@@ -34,7 +41,15 @@ function Row({
   )
 }
 
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  label: string
+}) {
   return (
     <button
       type="button"
@@ -44,13 +59,13 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
       onClick={() => onChange(!checked)}
       className={cn(
         'relative h-6 w-11 rounded-full border transition-colors',
-        checked ? 'border-primary bg-primary' : 'bg-muted'
+        checked ? 'border-primary bg-primary' : 'bg-muted',
       )}
     >
       <span
         className={cn(
-          'absolute top-0.5 left-0.5 rounded-full bg-white transition-transform',
-          checked ? 'translate-x-[21px]' : 'translate-x-0'
+          'absolute left-0.5 top-0.5 rounded-full bg-white transition-transform',
+          checked ? 'translate-x-[21px]' : 'translate-x-0',
         )}
         style={{ height: '18px', width: '18px' }}
       />
@@ -81,7 +96,9 @@ export function SettingsPanel() {
         control={
           <Toggle
             checked={settings.assistant}
-            onChange={(v) => update({ assistant: v, assistantPanelOpen: v ? settings.assistantPanelOpen : false })}
+            onChange={(v) =>
+              update({ assistant: v, assistantPanelOpen: v ? settings.assistantPanelOpen : false })
+            }
             label="显示站内助手"
           />
         }
@@ -103,7 +120,7 @@ export function SettingsPanel() {
                     'rounded-full border px-3 py-1 text-xs transition-colors',
                     active
                       ? 'border-primary bg-primary/10 font-medium text-primary'
-                      : 'text-muted-foreground hover:border-foreground/25'
+                      : 'text-muted-foreground hover:border-foreground/25',
                   )}
                 >
                   {DOCK_LABEL[dock]}
@@ -120,13 +137,13 @@ export function SettingsPanel() {
       />
       <Row
         title="重新播放新手引导"
-        description="第一次进来时的四步引导。看完或跳过后不会自动再出现。"
+        description="一分钟动手体验。可以随时关闭，或选择今天不再提示。"
         control={
           <button
             type="button"
             onClick={() => {
               writeSettings({ onboardingDone: false })
-              window.location.reload()
+              window.location.assign('/?tour=1')
             }}
             className="inline-flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors hover:bg-accent"
           >

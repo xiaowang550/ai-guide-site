@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { ArrowUp, Check, Copy, LoaderCircle, RotateCcw, Square, X } from 'lucide-react'
 import type { AssistantToolsIndex } from '@/lib/assistant'
 import type { ModelCatalog } from '@/lib/assistant-models'
-import { readSse } from '@/lib/assistant-stream'
+import { runAssistant } from '@/lib/assistant-client'
 import { copyText } from '@/lib/copy-text'
 import { computeDockPosition } from '@/lib/dock-position'
 import { toggleSaved, validLearningEntry, type LearningEntry } from '@/lib/learning/library'
@@ -172,29 +172,16 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
   ) {
     const controller = new AbortController()
     abort.current = controller
-    const response = await fetch('/api/assistant/chat', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ model: selected, messages, page: pathname }),
+    await runAssistant({
+      model: selected,
+      messages,
+      page: pathname,
       signal: controller.signal,
+      onText,
+      onMeta,
     })
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}))
-      throw new Error(data.error ?? '模型暂时没有响应，请稍后再试。')
-    }
-    if (!response.body) throw new Error('没有收到流式响应。')
-    let complete = false,
-      streamError = ''
-    await readSse(response.body, (data) => {
-      const event = JSON.parse(data)
-      if (event.type === 'meta') onMeta?.(event.name, event.sources)
-      if (event.type === 'model') onMeta?.(event.name, [])
-      if (event.type === 'delta') onText(event.text)
-      if (event.type === 'done') complete = true
-      if (event.type === 'error') streamError = event.message
-    })
-    if (streamError || !complete) throw new Error(streamError || '生成中断了，可以重试。')
   }
+
   async function ask(text = draft, recovery?: { id: string; continue: boolean }) {
     const q = text.trim()
     if (!q || busy) return

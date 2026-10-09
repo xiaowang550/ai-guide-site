@@ -27,6 +27,7 @@ export function AssistantDock() {
   const [dock, setDock] = useState<AssistantDock>('bottom-right')
   const [ready, setReady] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [hint, setHint] = useState(false)
 
   const dragState = useRef<{
     id: number
@@ -70,6 +71,34 @@ export function AssistantDock() {
       setDock(next.assistantDock)
     })
   }, [])
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>
+    function show(force = false) {
+      if (document.querySelector('.first-visit-dialog[open]')) return
+      try {
+        if (
+          !force &&
+          (localStorage.getItem('ai-map:assistant-tip:v1') || readSettings().onboardingDone)
+        )
+          return
+        localStorage.setItem('ai-map:assistant-tip:v1', '1')
+      } catch {}
+      setHint(true)
+      clearTimeout(timer)
+      timer = setTimeout(() => setHint(false), 16000)
+    }
+    const initial = setTimeout(() => show(), 1200),
+      afterIntro = () => {
+        clearTimeout(timer)
+        timer = setTimeout(() => show(true), 60)
+      }
+    window.addEventListener('ai-map:intro-closed', afterIntro)
+    return () => {
+      clearTimeout(initial)
+      clearTimeout(timer)
+      window.removeEventListener('ai-map:intro-closed', afterIntro)
+    }
+  }, [])
 
   useEffect(() => {
     if (!ready) return
@@ -104,6 +133,7 @@ export function AssistantDock() {
   })
   function onPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
     if (!e.isPrimary || e.button !== 0) return
+    setHint(false)
     const rect = wrapRef.current!.getBoundingClientRect()
     suppressClick.current = false
     dragState.current = {
@@ -163,6 +193,31 @@ export function AssistantDock() {
         height: DOCK_BUTTON_SIZE,
       }}
     >
+      {hint && !open && (
+        <div
+          className="assistant-discovery"
+          role="status"
+          style={{
+            left: Math.max(
+              (window.visualViewport?.offsetLeft ?? 0) + 16,
+              Math.min(
+                position.left - 190,
+                (window.visualViewport?.offsetLeft ?? 0) +
+                  (window.visualViewport?.width ?? window.innerWidth) -
+                  Math.min(260, window.innerWidth - 32) -
+                  16,
+              ),
+            ),
+            top: position.top < 120 ? position.top + 60 : position.top - 94,
+          }}
+        >
+          <button aria-label="关闭助手提示" onClick={() => setHint(false)}>
+            ×
+          </button>
+          <strong>小芽在这里，随时可以问。</strong>
+          <p>点头像打开；按住头像能拖动。</p>
+        </div>
+      )}
       {mounted ? (
         <AssistantPanel
           open={open}

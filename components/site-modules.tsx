@@ -102,7 +102,7 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       {children}
       {preview && <PreviewControls />}
       {config.features.assistant && <AssistantDock />}
-      {config.features.onboarding && <GuidedTour />}
+      {ready && config.features.onboarding && <GuidedTour />}
     </SiteContext.Provider>
   )
 }

@@ -5,12 +5,7 @@ import { tools } from '@/data'
 import { ToolLogo } from '@/components/tool-logo'
 import { PageHeader, Section } from '@/components/page-header'
 import { Badge } from '@/components/ui/badge'
-import {
-  ACCESS_REASON_LABELS,
-  OUT_OF_SCOPE,
-  classifyAccess,
-  type AccessReason,
-} from '@/lib/access'
+import { ACCESS_REASON_LABELS, OUT_OF_SCOPE, classifyAccess, type AccessReason } from '@/lib/access'
 
 export const metadata: Metadata = {
   title: '海外工具打不开：原因与应对',
@@ -29,8 +24,7 @@ const REASONS: {
   {
     key: 'unserved',
     what: '官方没有在你们所在地区提供服务。',
-    soWhat:
-      '这类不是「网络慢」或「被墙」，而是厂商根本没做这个市场。换个网络环境通常也不会变。',
+    soWhat: '这类不是「网络慢」或「被墙」，而是厂商根本没做这个市场。换个网络环境通常也不会变。',
     advice: '直接用替代方案。下面每个工具都列了本站已收录、且大陆可直连的同能力工具。',
   },
   {
@@ -43,10 +37,8 @@ const REASONS: {
   {
     key: 'network-dependent',
     what: '能力完全依赖厂商服务器，没有本地部署选项。',
-    soWhat:
-      '这一类在大陆网络下通常表现不稳定 —— 可能时好时坏，比干脆打不开更难判断问题出在哪。',
-    advice:
-      '先看有没有官方提供的其他使用渠道（比如国内企业版、区域版），没有就换用替代方案。',
+    soWhat: '这一类在大陆网络下通常表现不稳定 —— 可能时好时坏，比干脆打不开更难判断问题出在哪。',
+    advice: '先看有没有官方提供的其他使用渠道（比如国内企业版、区域版），没有就换用替代方案。',
   },
 ]
 
@@ -87,7 +79,7 @@ export default function AccessPage() {
       <PageHeader
         breadcrumbs={[
           { label: '首页', href: '/' },
-          { label: '知识库', href: '/learn' },
+          { label: '教程', href: '/guides' },
           { label: '海外工具打不开' },
         ]}
         title="海外工具打不开，到底是怎么回事"
@@ -129,8 +121,8 @@ export default function AccessPage() {
             </ul>
             <p className="mt-3 text-sm leading-7 text-foreground/85">
               <b className="text-foreground">能提供的是：</b>
-              说清每个工具打不开的<b>具体原因</b>（因为三类原因的应对完全不同），
-              并给出本站已收录、<b>大陆可直连</b>的同能力替代工具。
+              说清每个工具打不开的<b>具体原因</b>（因为三类原因的应对完全不同）， 并给出本站已收录、
+              <b>大陆可直连</b>的同能力替代工具。
             </p>
           </div>
 
@@ -210,7 +202,10 @@ export default function AccessPage() {
               return (
                 <li key={t.id} className="border-b border-hairline pb-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <Link href={`/tools/${t.id}`} className="flex items-center gap-2 font-medium hover:text-primary">
+                    <Link
+                      href={`/tools/${t.id}`}
+                      className="flex items-center gap-2 font-medium hover:text-primary"
+                    >
                       <ToolLogo src={t.logo} alt={`${t.name} 标志`} size={22} />
                       {t.name}
                     </Link>
