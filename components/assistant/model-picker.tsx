@@ -24,7 +24,8 @@ export function ModelPicker({
   )
   const current = catalog?.models.find((m) => m.id === selected)
   useEffect(() => {
-    if (open) search.current?.focus()
+    if (open && !window.matchMedia('(pointer: coarse)').matches)
+      search.current?.focus({ preventScroll: true })
   }, [open])
   useEffect(() => {
     if (busy) setOpen(false)

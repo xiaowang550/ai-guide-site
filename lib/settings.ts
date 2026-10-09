@@ -43,7 +43,9 @@ function isDock(value: unknown): value is AssistantDock {
     typeof value === 'object' &&
     value !== null &&
     typeof (value as { x?: unknown }).x === 'number' &&
-    typeof (value as { y?: unknown }).y === 'number'
+    typeof (value as { y?: unknown }).y === 'number' &&
+    Number.isFinite((value as { x: number }).x) &&
+    Number.isFinite((value as { y: number }).y)
   )
 }
 
@@ -102,12 +104,15 @@ export function resetSettings(): SiteSettings {
 export function subscribeSettings(cb: (s: SiteSettings) => void): () => void {
   if (typeof window === 'undefined') return () => {}
   const handler = (e: Event) => cb((e as CustomEvent<SiteSettings>).detail)
+  const storage = (e: StorageEvent) => {
+    if (e.key === KEY || e.key === null) cb(readSettings())
+  }
   window.addEventListener(EVENT, handler)
   // 另一个标签页改了设置，也要同步
-  window.addEventListener('storage', handler)
+  window.addEventListener('storage', storage)
   return () => {
     window.removeEventListener(EVENT, handler)
-    window.removeEventListener('storage', handler)
+    window.removeEventListener('storage', storage)
   }
 }
 

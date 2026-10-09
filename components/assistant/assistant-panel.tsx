@@ -8,6 +8,7 @@ import type { AssistantToolsIndex } from '@/lib/assistant'
 import type { ModelCatalog } from '@/lib/assistant-models'
 import { readSse } from '@/lib/assistant-stream'
 import { copyText } from '@/lib/copy-text'
+import { computeDockPosition } from '@/lib/dock-position'
 import { toggleSaved, validLearningEntry, type LearningEntry } from '@/lib/learning/library'
 import { AssistantAvatar } from './assistant-avatar'
 import { ModelPicker } from './model-picker'
@@ -37,6 +38,8 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
     input = useRef<HTMLTextAreaElement>(null),
     feed = useRef<HTMLDivElement>(null),
     abort = useRef<AbortController | null>(null)
+  const panelPosition = useRef<{ x: number; y: number } | null>(null)
+  const panelDrag = useRef<{ id: number; dx: number; dy: number } | null>(null)
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null),
     [index, setIndex] = useState<AssistantToolsIndex | null>(null)
   const [mode, setMode] = useState<'chat' | 'practice' | 'search'>('chat'),
@@ -53,7 +56,43 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
   useEffect(() => {
     if (open && !dialog.current?.open) dialog.current?.showModal()
     if (!open && dialog.current?.open) dialog.current?.close()
-    if (open) input.current?.focus()
+    if (open && !window.matchMedia('(pointer: coarse)').matches)
+      input.current?.focus({ preventScroll: true })
+  }, [open])
+  useEffect(() => {
+    if (!open) return
+    function place() {
+      const el = dialog.current,
+        v = window.visualViewport
+      if (!el) return
+      const width = v?.width ?? window.innerWidth,
+        height = v?.height ?? window.innerHeight
+      const left = v?.offsetLeft ?? 0,
+        top = v?.offsetTop ?? 0,
+        mobile = window.innerWidth <= 600
+      el.style.width = `${Math.min(480, width - (mobile ? 16 : 32))}px`
+      el.style.height = `${Math.min(mobile ? height : 740, height - (mobile ? 16 : 32))}px`
+      const rect = el.getBoundingClientRect()
+      const next = computeDockPosition(
+        mobile ? { x: left + 8, y: top + 8 } : (panelPosition.current ?? 'bottom-right'),
+        { width, height, left, top, gap: mobile ? 8 : 16 },
+        false,
+        { width: rect.width, height: rect.height },
+      )
+      el.style.inset = 'auto'
+      el.style.left = `${next.left}px`
+      el.style.top = `${next.top}px`
+      el.style.setProperty('--assistant-visible-height', `${height}px`)
+    }
+    place()
+    window.addEventListener('resize', place)
+    window.visualViewport?.addEventListener('resize', place)
+    window.visualViewport?.addEventListener('scroll', place)
+    return () => {
+      window.removeEventListener('resize', place)
+      window.visualViewport?.removeEventListener('resize', place)
+      window.visualViewport?.removeEventListener('scroll', place)
+    }
   }, [open])
   useEffect(() => () => abort.current?.abort(), [])
   useEffect(() => {
@@ -276,6 +315,7 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
       ref={dialog}
       className="assistant-dialog"
       aria-label="小芽站内学习助手"
+      tabIndex={-1}
       onCancel={() => {
         abort.current?.abort()
         onClose()
@@ -294,7 +334,49 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
       }}
     >
       <div className="assistant-surface">
-        <header className="assistant-heading">
+        <header
+          className="assistant-heading"
+          onPointerDown={(e) => {
+            if (
+              !e.isPrimary ||
+              e.button !== 0 ||
+              window.innerWidth <= 600 ||
+              (e.target as HTMLElement).closest('button')
+            )
+              return
+            const rect = dialog.current!.getBoundingClientRect()
+            panelDrag.current = {
+              id: e.pointerId,
+              dx: e.clientX - rect.left,
+              dy: e.clientY - rect.top,
+            }
+            e.currentTarget.setPointerCapture(e.pointerId)
+          }}
+          onPointerMove={(e) => {
+            const drag = panelDrag.current,
+              el = dialog.current
+            if (!drag || !el || drag.id !== e.pointerId) return
+            const rect = el.getBoundingClientRect()
+            const next = computeDockPosition(
+              { x: e.clientX - drag.dx, y: e.clientY - drag.dy },
+              { width: window.innerWidth, height: window.innerHeight },
+              false,
+              { width: rect.width, height: rect.height },
+            )
+            el.style.left = `${next.left}px`
+            el.style.top = `${next.top}px`
+            panelPosition.current = { x: next.left, y: next.top }
+          }}
+          onPointerUp={() => {
+            panelDrag.current = null
+          }}
+          onPointerCancel={() => {
+            panelDrag.current = null
+          }}
+          onLostPointerCapture={() => {
+            panelDrag.current = null
+          }}
+        >
           <AssistantAvatar thinking={busy} />
           <div>
             <strong>

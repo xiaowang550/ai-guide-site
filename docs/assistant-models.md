@@ -17,3 +17,5 @@
 验证包括价格过滤、权限、密钥加密、零价路由、中文 SSE 分片、错误及中断处理、额度、模态焦点、移动布局、实际查找与收藏。自动测试使用明确的接口测试数据，不宣称每个免费模型均已实测。上线验证用已保存的服务端 Key 发起简短真实推理，不导出 Key。
 
 参考：[官方模型 API](https://openrouter.ai/api/v1/models)、[OpenRouter 流式接口](https://openrouter.ai/docs/api_reference/streaming)、[账号模型目录](https://openrouter.ai/docs/client-sdks/typescript/api-reference/models/models)、[推理与输出预算](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)、[OpenRouter 额度](https://openrouter.ai/docs/api_reference/limits)、[太空兔端点](https://openrouter.ai/api/v1/models/stealth/space-bunny-alpha/endpoints)、[OpenCode 模型](https://opencode.ai/zen/v1/models)。
+
+手机与鼠标都可以直接拖动小芽入口，移动超过 8px 才按拖动处理，松手不会误开面板。位置保存在当前浏览器并跨标签页同步；键盘、旋转与缩放变化只临时夹紧到可视区，不覆盖原位置。桌面可拖动面板标题栏；手机打开面板和模型菜单不会主动聚焦输入框，主要触控区域至少 44px，输入字号避免系统自动放大，并根据可视窗口调整高度。

@@ -38,12 +38,10 @@ describe('computeDockPosition：所有屏宽都在可视区内', () => {
   it.each(VIEWPORTS)('$name 展开态面板完整可见（这是修掉的真实 bug）', ({ width, height }) => {
     const panelW = panelWidthFor(width)
     const panelH = 460
-    const p = computeDockPosition(
-      'bottom-right',
-      { width, height },
-      true,
-      { width: panelW, height: panelH }
-    )
+    const p = computeDockPosition('bottom-right', { width, height }, true, {
+      width: panelW,
+      height: panelH,
+    })
     expect(p.left, `${width}px 屏上 left 不能为负`).toBeGreaterThanOrEqual(0)
     expect(p.left + panelW, `${width}px 屏上面板右缘不能超出`).toBeLessThanOrEqual(width)
     expect(p.top).toBeGreaterThanOrEqual(0)
@@ -102,5 +100,39 @@ describe('computeDockPosition：拖拽后的自定义坐标会被夹回可视区
     const p = computeDockPosition({ x: 360, y: 780 }, { width: 812, height: 375 }, false)
     expect(p.left).toBeLessThanOrEqual(812 - DOCK_BUTTON_SIZE)
     expect(p.top).toBeLessThanOrEqual(375 - DOCK_BUTTON_SIZE)
+  })
+})
+
+describe('可视窗口、安全区与手机键盘', () => {
+  it('键盘缩小可视区时始终可点击，保留原坐标以便键盘收起后恢复', () => {
+    const dock = { x: 310, y: 720 }
+    const keyboard = computeDockPosition(dock, { width: 390, height: 340, top: 30 }, false)
+    expect(keyboard.top + DOCK_BUTTON_SIZE).toBeLessThanOrEqual(30 + 340 - DOCK_GAP)
+    expect(computeDockPosition(dock, { width: 390, height: 844 }, false)).toEqual({
+      left: 310,
+      top: 720,
+    })
+  })
+  it('横屏刘海、底部手势条和缩放后的视口偏移不会盖住入口', () => {
+    const vp = {
+      width: 812,
+      height: 375,
+      left: 20,
+      top: 50,
+      insets: { left: 44, right: 44, top: 0, bottom: 34 },
+    }
+    expect(computeDockPosition({ x: -200, y: -300 }, vp, false)).toEqual({ left: 64, top: 66 })
+    expect(computeDockPosition({ x: 2000, y: 2000 }, vp, false)).toEqual({
+      left: 20 + 812 - 44 - 52,
+      top: 50 + 375 - 34 - 52,
+    })
+  })
+  it('手机对话面板可使用 8px 边距而不被推出屏幕', () => {
+    expect(
+      computeDockPosition({ x: 8, y: 8 }, { width: 320, height: 568, gap: 8 }, false, {
+        width: 304,
+        height: 552,
+      }),
+    ).toEqual({ left: 8, top: 8 })
   })
 })

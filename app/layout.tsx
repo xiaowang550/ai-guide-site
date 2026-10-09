@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import './globals.css'
 import './styles/surfaces.css'
@@ -28,6 +28,13 @@ const NO_JS_REVEAL_FIX = '.js-reveal .reveal{opacity:1 !important;transform:none
  * MotionLayer 之后接管时用 `.reveal:not(.is-in)` 扫描，两者不会打架。
  */
 const REVEAL_EAGER = `(function(){try{var vh=window.innerHeight||800;var els=document.querySelectorAll('.js-reveal .reveal:not(.is-in)');for(var i=0;i<els.length;i++){if(els[i].getBoundingClientRect().top<vh*1.05){els[i].classList.add('is-in')}}}catch(e){}})()`
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),

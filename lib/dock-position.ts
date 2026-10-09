@@ -25,18 +25,28 @@ export const DOCK_BUTTON_SIZE = 52
  */
 export function computeDockPosition(
   dock: string | { x: number; y: number },
-  viewport: { width: number; height: number },
+  viewport: {
+    width: number
+    height: number
+    left?: number
+    top?: number
+    gap?: number
+    insets?: { top: number; right: number; bottom: number; left: number }
+  },
   panelOpen: boolean,
-  size: { width: number; height: number } = { width: DOCK_BUTTON_SIZE, height: DOCK_BUTTON_SIZE }
+  size: { width: number; height: number } = { width: DOCK_BUTTON_SIZE, height: DOCK_BUTTON_SIZE },
 ): { left: number; top: number } {
-  const { width: vw, height: vh } = viewport
+  const { width: vw, height: vh, left = 0, top = 0, insets } = viewport
+  const gap = viewport.gap ?? DOCK_GAP
   // 展开时容器要让出面板宽度；窄屏上直接靠边
   const needed = panelOpen ? panelWidthFor(vw) : DOCK_BUTTON_SIZE
-  const minLeft = Math.max(0, Math.min(DOCK_GAP, vw - size.width))
-  const minTop = Math.max(0, Math.min(DOCK_GAP, vh - size.height))
+  const minLeft = left + Math.max(0, Math.min(Math.max(gap, insets?.left ?? 0), vw - size.width))
+  const minTop = top + Math.max(0, Math.min(Math.max(gap, insets?.top ?? 0), vh - size.height))
+  const maxLeft = Math.max(minLeft, left + vw - size.width - Math.max(gap, insets?.right ?? 0))
+  const maxTop = Math.max(minTop, top + vh - size.height - Math.max(gap, insets?.bottom ?? 0))
 
-  const clampX = (x: number) => Math.min(Math.max(x, minLeft), Math.max(minLeft, vw - size.width))
-  const clampY = (y: number) => Math.min(Math.max(y, minTop), Math.max(minTop, vh - size.height))
+  const clampX = (x: number) => Math.min(Math.max(x, minLeft), maxLeft)
+  const clampY = (y: number) => Math.min(Math.max(y, minTop), maxTop)
 
   if (typeof dock !== 'string') {
     // 拖拽过的位置：始终夹回可视区内，旋转屏幕也不会丢
@@ -45,15 +55,15 @@ export function computeDockPosition(
 
   switch (dock) {
     case 'bottom-left':
-      return { left: minLeft, top: clampY(vh - needed - DOCK_GAP) }
+      return { left: minLeft, top: maxTop }
     case 'top-right':
-      return { left: clampX(vw - needed - DOCK_GAP), top: minTop }
+      return { left: clampX(left + vw - needed - gap), top: minTop }
     case 'top-left':
       return { left: minLeft, top: minTop }
     default:
       return {
-        left: clampX(vw - needed - DOCK_GAP),
-        top: clampY(vh - (panelOpen ? size.height : needed) - DOCK_GAP),
+        left: clampX(left + vw - needed - gap),
+        top: maxTop,
       }
   }
 }

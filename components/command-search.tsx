@@ -84,16 +84,17 @@ export function CommandSearch({ className }: { className?: string } = {}) {
     function place() {
       const rect = wrapper.current?.getBoundingClientRect()
       if (!rect) return
-      const width = Math.min(520, window.innerWidth - 32)
-      const top = rect.bottom + 10
+      const v = window.visualViewport
+      const width = Math.min(520, (v?.width ?? window.innerWidth) - 32)
+      const top = Math.max(rect.bottom + 10, (v?.offsetTop ?? 0) + 8)
       setPosition({
         top,
         left:
           window.innerWidth < 640
-            ? 16
+            ? (v?.offsetLeft ?? 0) + 16
             : Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16)),
         width,
-        height: Math.max(150, window.innerHeight - top - 24),
+        height: Math.max(100, (v?.offsetTop ?? 0) + (v?.height ?? window.innerHeight) - top - 16),
       })
     }
     place()
@@ -106,10 +107,14 @@ export function CommandSearch({ className }: { className?: string } = {}) {
     }
     document.addEventListener('pointerdown', outside)
     window.addEventListener('resize', place)
+    window.visualViewport?.addEventListener('resize', place)
+    window.visualViewport?.addEventListener('scroll', place)
     window.addEventListener('scroll', place, { passive: true })
     return () => {
       document.removeEventListener('pointerdown', outside)
       window.removeEventListener('resize', place)
+      window.visualViewport?.removeEventListener('resize', place)
+      window.visualViewport?.removeEventListener('scroll', place)
       window.removeEventListener('scroll', place)
     }
   }, [open, close])
@@ -226,7 +231,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
                       onClick={() => {
                         setQuery(word)
                         setActive(0)
-                        desktopInput.current?.focus()
+                        if (window.innerWidth >= 640) desktopInput.current?.focus()
                       }}
                     >
                       {word}
@@ -285,7 +290,8 @@ export function CommandSearch({ className }: { className?: string } = {}) {
               </div>
             )}
             <div className="flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3 text-[10px] text-muted-foreground">
-              <span>↑↓ 选择 · Enter 打开 · Esc 关闭</span>
+              <span className="hidden sm:inline">↑↓ 选择 · Enter 打开 · Esc 关闭</span>
+              <span className="sm:hidden">点击结果查看 · 上下滑动浏览</span>
               {query.trim() && (
                 <Link
                   href={`/search?q=${encodeURIComponent(query.trim())}`}

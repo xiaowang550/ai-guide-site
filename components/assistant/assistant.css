@@ -93,3 +93,37 @@ body:has(.assistant-dialog[open]) { overflow: hidden; }
 @keyframes assistant-rotate { to { transform:rotate(360deg); } }
 @media(max-width:600px) { .assistant-dialog { inset:auto 8px 8px auto; width:calc(100vw - 16px); height:calc(100dvh - 24px); border-radius:20px; } .assistant-heading { padding:15px 16px 12px; } .assistant-body { padding-left:16px; padding-right:16px; } .assistant-heading strong span { font-size:11px; } .assistant-model-trigger > span { max-width:190px; } .assistant-model-menu { bottom:86px; } }
 @media(prefers-reduced-motion:reduce) { .assistant-spin,.assistant-avatar.is-thinking,.assistant-typing span { animation:none; } }
+
+.assistant-heading { touch-action:none; cursor:grab; user-select:none; }
+.assistant-picker { min-width:0; flex:1; }
+.assistant-model-trigger { max-width:100%; }
+.assistant-model-menu { max-height:calc(var(--assistant-visible-height,100dvh) - 170px); }
+.assistant-message-actions { flex-wrap:wrap; gap:12px; }
+@media (pointer:coarse) {
+  .assistant-heading { touch-action:auto; cursor:default; }
+  .assistant-heading > button,.assistant-tabs button,.assistant-send,.assistant-model-trigger,.assistant-model-option,.assistant-model-menu-heading > button { min-height:44px; }
+  .assistant-send,.assistant-heading > button,.assistant-model-menu-heading > button { min-width:44px; }
+  .assistant-message-actions button,.assistant-source-cards button,.assistant-footer-note button { min-height:44px; padding:8px; }
+  .assistant-body,.assistant-model-list { -webkit-overflow-scrolling:touch; touch-action:pan-y; }
+  .assistant-source-cards > div { flex-wrap:wrap; }
+  .assistant-model-trigger > span { max-width:100%; }
+  .assistant-model-trigger svg { flex-shrink:0; }
+  .assistant-model-menu { padding:10px; bottom:102px; }
+  .assistant-model-list { max-height:min(230px,calc(var(--assistant-visible-height,100dvh) - 310px)); }
+}
+@media (max-width:600px) {
+  .assistant-footer { padding-bottom:max(8px,env(safe-area-inset-bottom,0px)); }
+  .assistant-heading { padding:8px 12px; }
+  .assistant-body { padding:8px 14px; }
+  .assistant-tabs { margin:0 12px 6px; }
+  .assistant-heading p { display:none; }
+  .assistant-message { font-size:14px; }
+  .assistant-heading strong span { display:none; }
+  .assistant-footer-note { font-size:10px; }
+}
+@media (max-height:500px) {
+  .assistant-footer-note { display:none; }
+  .assistant-heading { padding:4px 12px; }
+  .assistant-model-detail,.assistant-model-menu > a { display:none; }
+  .assistant-model-list { max-height:calc(var(--assistant-visible-height,100dvh) - 230px); }
+}

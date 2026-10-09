@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bookmark, Compass, Menu, X } from 'lucide-react'
@@ -19,6 +19,25 @@ export function SiteHeader() {
   )
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuButton = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+        menuButton.current?.focus()
+      }
+    }
+    const resize = () => {
+      if (window.innerWidth >= 1024) setMenuOpen(false)
+    }
+    document.addEventListener('keydown', close)
+    window.addEventListener('resize', resize)
+    return () => {
+      document.removeEventListener('keydown', close)
+      window.removeEventListener('resize', resize)
+    }
+  }, [menuOpen])
 
   useEffect(() => {
     setMenuOpen(false)
@@ -106,6 +125,7 @@ export function SiteHeader() {
             <ThemeToggle />
           </div>
           <button
+            ref={menuButton}
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-background text-muted-foreground lg:hidden"
             onClick={() => setMenuOpen((v) => !v)}
@@ -123,7 +143,7 @@ export function SiteHeader() {
       </div>
 
       {menuOpen ? (
-        <div id="mobile-nav" className="border-t bg-background lg:hidden">
+        <div id="mobile-nav" className="mobile-nav-panel border-t bg-background lg:hidden">
           <nav aria-label="移动端导航" className="container py-3">
             <ul className="grid gap-1 sm:grid-cols-2">
               {primaryNav
@@ -140,7 +160,9 @@ export function SiteHeader() {
                       )}
                     >
                       {item.label}
-                      <span className="text-xs text-muted-foreground">{item.hint}</span>
+                      <span className="max-w-[55%] text-right text-xs text-muted-foreground">
+                        {item.hint}
+                      </span>
                     </Link>
                   </li>
                 ))}
@@ -166,7 +188,9 @@ export function SiteHeader() {
                         )}
                       >
                         {item.label}
-                        <span className="text-[11px] text-muted-foreground">{item.hint}</span>
+                        <span className="max-w-[55%] text-right text-[11px] text-muted-foreground">
+                          {item.hint}
+                        </span>
                       </Link>
                     </li>
                   ))}
