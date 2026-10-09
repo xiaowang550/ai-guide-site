@@ -21,8 +21,9 @@ export function useTutor() {
         const usable = value.models.filter((m) => m.available && value.connected[m.provider])
         setModel(
           (
-            usable.find((m) => m.id.startsWith('google/gemma') && !m.reasoning) ??
+            usable.find((m) => m.id.startsWith('google/gemma')) ??
             usable.find((m) => m.id !== 'openrouter/free' && !m.reasoning) ??
+            usable.find((m) => m.id !== 'openrouter/free') ??
             usable[0]
           )?.id ?? '',
         )
