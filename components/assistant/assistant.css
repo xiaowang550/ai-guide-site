@@ -127,3 +127,12 @@ body:has(.assistant-dialog[open]) { overflow: hidden; }
   .assistant-model-detail,.assistant-model-menu > a { display:none; }
   .assistant-model-list { max-height:calc(var(--assistant-visible-height,100dvh) - 230px); }
 }
+.assistant-dialog[data-compact=true] .assistant-footer-note { display:none; }
+.assistant-dialog[data-compact=true] .assistant-heading { padding:4px 12px; }
+.assistant-dialog[data-compact=true] .assistant-model-detail,.assistant-dialog[data-compact=true] .assistant-model-menu > a { display:none; }
+.assistant-dialog[data-compact=true] .assistant-model-list { max-height:calc(var(--assistant-visible-height,100dvh) - 230px); }
+.assistant-dialog[data-compact=true] .assistant-footer { padding:8px; }
+.assistant-dialog[data-compact=true] .assistant-footer form { padding:8px; }
+.assistant-dialog[data-compact=true] .assistant-footer textarea { height:32px; }
+.assistant-dialog[data-compact=true] .assistant-body { padding-top:0; padding-bottom:0; }
+.assistant-dialog[data-compact=true] .assistant-connection { display:none; }

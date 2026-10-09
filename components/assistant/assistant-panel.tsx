@@ -70,12 +70,22 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
       const left = v?.offsetLeft ?? 0,
         top = v?.offsetTop ?? 0,
         mobile = window.innerWidth <= 600
-      el.style.width = `${Math.min(480, width - (mobile ? 16 : 32))}px`
-      el.style.height = `${Math.min(mobile ? height : 740, height - (mobile ? 16 : 32))}px`
+      const gap = mobile ? 8 : 16,
+        css = getComputedStyle(document.documentElement)
+      const inset = (edge: string) => parseFloat(css.getPropertyValue('--safe-' + edge)) || 0
+      const insets = {
+        top: inset('top'),
+        right: inset('right'),
+        bottom: inset('bottom'),
+        left: inset('left'),
+      }
+      el.style.width = `${Math.min(480, width - Math.max(gap, insets.left) - Math.max(gap, insets.right))}px`
+      el.style.height = `${Math.min(mobile ? height : 740, height - Math.max(gap, insets.top) - Math.max(gap, insets.bottom))}px`
+      el.dataset.compact = String(height < 500)
       const rect = el.getBoundingClientRect()
       const next = computeDockPosition(
         mobile ? { x: left + 8, y: top + 8 } : (panelPosition.current ?? 'bottom-right'),
-        { width, height, left, top, gap: mobile ? 8 : 16 },
+        { width, height, left, top, gap, insets },
         false,
         { width: rect.width, height: rect.height },
       )
