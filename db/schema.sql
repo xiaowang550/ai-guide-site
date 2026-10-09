@@ -27,10 +27,10 @@
 
 -- 管理员账号。
 -- 密码只存 PBKDF2-SHA256 的派生结果，**永不存明文、永不存可逆密文**。
--- iterations 定为 210000 是 OWASP 对 PBKDF2-SHA256 的当前建议值。
+-- Cloudflare 单次 PBKDF2 上限为 100000；线上另用独立 ADMIN_PEPPER 认证派生结果。
 CREATE TABLE IF NOT EXISTS admins (
   username       TEXT PRIMARY KEY,
-  password_hash  TEXT NOT NULL,              -- base64url(PBKDF2-SHA256(password, salt))
+  password_hash  TEXT NOT NULL,              -- base64url(PBKDF2)，或 p1:base64url(HMAC(pepper, PBKDF2))
   salt           TEXT NOT NULL,              -- base64url(16 字节随机盐)
   iterations     INTEGER NOT NULL,
   -- 角色分离是为了让「改内容」和「管账号」不是同一权限。

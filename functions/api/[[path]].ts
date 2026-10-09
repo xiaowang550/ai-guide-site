@@ -24,6 +24,7 @@ interface PagesContext {
     DB?: D1Database
     SITE_SALT?: string
     ADMIN_PASSWORD?: string
+    ADMIN_PEPPER?: string
     ADMIN_USERNAME?: string
   }
 }
@@ -51,6 +52,7 @@ export const onRequest = async (
     DB: env.DB,
     SITE_SALT: env.SITE_SALT ?? '',
     ADMIN_PASSWORD: env.ADMIN_PASSWORD,
+    ADMIN_PEPPER: env.ADMIN_PEPPER,
     ADMIN_USERNAME: env.ADMIN_USERNAME,
     NEWS_BACKGROUND: context.waitUntil ? (work) => context.waitUntil!(work) : undefined,
   }

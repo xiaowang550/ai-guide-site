@@ -133,25 +133,14 @@ export function buildClearCookie(): string {
 
 // ── 会话 ───────────────────────────────────────────────────────────────────
 
-export async function createSession(
-  db: Db,
-  username: string,
-  meta: RequestMeta
-): Promise<string> {
+export async function createSession(db: Db, username: string, meta: RequestMeta): Promise<string> {
   const token = generateSessionToken()
   const tokenHash = await hashSessionToken(token)
   const expiresAt = new Date(Date.now() + SESSION_TTL_SECONDS * 1000).toISOString()
   await db.run(
     `INSERT INTO sessions (token_hash, username, expires_at, created_at, user_agent, ip_prefix)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      tokenHash,
-      username,
-      expiresAt,
-      nowIso(),
-      meta.userAgent.slice(0, 200),
-      maskIp(meta.ip),
-    ]
+    [tokenHash, username, expiresAt, nowIso(), meta.userAgent.slice(0, 200), maskIp(meta.ip)],
   )
   await db.run('UPDATE admins SET last_login_at = ? WHERE username = ?', [nowIso(), username])
   return token
@@ -172,7 +161,7 @@ export async function verifySession(db: Db, token: string | null): Promise<Admin
        FROM sessions s
        JOIN admins a ON a.username = s.username
       WHERE s.token_hash = ? AND s.expires_at > ?`,
-    [tokenHash, nowIso()]
+    [tokenHash, nowIso()],
   )
   if (!row) return null
   return { username: toText(row.username), role: toText(row.role) as AdminRole }
@@ -208,12 +197,12 @@ export async function isLoginLocked(
   db: Db,
   username: string,
   ipPrefix: string,
-  siteSalt: string
+  siteSalt: string,
 ): Promise<{ locked: boolean; until: string | null; remaining: number }> {
   const key = await loginThrottleKey(username, ipPrefix, siteSalt)
   const row = await db.first<AttemptRow>(
     'SELECT count, locked_until FROM login_attempts WHERE key = ?',
-    [key]
+    [key],
   )
   if (!row) return { locked: false, until: null, remaining: LOGIN_MAX_FAILURES }
   const lockedUntil = toText(row.locked_until) || null
@@ -233,12 +222,11 @@ export async function recordLoginFailure(
   db: Db,
   username: string,
   ipPrefix: string,
-  siteSalt: string
+  siteSalt: string,
 ): Promise<{ remaining: number; lockedUntil: string | null }> {
   const key = await loginThrottleKey(username, ipPrefix, siteSalt)
   const windowStart = Math.floor(Date.now() / 60000)
-  const lockedUntil =
-    new Date(Date.now() + LOGIN_LOCK_SECONDS * 1000).toISOString()
+  const lockedUntil = new Date(Date.now() + LOGIN_LOCK_SECONDS * 1000).toISOString()
 
   await db.run(
     `INSERT INTO login_attempts (key, username, window_start, count, locked_until)
@@ -246,12 +234,12 @@ export async function recordLoginFailure(
      ON CONFLICT(key) DO UPDATE SET
        count = count + 1,
        locked_until = CASE WHEN count + 1 >= ? THEN ? ELSE locked_until END`,
-    [key, username, windowStart, LOGIN_MAX_FAILURES, lockedUntil]
+    [key, username, windowStart, LOGIN_MAX_FAILURES, lockedUntil],
   )
 
   const row = await db.first<AttemptRow>(
     'SELECT count, locked_until FROM login_attempts WHERE key = ?',
-    [key]
+    [key],
   )
   const count = toInt(row?.count)
   const until = toText(row?.locked_until) || null
@@ -265,7 +253,7 @@ export async function clearLoginFailures(
   db: Db,
   username: string,
   ipPrefix: string,
-  siteSalt: string
+  siteSalt: string,
 ): Promise<void> {
   const key = await loginThrottleKey(username, ipPrefix, siteSalt)
   await db.run('DELETE FROM login_attempts WHERE key = ?', [key])
@@ -296,10 +284,9 @@ async function loadAdmin(db: Db, username: string) {
     salt: string
     iterations: number
     role: string
-  }>(
-    'SELECT username, password_hash, salt, iterations, role FROM admins WHERE username = ?',
-    [username]
-  )
+  }>('SELECT username, password_hash, salt, iterations, role FROM admins WHERE username = ?', [
+    username,
+  ])
 }
 
 /**
@@ -316,7 +303,8 @@ export async function login(
   username: string,
   password: string,
   meta: RequestMeta,
-  siteSalt: string
+  siteSalt: string,
+  pepper?: string,
 ): Promise<LoginResult> {
   const ipPrefix = maskIp(meta.ip)
 
@@ -338,7 +326,7 @@ export async function login(
       }
     : null
 
-  const valid = await verifyPassword(password, record)
+  const valid = await verifyPassword(password, record, pepper)
   if (!valid || !admin) {
     const failure = await recordLoginFailure(db, username, ipPrefix, siteSalt)
     await pruneExpiredSessions(db)
@@ -376,24 +364,31 @@ export async function changePassword(
   username: string,
   oldPassword: string,
   newPassword: string,
-  currentToken: string
+  currentToken: string,
+  pepper?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const admin = await loadAdmin(db, username)
   if (!admin) return { ok: false, error: '账号不存在' }
-  const ok = await verifyPassword(oldPassword, {
-    hash: toText(admin.password_hash),
-    salt: toText(admin.salt),
-    iterations: toInt(admin.iterations, 210000),
-  })
+  const ok = await verifyPassword(
+    oldPassword,
+    {
+      hash: toText(admin.password_hash),
+      salt: toText(admin.salt),
+      iterations: toInt(admin.iterations, 100000),
+    },
+    pepper,
+  )
   if (!ok) return { ok: false, error: '当前密码不正确' }
   if (newPassword.length < 8) {
     return { ok: false, error: '新密码至少 8 位' }
   }
-  const rec = await hashPassword(newPassword)
-  await db.run(
-    'UPDATE admins SET password_hash = ?, salt = ?, iterations = ? WHERE username = ?',
-    [rec.hash, rec.salt, rec.iterations, username]
-  )
+  const rec = await hashPassword(newPassword, pepper)
+  await db.run('UPDATE admins SET password_hash = ?, salt = ?, iterations = ? WHERE username = ?', [
+    rec.hash,
+    rec.salt,
+    rec.iterations,
+    username,
+  ])
   await db.run('DELETE FROM sessions WHERE username = ? AND token_hash != ?', [
     username,
     await hashSessionToken(currentToken),

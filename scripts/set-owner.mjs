@@ -7,7 +7,7 @@ const username = process.env.ADMIN_USERNAME?.trim()
 const password = process.env.ADMIN_PASSWORD
 if (!username || !password || password.length < 8)
   throw new Error('请设置 ADMIN_USERNAME 和至少 8 位的 ADMIN_PASSWORD。')
-const record = await hashPassword(password)
+const record = await hashPassword(password, process.env.ADMIN_PEPPER)
 const statements = [
   { sql: 'DELETE FROM sessions', params: [] },
   { sql: 'DELETE FROM login_attempts', params: [] },

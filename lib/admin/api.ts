@@ -121,6 +121,8 @@ export interface AdminEnv {
    * 否则改了 secret 就能顶掉任何已注册账号。
    */
   ADMIN_PASSWORD?: string
+  /** 独立于数据库的密码哈希认证密钥，仅线上 Secret 保存。 */
+  ADMIN_PEPPER?: string
   ADMIN_USERNAME?: string
   NEWS_BACKGROUND?: (task: Promise<unknown>) => void
   CODEX_BRIDGE?: CodexBridge
@@ -170,7 +172,7 @@ async function ensureBootstrapAdmin(db: Db, env: AdminEnv): Promise<void> {
   if (toInt(existing?.n) > 0) return
   if (!env.ADMIN_PASSWORD) return
 
-  const rec = await hashPassword(env.ADMIN_PASSWORD)
+  const rec = await hashPassword(env.ADMIN_PASSWORD, env.ADMIN_PEPPER)
   const username = env.ADMIN_USERNAME || 'admin'
   await db.run(
     `INSERT INTO admins (username, password_hash, salt, iterations, role, created_at)
@@ -608,7 +610,7 @@ async function handleLogin(ctx: RouteCtx): Promise<Response> {
     return fail(429, `登录失败次数过多，请稍后再试。`, { meta: { lockedUntil: lock.until } })
   }
 
-  const result = await login(ctx.db, username, password, meta, salt)
+  const result = await login(ctx.db, username, password, meta, salt, ctx.env.ADMIN_PEPPER)
   if (!result.ok) {
     await pruneLoginAttempts(ctx.db)
     // 这次失败刚好触发了锁定时返回 429 而不是 401：
@@ -661,6 +663,7 @@ async function handleChangePassword(ctx: RouteCtx): Promise<Response> {
     oldPassword,
     newPassword,
     ctx.token!,
+    ctx.env.ADMIN_PEPPER,
   )
   if (!res.ok) return fail(400, res.error ?? '修改失败')
   await ctx.db.run(

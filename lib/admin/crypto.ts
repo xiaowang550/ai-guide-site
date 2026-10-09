@@ -7,7 +7,7 @@
  *   Cloudflare Workers 没有 Node 原生模块，argon2/bcrypt 都装不了。
  *   WebCrypto（`crypto.subtle`）原生支持 PBKDF2，且 Workers 与 Node 22 都有，
  *   于是本地测试与线上跑的是**同一份实现**——不会出现「本地能登、线上登不上」。
- *   210000 次迭代是 OWASP 对 PBKDF2-SHA256 的当前建议值。
+ *   Cloudflare 生产环境单次 PBKDF2 上限为 100000；线上再用独立 ADMIN_PEPPER 做 HMAC。
  *
  * · **不使用 Node 的 crypto 模块**
  *   同一个文件要能在 Workers 里跑。任何 `import ... from 'node:crypto'` 都会让
@@ -18,7 +18,7 @@
  *   存哈希后表泄露也无法直接冒用：Cookie 里是原文，表里是哈希，攻击者需要两者。
  */
 
-const PBKDF2_ITERATIONS = 210_000
+const PBKDF2_ITERATIONS = 100_000
 const SALT_BYTES = 16
 const TOKEN_BYTES = 32
 
@@ -54,22 +54,18 @@ export async function sha256Base64Url(data: Uint8Array | string): Promise<string
   return toBase64Url(await sha256(data))
 }
 
-async function pbkdf2(
-  password: string,
-  salt: Uint8Array,
-  iterations: number
-): Promise<Uint8Array> {
+async function pbkdf2(password: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(password) as BufferSource,
     'PBKDF2',
     false,
-    ['deriveBits']
+    ['deriveBits'],
   )
   const bits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt: salt as BufferSource, iterations, hash: 'SHA-256' },
     key,
-    256
+    256,
   )
   return new Uint8Array(bits)
 }
@@ -100,12 +96,24 @@ export interface PasswordRecord {
   iterations: number
 }
 
+/** 密钥单独存 Cloudflare Secret；数据库只保留加密认证码，不含 pepper。 */
+async function pepperHash(derived: Uint8Array, pepper: string): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pepper),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, derived as BufferSource))
+}
+
 /** 为新密码生成一条可入库的记录 */
-export async function hashPassword(password: string): Promise<PasswordRecord> {
+export async function hashPassword(password: string, pepper?: string): Promise<PasswordRecord> {
   const salt = randomBytes(SALT_BYTES)
   const dk = await pbkdf2(password, salt, PBKDF2_ITERATIONS)
   return {
-    hash: toBase64Url(dk),
+    hash: pepper ? 'p1:' + toBase64Url(await pepperHash(dk, pepper)) : toBase64Url(dk),
     salt: toBase64Url(salt),
     iterations: PBKDF2_ITERATIONS,
   }
@@ -120,11 +128,13 @@ export async function hashPassword(password: string): Promise<PasswordRecord> {
  */
 export async function verifyPassword(
   password: string,
-  record: PasswordRecord | null
+  record: PasswordRecord | null,
+  pepper?: string,
 ): Promise<boolean> {
   if (!record) {
     const dummySalt = new Uint8Array(SALT_BYTES)
-    await pbkdf2(password, dummySalt, PBKDF2_ITERATIONS)
+    const dummy = await pbkdf2(password, dummySalt, PBKDF2_ITERATIONS)
+    if (pepper) await pepperHash(dummy, pepper)
     return false
   }
   let salt: Uint8Array
@@ -133,10 +143,15 @@ export async function verifyPassword(
   } catch {
     return false
   }
-  const dk = await pbkdf2(password, salt, record.iterations)
+  let dk = await pbkdf2(password, salt, record.iterations)
+  const peppered = record.hash.startsWith('p1:')
+  if (peppered) {
+    if (!pepper) return false
+    dk = await pepperHash(dk, pepper)
+  }
   let expected: Uint8Array
   try {
-    expected = fromBase64Url(record.hash)
+    expected = fromBase64Url(peppered ? record.hash.slice(3) : record.hash)
   } catch {
     return false
   }
@@ -164,7 +179,7 @@ export async function hashSessionToken(token: string): Promise<string> {
 export async function loginThrottleKey(
   username: string,
   ipPrefix: string,
-  siteSalt: string
+  siteSalt: string,
 ): Promise<string> {
   return sha256Base64Url(`${siteSalt}|${username}|${ipPrefix}`)
 }

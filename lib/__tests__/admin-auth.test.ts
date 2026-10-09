@@ -1,11 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import {
-  ADMIN_PASSWORD,
-  login,
-  makeTestEnv,
-  request,
-  validTool,
-} from './helpers/admin-test-env'
+import { describe, expect, it, vi } from 'vitest'
+import { ADMIN_PASSWORD, login, makeTestEnv, request, validTool } from './helpers/admin-test-env'
 import {
   fromBase64Url,
   generateSessionToken,
@@ -28,6 +22,27 @@ describe('密码与令牌原语', () => {
     expect(await verifyPassword('same-password', b)).toBe(true)
   })
 
+  it('密码计算遵守 Cloudflare 100000 上限，独立 pepper 缺失或错误不能登录', async () => {
+    const derive = crypto.subtle.deriveBits.bind(crypto.subtle)
+    const spy = vi
+      .spyOn(crypto.subtle, 'deriveBits')
+      .mockImplementation(async (algorithm, key, length) => {
+        expect((algorithm as Pbkdf2Params).iterations).toBeLessThanOrEqual(100000)
+        return derive(algorithm, key, length)
+      })
+    try {
+      const record = await hashPassword('owner-test-password', 'separate-test-pepper')
+      expect(record.hash).toMatch(/^p1:/)
+      expect(await verifyPassword('owner-test-password', record, 'separate-test-pepper')).toBe(true)
+      expect(await verifyPassword('wrong-password', record, 'separate-test-pepper')).toBe(false)
+      expect(await verifyPassword('owner-test-password', record, 'wrong-pepper')).toBe(false)
+      expect(await verifyPassword('owner-test-password', record)).toBe(false)
+      expect(await verifyPassword('unknown', null, 'separate-test-pepper')).toBe(false)
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
   it('错误密码验证失败', async () => {
     const rec = await hashPassword('right-password')
     expect(await verifyPassword('wrong-password', rec)).toBe(false)
@@ -46,7 +61,7 @@ describe('密码与令牌原语', () => {
     // 允许 3 倍余量：计时噪声大，但「完全不计算」会差两个数量级
     expect(
       spentOnFake,
-      `不存在账号时耗时 ${spentOnFake.toFixed(0)}ms，存在时 ${spentOnReal.toFixed(0)}ms —— 差太多说明能被用来枚举账号`
+      `不存在账号时耗时 ${spentOnFake.toFixed(0)}ms，存在时 ${spentOnReal.toFixed(0)}ms —— 差太多说明能被用来枚举账号`,
     ).toBeLessThan(Math.max(spentOnReal * 3, 60))
   })
 
@@ -57,7 +72,12 @@ describe('密码与令牌原语', () => {
   })
 
   it('base64url 能往返各种字节', () => {
-    for (const bytes of [new Uint8Array([]), new Uint8Array([0]), new Uint8Array([255, 254, 253]), new Uint8Array(32).fill(7)]) {
+    for (const bytes of [
+      new Uint8Array([]),
+      new Uint8Array([0]),
+      new Uint8Array([255, 254, 253]),
+      new Uint8Array(32).fill(7),
+    ]) {
       expect([...fromBase64Url(toBase64Url(bytes))]).toEqual([...bytes])
     }
     // base64url 不含 + / =
@@ -108,6 +128,28 @@ describe('IP 掩码与 Cookie', () => {
   it('非 localhost 时必须带 Secure', () => {
     expect(buildSessionCookie('t', { secure: true })).toMatch(/Secure/)
     expect(buildSessionCookie('t', { secure: false })).not.toMatch(/Secure/)
+  })
+})
+
+describe('线上独立密码密钥', () => {
+  it('首次初始化、登录和修改密码都使用相同的 pepper，缺失密钥不降级', async () => {
+    const env = await makeTestEnv()
+    env.env.ADMIN_PEPPER = 'separate-test-secret'
+    expect((await login(env)).status).toBe(200)
+    const initial = await env.db.first<{ password_hash: string }>('SELECT password_hash FROM admins')
+    expect(initial?.password_hash).toMatch(/^p1:/)
+    const change = await request(env, 'POST', '/api/admin/password', {
+      oldPassword: ADMIN_PASSWORD, newPassword: 'new-owner-test-password',
+    })
+    expect(change.status).toBe(200)
+    const changed = await env.db.first<{ password_hash: string }>('SELECT password_hash FROM admins')
+    expect(changed?.password_hash).toMatch(/^p1:/)
+    expect(changed?.password_hash).not.toBe(initial?.password_hash)
+    env.cookies.clear()
+    expect((await login(env, 'admin', 'new-owner-test-password')).status).toBe(200)
+    env.cookies.clear()
+    env.env.ADMIN_PEPPER = undefined
+    expect((await login(env, 'admin', 'new-owner-test-password')).status).toBe(401)
   })
 })
 
@@ -178,7 +220,10 @@ describe('改密码', () => {
 
     // A 被踢掉
     env.cookies.set('admin_session', tokenA)
-    expect((await request(env, 'GET', '/api/admin/dashboard')).status, '改密码后旧会话仍然有效').toBe(401)
+    expect(
+      (await request(env, 'GET', '/api/admin/dashboard')).status,
+      '改密码后旧会话仍然有效',
+    ).toBe(401)
   })
 
   it('旧密码错误时拒绝，且需要 8 位以上', async () => {
@@ -261,14 +306,24 @@ describe('内容校验在写入口生效', () => {
       ['强项不足 3 条', { ...validTool(), strengths: ['只有一条'] }],
       ['弱项不足 3 条', { ...validTool(), weaknesses: ['只有一条'] }],
       ['能力维度缺失', { ...validTool(), capabilities: capsOf((c) => delete c.coding) }],
-      ['能力维度多出未知项', {
-        ...validTool(),
-        capabilities: capsOf((c) => { c.unknownDim = { score: 3, basis: 'x' } }),
-      }],
-      ['分数越界', {
-        ...validTool(),
-        capabilities: capsOf((c) => { c.coding = { score: 9, basis: 'x' } }),
-      }],
+      [
+        '能力维度多出未知项',
+        {
+          ...validTool(),
+          capabilities: capsOf((c) => {
+            c.unknownDim = { score: 3, basis: 'x' }
+          }),
+        },
+      ],
+      [
+        '分数越界',
+        {
+          ...validTool(),
+          capabilities: capsOf((c) => {
+            c.coding = { score: 9, basis: 'x' }
+          }),
+        },
+      ],
       ['把自己列为替代品', { ...validTool(), alternatives: ['testtool'] }],
       ['替代品重复', { ...validTool(), alternatives: ['a', 'a'] }],
       ['chinaAccessible 非布尔', { ...validTool(), chinaAccessible: 'yes' }],
