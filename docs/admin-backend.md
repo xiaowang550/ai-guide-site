@@ -414,3 +414,5 @@ npm run build      # 会重新生成
 线上 PBKDF2 单次迭代不超过 100000，另用随机 `ADMIN_PEPPER` Secret 对派生结果做 HMAC-SHA256，数据库中的 `p1:` 标记表示该方案。密钥必须保存在 Cloudflare Secret 中，独立于 D1，不能随备份导出或提交仓库。登录、首次初始化和后台修改密码使用同一密钥；缺失或错误时不会降级验证。旧本地哈希仍可在 Node 中验证。迁移线上旧的 210000 次哈希需要用已知管理员密码重新生成兼容记录并撤销旧会话；仅降低数据库的 iterations 字段会破坏密码验证。
 
 参考：[Cloudflare 运行时上限讨论](https://github.com/cloudflare/workerd/issues/1346)、[OWASP 独立 pepper](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#post-hashing-peppers)。
+
+D1 的 `exec()` 按换行拆分查询，因此多行建表脚本由适配层拆成完整语句并通过 `batch()` 执行，避免实时统计和资讯首次初始化只执行半条 SQL。参考：[D1 官方执行接口](https://developers.cloudflare.com/d1/worker-api/d1-database/#exec)。

@@ -1,3 +1,4 @@
+import { schemaStatements } from './schema-statements.ts'
 import type { Db, DbRow, RunResult, SqlParam } from './types.ts'
 
 /**
@@ -104,10 +105,10 @@ export function createD1Db(database: D1Database): Db {
     },
 
     async exec(sql: string): Promise<void> {
-      // D1 的 exec 是给「跑一段脚本」用的，但对含 CREATE TABLE IF NOT EXISTS
-      // 的 schema 直接可用（Pages 控制台执行 schema.sql 就是这条路）。
-      // 注意：D1 exec 不支持参数绑定，这里只接受字面量脚本。
-      await database.exec(sql)
+      // D1.exec 按换行拆查询，多行 CREATE TABLE 会被截断。使用批量预处理语句。
+      const statements = schemaStatements(sql)
+      if (statements.length)
+        await database.batch(statements.map((statement) => database.prepare(statement)))
     },
 
     async batch(statements: { sql: string; params?: SqlParam[] }[]): Promise<void> {
