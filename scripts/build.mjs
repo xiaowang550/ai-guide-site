@@ -41,5 +41,5 @@ child.on('exit', (code) => {
   // Functions 编译在静态构建之后：助手知识目录跟随这次导出的公开内容。
   const index = JSON.parse(readFileSync(join(outDir,'assistant-index.json'),'utf8'))
   const documents = index.searchDocs.map((d) => ({id:d.id,title:d.title,href:d.href,summary:(d.summary??'').slice(0,220),kind:d.type}))
-  writeFileSync(join(projectRoot,'data','assistant-knowledge.json'),JSON.stringify(documents,null,2)+'\n','utf8')
+  writeFileSync(join(projectRoot,'data','assistant-knowledge.ts'),'export default '+JSON.stringify(documents,null,2)+'\n','utf8')
 })

@@ -1,4 +1,4 @@
-[
+export default [
   {
     "id": "my-learning-library",
     "title": "我的学习夹",

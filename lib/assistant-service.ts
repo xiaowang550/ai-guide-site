@@ -1,5 +1,5 @@
-import snapshot from '../data/assistant-models.json' with { type: 'json' }
-import knowledge from '../data/assistant-knowledge.json' with { type: 'json' }
+import snapshot from '../data/assistant-models.ts'
+import knowledge from '../data/assistant-knowledge.ts'
 import { freeModels, type AssistantProvider, type ModelCatalog } from './assistant-models.ts'
 import { readSse } from './assistant-stream.ts'
 import { readSiteConfig } from './admin/modules.ts'

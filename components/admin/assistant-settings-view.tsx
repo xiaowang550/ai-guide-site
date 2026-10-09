@@ -185,8 +185,8 @@ export function AssistantSettingsView() {
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
         <span>
-          {state?.models.length ?? 0} 个模型 ·{' '}
-          {state?.stale ? '使用目录快照，待重新核验' : '价格目录已核验'}
+          {state ? `${state.models.length} 个模型 ·` : '正在读取模型目录…'}{' '}
+          {state ? (state.stale ? '使用目录快照，待重新核验' : '价格目录已核验') : ''}
           {state?.checkedAt
             ? ' · ' +
               new Date(state.checkedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
