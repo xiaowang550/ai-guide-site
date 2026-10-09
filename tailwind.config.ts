@@ -7,7 +7,7 @@ const config: Config = {
     container: {
       center: true,
       padding: 'clamp(1rem, 2.1vw, 3rem)',
-      screens: {},
+      screens: { '2xl': '1640px' },
     },
     extend: {
       fontSize: {

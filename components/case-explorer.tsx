@@ -110,7 +110,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
         </div>
       </section>
       {filtered.length ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-x-7 gap-y-9 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
           {filtered.map((item, i) => (
             <article key={item.id} className="media-card flex flex-col overflow-hidden">
               <Link href={`/cases/${item.id}`} aria-label={`查看${item.title}`}>
@@ -119,35 +119,37 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
                   eyebrow={`${item.industry} · ${item.role}`}
                   index={i + 1}
                   tools={item.tools}
-                  height="sm"
+                  height="md"
                 />
               </Link>
-              <div className="flex flex-1 flex-col p-5">
+              <div className="flex flex-1 flex-col p-6 lg:p-7">
                 <p className="mb-2 text-xs text-muted-foreground">
                   {item.illustrative ? '演示案例 · 虚构材料练习' : '典型场景 · 编辑整理'}
                 </p>
-                <h2 className="text-base font-semibold leading-7">
+                <h2 className="text-base font-semibold leading-8">
                   <Link className="hover:text-primary" href={`/cases/${item.id}`}>
                     {item.title}
                   </Link>
                 </h2>
-                <p className="mt-3 line-clamp-3 flex-1 text-sm leading-7 text-muted-foreground">
+                <p className="mt-4 line-clamp-3 text-sm leading-7 text-muted-foreground">
                   {item.summary}
                 </p>
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-                  <Link
-                    href={`/cases/${item.id}`}
-                    className="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-primary"
-                  >
-                    看流程与提示词 <ArrowUpRight className="h-3 w-3" />
-                  </Link>
-                  <SaveButton
-                    href={`/cases/${item.id}`}
-                    title={item.title}
-                    summary={item.summary}
-                    kind="case"
-                    record={false}
-                  />
+                <div className="mt-auto pt-6">
+                  <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5">
+                    <Link
+                      href={`/cases/${item.id}`}
+                      className="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-primary"
+                    >
+                      看流程与提示词 <ArrowUpRight className="h-3 w-3" />
+                    </Link>
+                    <SaveButton
+                      href={`/cases/${item.id}`}
+                      title={item.title}
+                      summary={item.summary}
+                      kind="case"
+                      record={false}
+                    />
+                  </div>
                 </div>
               </div>
             </article>

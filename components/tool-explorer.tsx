@@ -521,7 +521,7 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
             }
           />
         ) : filters.view === 'grid' ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8">
             {result.map((tool, i) => (
               <ToolCard key={tool.id} tool={tool} index={i} />
             ))}

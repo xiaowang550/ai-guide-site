@@ -25,7 +25,7 @@ export default function ComparePage() {
     <>
       <PageHeader
         title="工具对比"
-        description={`${compareRangeText()}。地址栏里的 ?ids=a,b,c 可以直接分享给别人。`}
+        description={`${compareRangeText()}，按任务看清各自强项。雷达图、条形图、折线图随时切换；复制网址即可分享。`}
         breadcrumbs={[
           { label: '首页', href: '/' },
           { label: '工具库', href: '/tools' },

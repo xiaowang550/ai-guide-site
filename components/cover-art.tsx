@@ -59,7 +59,7 @@ export function CoverArt({
   const hue2 = warm ? hue + 12 : hue + 18
   const angle = 120 + (h % 60)
 
-  const heights = { sm: 'h-20', md: 'h-28', lg: 'h-36' }[height]
+  const heights = { sm: 'h-32', md: 'h-36', lg: 'h-44' }[height]
 
   return (
     <div
@@ -74,7 +74,7 @@ export function CoverArt({
       aria-hidden
     >
       {eyebrow ? (
-        <span className="absolute left-4 top-3 text-xs font-medium text-white/75">
+        <span className="absolute left-5 right-5 top-4 line-clamp-2 text-xs font-medium leading-6 text-white/80">
           {eyebrow}
         </span>
       ) : null}
@@ -86,11 +86,21 @@ export function CoverArt({
       ) : null}
 
       {centerLabel ? (
-        <span className="absolute inset-0 flex items-center justify-center font-serif text-4xl leading-none tracking-tight text-white/85">
+        <span
+          className={cn(
+            'absolute inset-x-0 bottom-3 flex items-center justify-center font-serif text-4xl leading-none tracking-tight text-white/85',
+            eyebrow ? 'top-16' : 'top-0',
+          )}
+        >
           {centerLabel}
         </span>
       ) : tools.length > 0 ? (
-        <div className="absolute inset-0 flex items-center justify-center gap-2.5">
+        <div
+          className={cn(
+            'absolute inset-x-0 bottom-3 flex items-center justify-center gap-3',
+            eyebrow ? 'top-16' : 'top-0',
+          )}
+        >
           {tools.slice(0, 4).map((t) => (
             <span
               key={t.id}

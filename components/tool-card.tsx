@@ -21,11 +21,11 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
 
   return (
     <article
-      className="media-card spotlight group reveal"
+      className="media-card spotlight reveal group"
       style={{ ['--d' as string]: `${Math.min(index, 8) * 45}ms` }}
     >
       {/* 封面：logo 放大做视觉锚点，角上放分类小标签 */}
-      <div className="media-cover h-28">
+      <div className="media-cover h-36 pt-8">
         <ToolLogo
           src={tool.logo}
           alt={`${tool.name} 标志`}
@@ -34,7 +34,7 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
           rounded="rounded-none"
           className="opacity-90"
         />
-        <span className="absolute left-3 top-3 text-xs font-medium text-muted-foreground">
+        <span className="absolute left-5 right-14 top-4 line-clamp-2 text-xs font-medium text-muted-foreground">
           {tool.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}
         </span>
         {isFree ? (
@@ -43,7 +43,7 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
       </div>
 
       {/* 标题区 */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-6">
         <h3 className="flex items-baseline justify-between gap-3">
           <Link
             href={`/tools/${tool.id}`}
@@ -69,7 +69,7 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
           ))}
         </ul>
 
-        <div className="mt-3 flex items-center justify-between gap-2 border-t border-hairline pt-2.5 text-xs text-muted-foreground">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-hairline pt-4 text-xs text-muted-foreground">
           <UpdatedBadge date={tool.updatedAt} prefix="更新于" showStale={false} />
           <span className="inline-flex items-center gap-1 text-foreground/70 transition-colors group-hover:text-primary">
             {tool.chinaAccessible ? '大陆可直连' : '大陆需借助网络工具'}
@@ -119,10 +119,21 @@ export function ToolTable({ tools }: { tools: ToolListItem[] }) {
         </thead>
         <tbody>
           {tools.map((tool, i) => (
-            <tr key={tool.id} className={cn('hover:bg-accent/40', i > 0 && 'border-t border-hairline')}>
+            <tr
+              key={tool.id}
+              className={cn('hover:bg-accent/40', i > 0 && 'border-t border-hairline')}
+            >
               <th scope="row" className="py-2.5 pr-4 text-left font-normal">
-                <Link href={`/tools/${tool.id}`} className="flex items-center gap-2 hover:text-primary">
-                  <ToolLogo src={tool.logo} alt="" size={22} className="border-0 bg-transparent p-0" />
+                <Link
+                  href={`/tools/${tool.id}`}
+                  className="flex items-center gap-2 hover:text-primary"
+                >
+                  <ToolLogo
+                    src={tool.logo}
+                    alt=""
+                    size={22}
+                    className="border-0 bg-transparent p-0"
+                  />
                   <span>
                     <span className="font-medium">{tool.name}</span>
                     <span className="ml-1.5 text-xs text-muted-foreground">{tool.vendor}</span>

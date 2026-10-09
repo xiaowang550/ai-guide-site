@@ -141,9 +141,7 @@ export default function HomePage() {
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block text-sm font-medium">{title}</span>
-                            <span className="mt-1 block text-xs text-muted-foreground">
-                              {hint}
-                            </span>
+                            <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>
                           </span>
                           <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
                         </Link>
@@ -224,7 +222,7 @@ export default function HomePage() {
                   </Link>
                 }
               >
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
                   {featuredItems.map((tool, i) => (
                     <ToolCard key={tool.id} tool={tool} index={i} />
                   ))}
