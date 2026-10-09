@@ -24,6 +24,7 @@ import { NEWS_REFRESH_MS } from '../lib/news/types.ts'
  *   $env:ADMIN_PASSWORD="你的密码"; npm run admin:dev
  */
 import { createServer } from 'node:http'
+import { once } from 'node:events'
 import { readFile, stat } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { extname, join, normalize, resolve } from 'node:path'
@@ -92,6 +93,18 @@ async function writeWebResponse(res, response) {
   if (setCookies.length > 0) headers['set-cookie'] = setCookies
 
   res.writeHead(response.status, headers)
+  if (response.headers.get('content-type')?.includes('text/event-stream') && response.body) {
+    const reader = response.body.getReader()
+    res.on('close', () => void reader.cancel().catch(() => {}))
+    try {
+      while (!res.destroyed) {
+        const {done,value} = await reader.read()
+        if (done) break
+        if (!res.write(Buffer.from(value))) await once(res,'drain')
+      }
+    } finally { reader.releaseLock();res.end() }
+    return
+  }
   const body = response.body ? Buffer.from(await response.arrayBuffer()) : Buffer.alloc(0)
   res.end(body)
 }
@@ -178,6 +191,10 @@ const server = createServer(async (req, res) => {
         SITE_SALT: process.env.SITE_SALT || 'local-dev-salt',
         ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
         ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
+        ADMIN_PEPPER: process.env.ADMIN_PEPPER,
+        AI_CREDENTIALS_KEY: process.env.AI_CREDENTIALS_KEY,
+        OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+        OPENCODE_API_KEY: process.env.OPENCODE_API_KEY,
       })
 
       if (response) {

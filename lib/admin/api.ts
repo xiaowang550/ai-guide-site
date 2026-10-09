@@ -40,6 +40,12 @@ import { eduBriefings } from '../../data/edu-briefings.ts'
  * 后台 UI 只是静态壳，没有数据就什么都渲染不出来。
  */
 import type { Db } from '../db/types.ts'
+import {
+  assistantAdmin,
+  assistantCatalog,
+  assistantChat,
+  type AssistantEnv,
+} from '../assistant-service.ts'
 import { createD1Db, D1BindingMissingError } from '../db/d1.ts'
 import type { D1Database } from '../db/d1.ts'
 import { toInt, toText } from '../db/types.ts'
@@ -108,7 +114,7 @@ import {
 import { hashPassword } from './crypto.ts'
 import { diffContent, summarizeChanges } from './diff.ts'
 
-export interface AdminEnv {
+export interface AdminEnv extends AssistantEnv {
   /** D1 绑定 */
   DB: D1Database
   /** 站点盐。用于限流键的哈希，换站点就该换盐 */
@@ -204,6 +210,41 @@ function matchPath(pattern: string, pathname: string): Record<string, string> | 
 // ── 路由表 ─────────────────────────────────────────────────────────────────
 
 const ROUTES: Route[] = [
+  {
+    method: 'GET',
+    pattern: '/api/assistant/models',
+    auth: 'public',
+    handler: ({ db, env }) => assistantCatalog(db, env),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/assistant/chat',
+    auth: 'public',
+    handler: ({ db, env, request }) => assistantChat(db, env, request),
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/assistant',
+    auth: 'required',
+    handler: ({ db, env, request }) => assistantAdmin(db, env, request),
+  },
+  {
+    method: 'PATCH',
+    pattern: '/api/admin/assistant',
+    auth: 'required',
+    handler: async ({ db, env, request, identity }) => {
+      const response = await assistantAdmin(db, env, request)
+      if (response.ok)
+        await db.run('INSERT INTO audit_log(at,actor,action,target,detail) VALUES(?,?,?,?,?)', [
+          nowIso(),
+          identity!.username,
+          'assistant.configure',
+          'assistant',
+          '更新助手连接或额度；不记录密钥',
+        ])
+      return response
+    },
+  },
   {
     method: 'GET',
     pattern: '/api/site',

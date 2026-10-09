@@ -25,6 +25,9 @@ interface PagesContext {
     SITE_SALT?: string
     ADMIN_PASSWORD?: string
     ADMIN_PEPPER?: string
+    AI_CREDENTIALS_KEY?: string
+    OPENROUTER_API_KEY?: string
+    OPENCODE_API_KEY?: string
     ADMIN_USERNAME?: string
   }
 }
@@ -53,6 +56,9 @@ export const onRequest = async (
     SITE_SALT: env.SITE_SALT ?? '',
     ADMIN_PASSWORD: env.ADMIN_PASSWORD,
     ADMIN_PEPPER: env.ADMIN_PEPPER,
+    AI_CREDENTIALS_KEY: env.AI_CREDENTIALS_KEY,
+    OPENROUTER_API_KEY: env.OPENROUTER_API_KEY,
+    OPENCODE_API_KEY: env.OPENCODE_API_KEY,
     ADMIN_USERNAME: env.ADMIN_USERNAME,
     NEWS_BACKGROUND: context.waitUntil ? (work) => context.waitUntil!(work) : undefined,
   }

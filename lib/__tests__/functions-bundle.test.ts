@@ -131,7 +131,7 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
     expect(
       graph.files.length,
       `依赖链有 ${graph.files.length} 个文件：\n${graph.files.join('\n')}`,
-    ).toBeLessThan(34) // 新增模块配置与管理服务，仍禁止导入完整前台数据。
+    ).toBeLessThan(40) // 免费助手新增三个服务文件和轻量目录；仍禁止导入完整前台工具数据。
     expect(
       graph.files.some((f) => /data[/\\](?:tools|index)\.ts$/.test(f)),
       'Functions 不该依赖完整工具评分和前端聚合索引',

@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
-import { Sparkles } from 'lucide-react'
-import { readAiConfig, writeAiConfig, type AiConfig } from '@/lib/ai-client'
+import { AssistantAvatar } from './assistant-avatar'
 import type { AssistantDock } from '@/lib/settings'
 import { readSettings, subscribeSettings, writeSettings } from '@/lib/settings'
-import { computeDockPosition, DOCK_BUTTON_SIZE, panelWidthFor } from '@/lib/dock-position'
+import { computeDockPosition, DOCK_BUTTON_SIZE } from '@/lib/dock-position'
 import { cn } from '@/lib/utils'
 
 /**
@@ -27,7 +26,7 @@ export function AssistantDock() {
   const [open, setOpen] = useState(false)
   const [dock, setDock] = useState<AssistantDock>('bottom-right')
   const [ready, setReady] = useState(false)
-  const [aiConfig, setAiConfig] = useState<AiConfig | null>(null)
+  const [mounted, setMounted] = useState(false)
 
   const dragState = useRef<{
     dx: number
@@ -45,11 +44,12 @@ export function AssistantDock() {
     setEnabled(s.assistant)
     setOpen(s.assistantPanelOpen)
     setDock(s.assistantDock)
-    setAiConfig(readAiConfig())
+    setMounted(s.assistantPanelOpen)
     setReady(true)
     return subscribeSettings((next) => {
       setEnabled(next.assistant)
       setOpen(next.assistantPanelOpen)
+      if (next.assistantPanelOpen) setMounted(true)
       setDock(next.assistantDock)
     })
   }, [])
@@ -65,7 +65,7 @@ export function AssistantDock() {
       const next = computeDockPosition(
         { x: rect.left, y: rect.top },
         { width: window.innerWidth, height: window.innerHeight },
-        open,
+        false,
         { width: rect.width, height: rect.height },
       )
       if (Math.abs(next.left - rect.left) > 1 || Math.abs(next.top - rect.top) > 1) {
@@ -91,9 +91,9 @@ export function AssistantDock() {
     width: typeof window === 'undefined' ? 1440 : window.innerWidth,
     height: typeof window === 'undefined' ? 900 : window.innerHeight,
   }
-  const style = computeDockPosition(dock, viewport, open, {
-    width: open ? panelWidthFor(viewport.width) : DOCK_BUTTON_SIZE,
-    height: open ? 460 : DOCK_BUTTON_SIZE,
+  const style = computeDockPosition(dock, viewport, false, {
+    width: DOCK_BUTTON_SIZE,
+    height: DOCK_BUTTON_SIZE,
   })
 
   function onPointerDown(e: React.PointerEvent) {
@@ -124,7 +124,7 @@ export function AssistantDock() {
     const next = computeDockPosition(
       { x, y },
       { width: window.innerWidth, height: window.innerHeight },
-      open,
+      false,
       { width: rect.width, height: rect.height },
     )
     el.style.left = `${next.left}px`
@@ -141,7 +141,7 @@ export function AssistantDock() {
     const next = computeDockPosition(
       { x: rect.left, y: rect.top },
       { width: window.innerWidth, height: window.innerHeight },
-      open,
+      false,
       { width: rect.width, height: rect.height },
     )
     const x = next.left
@@ -163,27 +163,20 @@ export function AssistantDock() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
     >
-      {open ? (
+      {mounted ? (
         <AssistantPanel
-          width={panelWidthFor(viewport.width)}
+          open={open}
           onClose={() => {
             setOpen(false)
             writeSettings({ assistantPanelOpen: false })
           }}
-          onHide={() => {
-            setOpen(false)
-            writeSettings({ assistantPanelOpen: false })
-          }}
-          aiConfig={aiConfig}
-          onToggleAi={() =>
-            setAiConfig(writeAiConfig({ mode: aiConfig?.mode === 'live' ? 'rules' : 'live' }))
-          }
         />
       ) : null}
 
       <button
         type="button"
         onClick={() => {
+          setMounted(true)
           setOpen((v) => !v)
           writeSettings({ assistantPanelOpen: !open })
         }}
@@ -194,7 +187,7 @@ export function AssistantDock() {
           open ? 'border-primary/40 bg-primary text-primary-foreground' : 'hover:border-primary/40',
         )}
       >
-        <Sparkles className="h-5 w-5 text-primary" aria-hidden />
+        <AssistantAvatar />
       </button>
     </div>
   )

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { apiGet, apiSend } from './api-client'
 import type { PublicSiteConfig } from '@/lib/site-modules'
 import { SettingsPanel } from '@/components/settings/settings-panel'
+import { AssistantSettingsView } from './assistant-settings-view'
 export function SiteSettingsView() {
   const [config, setConfig] = useState<PublicSiteConfig | null>(null),
     [message, setMessage] = useState(''),
@@ -70,6 +71,7 @@ export function SiteSettingsView() {
           </p>
         )}
       </section>
+      <AssistantSettingsView />
       <details className="admin-card p-6">
         <summary className="cursor-pointer font-semibold">管理员本机偏好与接口设置</summary>
         <p className="mb-5 mt-3 text-xs leading-6 text-muted-foreground">

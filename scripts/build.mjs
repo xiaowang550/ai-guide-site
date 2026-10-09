@@ -10,7 +10,7 @@
  * 用法：npm run build
  */
 import { spawn } from 'node:child_process'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -38,4 +38,8 @@ child.on('exit', (code) => {
   const htmlCount = readdirSync(outDir, { recursive: true })
     .filter((f) => typeof f === 'string' && f.endsWith('.html')).length
   console.log(`[build] 产物校验通过：out/ 共 ${htmlCount} 个 HTML 文件，npm run serve 可直接预览`)
+  // Functions 编译在静态构建之后：助手知识目录跟随这次导出的公开内容。
+  const index = JSON.parse(readFileSync(join(outDir,'assistant-index.json'),'utf8'))
+  const documents = index.searchDocs.map((d) => ({id:d.id,title:d.title,href:d.href,summary:(d.summary??'').slice(0,220),kind:d.type}))
+  writeFileSync(join(projectRoot,'data','assistant-knowledge.json'),JSON.stringify(documents,null,2)+'\n','utf8')
 })
