@@ -1,7 +1,10 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Plus, Eye, Save, ArrowUpRight, Trash2 } from 'lucide-react'
+import { Plus, Eye, Save, ArrowUpRight, ArrowUp, ArrowDown, Trash2 } from 'lucide-react'
 import { apiGet, apiSend } from './api-client'
+import { notifySiteChange } from '@/lib/site-sync'
+import { LayoutEditor } from './layout-editor'
+import { type SiteLayout } from '@/lib/site-layout'
 import {
   moduleHref,
   type PublicSiteConfig,
@@ -36,8 +39,29 @@ export function ModulesView() {
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
     [previewPath, setPreviewPath] = useState('/'),
-    [frameKey, setFrameKey] = useState(0)
+    [frameKey, setFrameKey] = useState(0),
+    [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop'),
+    [previewScale, setPreviewScale] = useState(1)
   const frame = useRef<HTMLIFrameElement>(null)
+  const viewport = useRef<HTMLDivElement>(null)
+  const previewWidth = previewDevice === 'desktop' ? 1280 : 390
+  useEffect(() => {
+    const element = viewport.current
+    if (!element) return
+    const fit = () => setPreviewScale(Math.min(1, element.clientWidth / previewWidth))
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [previewWidth])
+  const draftLayout = useRef<SiteLayout | null>(null)
+  const previewLayout = useCallback((layout: SiteLayout) => {
+    draftLayout.current = layout
+    frame.current?.contentWindow?.postMessage(
+      { type: 'site-layout-preview', layout },
+      location.origin,
+    )
+  }, [])
   const load = useCallback(async () => {
     try {
       setConfig(await apiGet('/api/admin/modules'))
@@ -65,6 +89,7 @@ export function ModulesView() {
     try {
       await task()
       await load()
+      notifySiteChange()
       frame.current?.contentWindow?.postMessage({ type: 'site-modules-refresh' }, location.origin)
       setMessage(message)
       return true
@@ -86,7 +111,7 @@ export function ModulesView() {
           ...(id ? { version } : {}),
         }),
       editing.enabled
-        ? '已公开，访客刷新后即可看到；已打开页面约 15 秒同步。'
+        ? '已公开，访客刷新后即可看到；已打开页面约 5 秒同步。'
         : '草稿已保存，访客暂时看不到。',
     )
     if (ok) setEditing(null)
@@ -131,6 +156,19 @@ export function ModulesView() {
         <p className="rounded-xl bg-accent p-4 text-sm" role="status">
           {message}
         </p>
+      )}
+      {config && (
+        <LayoutEditor
+          config={config}
+          busy={busy}
+          onPreview={previewLayout}
+          onSave={(body) =>
+            act(
+              () => apiSend('/api/admin/layout', 'PATCH', body),
+              '布局已保存，预览立即更新，访客页面最多约 5 秒自动同步。',
+            )
+          }
+        />
       )}
       <div className="module-admin-layout">
         <section className="admin-card p-5">
@@ -193,7 +231,18 @@ export function ModulesView() {
         <section className="admin-card overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
             <h2 className="text-sm font-semibold">前台预览</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {(['desktop', 'mobile'] as const).map((device) => (
+                <button
+                  type="button"
+                  key={device}
+                  aria-pressed={previewDevice === device}
+                  className={`min-h-11 rounded-lg px-2 text-xs ${previewDevice === device ? 'bg-accent text-primary' : 'text-muted-foreground'}`}
+                  onClick={() => setPreviewDevice(device)}
+                >
+                  {device === 'desktop' ? '桌面' : '手机'}
+                </button>
+              ))}
               <button
                 className="text-xs text-primary"
                 onClick={() => {
@@ -219,13 +268,29 @@ export function ModulesView() {
               </a>
             </div>
           </div>
-          <iframe
-            ref={frame}
-            key={frameKey}
-            title="管理员前台预览"
-            src={`${previewPath}${previewPath.includes('?') ? '&' : '?'}admin-preview=1`}
-            className="module-admin-preview"
-          />
+          <div ref={viewport} className="overflow-hidden">
+            <div
+              className="mx-auto"
+              style={{ width: previewWidth * previewScale, height: 740 * previewScale }}
+            >
+              <iframe
+                ref={frame}
+                key={frameKey}
+                title="管理员前台预览"
+                src={`${previewPath}${previewPath.includes('?') ? '&' : '?'}admin-preview=1`}
+                className="module-admin-preview"
+                style={{
+                  width: previewWidth,
+                  height: 740,
+                  transform: `scale(${previewScale})`,
+                  transformOrigin: 'top left',
+                }}
+                onLoad={() => {
+                  if (draftLayout.current) previewLayout(draftLayout.current)
+                }}
+              />
+            </div>
+          </div>
         </section>
       </div>
       {editing && (
@@ -301,14 +366,31 @@ export function ModulesView() {
               <div key={i} className="rounded-2xl border p-4">
                 <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
                   <span>内容 {i + 1}</span>
-                  <button
-                    title="移除内容项"
-                    onClick={() =>
-                      setEditing({ ...editing, blocks: editing.blocks.filter((_, j) => j !== i) })
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="ml-auto flex items-center gap-2">
+                    {([-1, 1] as const).map((delta) => (
+                      <button
+                        key={delta}
+                        className="admin-icon-button"
+                        aria-label={`${delta < 0 ? '上移' : '下移'}内容 ${i + 1}`}
+                        disabled={i + delta < 0 || i + delta >= editing.blocks.length}
+                        onClick={() => {
+                          const blocks = [...editing.blocks]
+                          blocks.splice(i + delta, 0, blocks.splice(i, 1)[0])
+                          setEditing({ ...editing, blocks })
+                        }}
+                      >
+                        {delta < 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                      </button>
+                    ))}
+                    <button
+                      title="移除内容项"
+                      onClick={() =>
+                        setEditing({ ...editing, blocks: editing.blocks.filter((_, j) => j !== i) })
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
                 <div className="grid gap-3">
                   <label className="module-field">

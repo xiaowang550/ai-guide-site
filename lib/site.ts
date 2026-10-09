@@ -81,20 +81,20 @@ export interface NavItem {
  *   - 决策器/对比 合进「工具库」分区（都是「选工具」）
  *   - 更新/关于 合进「数据与站点」分区（都是「关于这个站本身」）
  */
+export const schoolNavigation: NavItem = {
+  href: '/edu',
+  label: '学校服务',
+  hint: '课程 / 教案包 / 规范',
+  children: [
+    { href: '/edu/programs', label: '课程体系', hint: '初中认识、高中实践、教师教学' },
+    { href: '/edu/toolkits', label: '课程与教案包', hint: '选场景，取材料，按流程上课' },
+    { href: '/edu/policy', label: 'AI 使用规范', hint: '看懂使用边界，带走规范与记录' },
+    { href: '/edu/support', label: '答疑与反馈', hint: '高频问题与反馈入口' },
+  ],
+}
+
 export const megaNav: readonly NavItem[] = [
-  {
-    href: '/learn',
-    label: '知识库',
-    hint: 'AI 是什么',
-    children: [
-      {
-        href: '/learn/advanced',
-        label: '模型与 Agent 进阶',
-        hint: '选模型、接资料、试流程，学会验收',
-      },
-      { href: '/learn/glossary', label: '术语表', hint: '中英对照速查，搜一个词就能查到' },
-    ],
-  },
+  { href: '/', label: '首页', hint: '回到网站首页' },
   {
     href: '/guides',
     label: '教程',
@@ -111,6 +111,11 @@ export const megaNav: readonly NavItem[] = [
     ],
   },
   {
+    href: '/cases',
+    label: '案例',
+    hint: '别人怎么做',
+  },
+  {
     href: '/tools',
     label: '工具库',
     hint: '哪个更强',
@@ -120,19 +125,16 @@ export const megaNav: readonly NavItem[] = [
     ],
   },
   {
-    href: '/cases',
-    label: '案例',
-    hint: '别人怎么做',
-  },
-  {
-    href: '/edu',
-    label: '学校服务',
-    hint: '课程 / 教案包 / 规范',
+    href: '/learn',
+    label: '知识库',
+    hint: 'AI 是什么',
     children: [
-      { href: '/edu/programs', label: '课程体系', hint: '初中认识、高中实践、教师教学' },
-      { href: '/edu/toolkits', label: '课程与教案包', hint: '选场景，取材料，按流程上课' },
-      { href: '/edu/policy', label: 'AI 使用规范', hint: '看懂使用边界，带走规范与记录' },
-      { href: '/edu/support', label: '答疑与反馈', hint: '高频问题与反馈入口' },
+      {
+        href: '/learn/advanced',
+        label: '模型与 Agent 进阶',
+        hint: '选模型、接资料、试流程，学会验收',
+      },
+      { href: '/learn/glossary', label: '术语表', hint: '中英对照速查，搜一个词就能查到' },
     ],
   },
   {
@@ -148,16 +150,17 @@ export const megaNav: readonly NavItem[] = [
 ]
 
 /** 移动端与页脚用的扁平列表：由 megaNav 拍平而来，避免两处各写一遍而漏项 */
-export const primaryNav: readonly NavChild[] = [
-  { href: '/', label: '首页', hint: '回到网站首页' },
-  ...megaNav.map((g) => ({
-    href: g.href,
-    label: g.label,
-    hint: g.hint,
-  })),
-]
+export const primaryNav: readonly NavChild[] = megaNav.map(({ href, label, hint }) => ({
+  href,
+  label,
+  hint,
+}))
 
-export const secondaryNav: readonly NavChild[] = megaNav.flatMap((g) => g.children ?? [])
+export const secondaryNav: readonly NavChild[] = [
+  schoolNavigation,
+  ...(schoolNavigation.children ?? []),
+  ...megaNav.flatMap((g) => g.children ?? []),
+]
 
 /**
  * AI 教育专区内部导航。

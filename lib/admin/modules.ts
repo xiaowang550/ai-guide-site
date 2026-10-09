@@ -1,6 +1,9 @@
 import type { Db } from '../db/types.ts'
+
 import {
   builtinModules,
+  DEFAULT_LAYOUT,
+  type SiteLayout,
   safeModuleLink,
   type PublicSiteConfig,
   type SiteModule,
@@ -8,6 +11,7 @@ import {
 
 const SCHEMA = `CREATE TABLE IF NOT EXISTS site_modules(id TEXT PRIMARY KEY,data TEXT NOT NULL,archived INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS site_features(id INTEGER PRIMARY KEY CHECK(id=1),data TEXT NOT NULL,updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS site_layout(id INTEGER PRIMARY KEY CHECK(id=1),data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS feature_requests(id TEXT PRIMARY KEY,title TEXT NOT NULL,request TEXT NOT NULL,status TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,result TEXT,workspace TEXT);
 CREATE UNIQUE INDEX IF NOT EXISTS one_active_build ON feature_requests((1)) WHERE status IN ('queued','running');`
 export class ModuleInputError extends Error {}
@@ -16,7 +20,7 @@ export async function ensureModules(db: Db) {
   try {
     if (
       await db.first(
-        "SELECT id FROM site_features WHERE id=1 AND EXISTS(SELECT 1 FROM site_modules WHERE id='saved') AND EXISTS(SELECT 1 FROM site_modules WHERE id='beginner')",
+        "SELECT id FROM site_features WHERE id=1 AND EXISTS(SELECT 1 FROM site_modules WHERE id='saved') AND EXISTS(SELECT 1 FROM site_modules WHERE id='beginner') AND EXISTS(SELECT 1 FROM site_layout WHERE id=1)",
       )
     )
       return
@@ -32,27 +36,112 @@ export async function ensureModules(db: Db) {
       sql: 'INSERT OR IGNORE INTO site_features VALUES(1,?,?)',
       params: [JSON.stringify({ assistant: true, onboarding: true }), now],
     },
+    {
+      sql: 'INSERT OR IGNORE INTO site_layout VALUES(1,?)',
+      params: [JSON.stringify({ ...DEFAULT_LAYOUT, updatedAt: now })],
+    },
   ])
 }
 export async function readSiteConfig(db: Db, privateView = false): Promise<PublicSiteConfig> {
   await ensureModules(db)
-  const [rows, features] = await Promise.all([
+  const [rows, features, layoutRow] = await Promise.all([
     db.all<{ data: string }>('SELECT data FROM site_modules WHERE archived=0'),
     db.first<{ data: string; updated_at: string }>(
       'SELECT data,updated_at FROM site_features WHERE id=1',
     ),
+    db.first<{ data: string }>('SELECT data FROM site_layout WHERE id=1'),
   ])
   const modules = rows
     .map((row) => JSON.parse(row.data) as SiteModule)
     .filter((module) => privateView || module.kind === 'builtin' || module.enabled)
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+  const layout = JSON.parse(layoutRow?.data ?? JSON.stringify(DEFAULT_LAYOUT)) as SiteLayout
+  // 草稿模块的布局 ID 与内容一样仅供管理员读取。
+  const navigationIds = new Set([
+    'home',
+    ...modules
+      .filter((module) => module.kind === 'builtin' || module.navigation)
+      .map((module) => module.id),
+  ])
+  const homeIds = new Set([
+    ...DEFAULT_LAYOUT.home,
+    ...modules
+      .filter((module) => module.kind !== 'builtin' && module.home)
+      .map((module) => module.id),
+  ])
   const revision =
-    [features?.updated_at ?? '', ...modules.map((module) => module.updatedAt)].sort().at(-1) ?? ''
+    [features?.updated_at ?? '', layout.updatedAt, ...modules.map((module) => module.updatedAt)]
+      .sort()
+      .at(-1) ?? ''
   return {
     revision,
     modules,
     features: JSON.parse(features?.data ?? '{}') as PublicSiteConfig['features'],
+    layout: {
+      ...layout,
+      navigation: layout.navigation.filter((id) => navigationIds.has(id)),
+      hiddenNavigation: layout.hiddenNavigation.filter((id) => navigationIds.has(id)),
+      home: layout.home.filter((id) => homeIds.has(id)),
+      hiddenHome: layout.hiddenHome.filter((id) => homeIds.has(id)),
+    },
   }
+}
+export async function saveSiteLayout(db: Db, input: unknown, actor: string) {
+  check(input)
+  if (
+    Object.keys(input).some(
+      (key) => !['navigation', 'home', 'hiddenNavigation', 'hiddenHome', 'version'].includes(key),
+    )
+  )
+    throw new ModuleInputError('布局字段不正确。')
+  const current = await readSiteConfig(db, true)
+  if (input.version !== current.layout.version)
+    throw new ModuleConflictError('布局已在其他页面修改，请刷新后再调整。')
+  const next = { ...current.layout } as SiteLayout
+  for (const field of ['navigation', 'home', 'hiddenNavigation', 'hiddenHome'] as const) {
+    if (input[field] === undefined) continue
+    const value = input[field]
+    const known = new Set(
+      field === 'navigation' || field === 'hiddenNavigation'
+        ? [
+            'home',
+            ...current.modules
+              .filter((module) => module.kind === 'builtin' || module.navigation)
+              .map((module) => module.id),
+          ]
+        : [
+            ...DEFAULT_LAYOUT.home,
+            ...current.modules
+              .filter((module) => module.kind !== 'builtin' && module.home)
+              .map((module) => module.id),
+          ],
+    )
+    if (
+      !Array.isArray(value) ||
+      value.length > 100 ||
+      value.some((id) => typeof id !== 'string' || !known.has(id)) ||
+      new Set(value).size !== value.length
+    )
+      throw new ModuleInputError('请选择有效的布局项，同一位置不能重复放置同一模块。')
+    next[field] = value as string[]
+  }
+  if (next.hiddenNavigation.includes('home'))
+    throw new ModuleInputError('首页入口需要保留，可以调整位置。')
+  next.version++
+  next.updatedAt = new Date().toISOString()
+  const updated = await db.run(
+    "UPDATE site_layout SET data=? WHERE id=1 AND json_extract(data,'$.version')=?",
+    [JSON.stringify(next), current.layout.version],
+  )
+  if (!updated.changes) throw new ModuleConflictError('布局已更新，请重新加载。')
+  await db.run('INSERT INTO audit_log(at,actor,action,target,detail) VALUES(?,?,?,?,?)', [
+    next.updatedAt,
+    actor,
+    'layout-save',
+    'site',
+    JSON.stringify({ version: next.version }),
+  ])
+  return readSiteConfig(db, true)
 }
 function check(input: unknown): asserts input is Record<string, unknown> {
   if (!input || typeof input !== 'object' || Array.isArray(input))

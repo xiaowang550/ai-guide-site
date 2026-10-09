@@ -1,4 +1,21 @@
-export const MODULE_POLL_MS = 15000
+export interface SiteLayout {
+  navigation: string[]
+  home: string[]
+  hiddenNavigation: string[]
+  hiddenHome: string[]
+  version: number
+  updatedAt: string
+}
+export const DEFAULT_LAYOUT: SiteLayout = {
+  navigation: ['home', 'guides', 'cases', 'tools', 'knowledge', 'news'],
+  home: ['hero', 'metrics', 'start', 'tools', 'guides', 'school', 'news'],
+  hiddenNavigation: ['school', 'advanced', 'beginner', 'saved', 'finder'],
+  hiddenHome: [],
+  version: 1,
+  updatedAt: '',
+}
+export const MODULE_POLL_MS = 5000
+export const SITE_SYNC_CHANNEL = 'ai-map:site-config'
 export type ModuleKind = 'builtin' | 'cards' | 'steps' | 'faq' | 'links'
 export interface ModuleBlock {
   title: string
@@ -22,6 +39,7 @@ export interface PublicSiteConfig {
   revision: string
   modules: SiteModule[]
   features: { assistant: boolean; onboarding: boolean }
+  layout: SiteLayout
 }
 export const builtinModules: SiteModule[] = [
   {
@@ -159,6 +177,7 @@ export const DEFAULT_SITE_CONFIG: PublicSiteConfig = {
   revision: 'baseline',
   modules: builtinModules,
   features: { assistant: true, onboarding: true },
+  layout: DEFAULT_LAYOUT,
 }
 export function moduleForPath(path: string): string | null {
   const clean = path.split('?')[0].replace(/\/+$/, '') || '/'
@@ -220,4 +239,15 @@ export function safeModuleLink(value: string): boolean {
   } catch {
     return false
   }
+}
+
+/** 保留已有顺序，新模块自动加入末尾；隐藏只改变展示，不关闭内容。 */
+export function orderedIds(order: string[], candidates: { id: string }[]) {
+  const known = new Set(candidates.map((item) => item.id))
+  return [
+    ...new Set([...order.filter((id) => known.has(id)), ...candidates.map((item) => item.id)]),
+  ]
+}
+export function layoutOf(config: PublicSiteConfig): SiteLayout {
+  return config.layout ?? DEFAULT_LAYOUT
 }

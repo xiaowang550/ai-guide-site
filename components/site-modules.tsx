@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { DEFAULT_SITE_CONFIG, MODULE_POLL_MS, type PublicSiteConfig } from '@/lib/site-modules'
 import { SiteContext } from './site-module-context'
+import { SITE_SYNC_CHANNEL } from '@/lib/site-modules'
+import { type SiteLayout } from '@/lib/site-layout'
 import dynamic from 'next/dynamic'
 const PreviewControls = dynamic(
   () => import('./module-preview-controls').then((m) => m.PreviewControls),
@@ -22,6 +24,7 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
     [preview, setPreview] = useState(false)
   const active = useRef(true),
     previewMode = useRef(false)
+  const draftLayout = useRef<SiteLayout | null>(null)
   const refresh = useCallback(async () => {
     try {
       const response = await fetch(previewMode.current ? '/api/admin/modules' : '/api/site', {
@@ -39,7 +42,11 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       }
       const next = (await response.json()) as PublicSiteConfig
       if (active.current) {
-        setConfig(next)
+        setConfig(
+          draftLayout.current && previewMode.current
+            ? { ...next, layout: draftLayout.current }
+            : next,
+        )
         setReady(true)
         setPreview(previewMode.current)
       }
@@ -58,11 +65,35 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       if (document.visibilityState === 'visible') void refresh()
     }
     const onMessage = (event: MessageEvent) => {
+      if (
+        previewMode.current &&
+        event.origin === location.origin &&
+        event.source === window.parent &&
+        event.data?.type === 'site-layout-preview'
+      ) {
+        void import('./layout-preview').then(({ applyLayoutPreview }) =>
+          applyLayoutPreview(event.data.layout, (layout) => {
+            if (!active.current || !previewMode.current) return
+            draftLayout.current = layout
+            setConfig((previous) => ({ ...previous, layout }))
+          }),
+        )
+      }
       if (event.origin === location.origin && event.data?.type === 'site-modules-refresh')
         void refresh()
     }
     document.addEventListener('visibilitychange', onVisible)
     window.addEventListener('message', onMessage)
+    const channel =
+      typeof BroadcastChannel === 'undefined' ? null : new BroadcastChannel(SITE_SYNC_CHANNEL)
+    if (channel) channel.onmessage = () => void refresh()
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === SITE_SYNC_CHANNEL) void refresh()
+    }
+    const onRefresh = () => void refresh()
+    window.addEventListener('storage', onStorage)
+    window.addEventListener('ai-map:site-refresh', onRefresh)
+    window.addEventListener('focus', onRefresh)
     const onPreviewNavigation = (event: MouseEvent) => {
       if (
         !previewMode.current ||
@@ -94,6 +125,10 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('message', onMessage)
+      channel?.close()
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener('ai-map:site-refresh', onRefresh)
+      window.removeEventListener('focus', onRefresh)
       document.removeEventListener('click', onPreviewNavigation, true)
     }
   }, [refresh])
@@ -102,7 +137,7 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       {children}
       {preview && <PreviewControls />}
       {config.features.assistant && <AssistantDock />}
-      {ready && config.features.onboarding && <GuidedTour />}
+      {ready && !preview && config.features.onboarding && <GuidedTour />}
     </SiteContext.Provider>
   )
 }

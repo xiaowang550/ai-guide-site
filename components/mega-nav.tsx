@@ -4,19 +4,22 @@ import { useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowRight, ChevronDown } from 'lucide-react'
-import { megaNav, type NavItem } from '@/lib/site'
+import { type NavItem } from '@/lib/site'
+import { siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
 import { pathEnabled } from '@/lib/site-modules'
 import { cn } from '@/lib/utils'
 
 export function MegaNav() {
   const { config } = useSiteModules()
-  const custom = config.modules.some(
-    (module) => module.kind !== 'builtin' && module.enabled && module.navigation,
-  )
-  const visibleNav = megaNav.filter((item) => pathEnabled(config, item.href))
-  if (custom && !visibleNav.length)
-    visibleNav.push({ href: '/modules/', label: '更多模块', hint: '新资料与练习' })
+  const allNav = siteNavigation(config)
+  const visibleNav =
+    allNav.length <= 6
+      ? allNav
+      : [
+          ...allNav.slice(0, 6),
+          { href: '#more-navigation', label: '更多', hint: '', children: allNav.slice(6) },
+        ]
   const pathname = usePathname()
   const [openKey, setOpenKey] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -88,9 +91,6 @@ export function MegaNav() {
           const open = openKey === key
           const children = [
             ...(item.children ?? []).filter((child) => pathEnabled(config, child.href)),
-            ...(custom && item.href !== '/modules/' && index === visibleNav.length - 1
-              ? [{ href: '/modules/', label: '学习与实践模块', hint: '打开最新添加的资料与练习' }]
-              : []),
           ]
           const id = `${baseId}-${key.replace(/\W/g, '')}`
 
@@ -128,7 +128,7 @@ export function MegaNav() {
                       : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
                   )}
                 >
-                  {item.label}
+                  <span className="max-w-[7rem] truncate">{item.label}</span>
                   <ChevronDown
                     className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')}
                     aria-hidden
@@ -145,7 +145,7 @@ export function MegaNav() {
                       : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
                   )}
                 >
-                  {item.label}
+                  <span className="max-w-[7rem] truncate">{item.label}</span>
                 </Link>
               )}
 
@@ -167,14 +167,16 @@ export function MegaNav() {
                         : 'min-w-[17.5rem] max-w-[calc(100vw-2rem)]',
                     )}
                   >
-                    <Link
-                      href={item.href}
-                      onClick={() => setOpenKey(null)}
-                      className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold hover:bg-accent/60"
-                    >
-                      进入{item.label}
-                      <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
-                    </Link>
+                    {item.href !== '#more-navigation' && (
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpenKey(null)}
+                        className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold hover:bg-accent/60"
+                      >
+                        进入{item.label}
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+                      </Link>
+                    )}
                     <ul
                       className={cn('grid gap-0.5', children.length > 4 && 'grid-cols-2 gap-x-2')}
                     >

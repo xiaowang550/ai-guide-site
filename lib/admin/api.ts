@@ -3,6 +3,7 @@ import {
   saveSiteModule,
   archiveSiteModule,
   saveSiteFeatures,
+  saveSiteLayout,
   createBuildRequest,
   listBuildRequests,
   ModuleInputError,
@@ -272,6 +273,13 @@ const ROUTES: Route[] = [
       moduleResponse(async () =>
         saveSiteModule(db, null, await readJson(request), identity!.username),
       ),
+  },
+  {
+    method: 'PATCH',
+    pattern: '/api/admin/layout',
+    auth: 'required',
+    handler: async ({ db, request, identity }) =>
+      moduleResponse(async () => saveSiteLayout(db, await readJson(request), identity!.username)),
   },
   {
     method: 'PATCH',

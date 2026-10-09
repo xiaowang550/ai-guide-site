@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync, type Dirent } from 'node:fs'
 import { join } from 'node:path'
-import { megaNav, secondaryNav, siteConfig, siteTitle } from '../site'
+import { megaNav, schoolNavigation, secondaryNav, siteConfig, siteTitle } from '../site'
 
 /**
  * 站点配置门禁。
@@ -52,7 +52,7 @@ describe('站点配置', () => {
     }
     expect(
       offenders,
-      `这些地方还写着旧站名，应该改成读 siteConfig：\n${offenders.join('\n')}`
+      `这些地方还写着旧站名，应该改成读 siteConfig：\n${offenders.join('\n')}`,
     ).toEqual([])
   })
 
@@ -95,13 +95,13 @@ describe('主导航结构', () => {
     const emptyArray = megaNav.filter((g) => Array.isArray(g.children) && g.children.length === 0)
     expect(
       emptyArray.map((g) => g.label),
-      '这些分区写了空 children，应该直接省略该字段'
+      '这些分区写了空 children，应该直接省略该字段',
     ).toEqual([])
   })
 
   it('子项不得与所属分区同路径（否则面板里有两个一模一样的入口）', () => {
     const dup = megaNav.flatMap((g) =>
-      (g.children ?? []).filter((c) => c.href === g.href).map((c) => `${g.label} → ${c.href}`)
+      (g.children ?? []).filter((c) => c.href === g.href).map((c) => `${g.label} → ${c.href}`),
     )
     expect(dup, '分区首页由一级标签直达，面板里不该再列一遍').toEqual([])
   })
@@ -109,19 +109,22 @@ describe('主导航结构', () => {
   it('关键分区确实有面板（否则「更多功能进主导航」这个需求没达成）', () => {
     const mustHavePanel = ['/tools', '/edu']
     const missing = mustHavePanel.filter(
-      (href) => (megaNav.find((g) => g.href === href)?.children?.length ?? 0) === 0
+      (href) =>
+        ([schoolNavigation, ...megaNav].find((g) => g.href === href)?.children?.length ?? 0) === 0,
     )
     expect(missing, '这些分区应该挂子项面板').toEqual([])
   })
 
   it('子项总数合理（太少说明没铺开，太多说明该分区太杂）', () => {
-    const total = megaNav.reduce((n, g) => n + (g.children?.length ?? 0), 0)
+    const total = [schoolNavigation, ...megaNav].reduce((n, g) => n + (g.children?.length ?? 0), 0)
     expect(total, '分区里的子项加起来太少，面板等于没做').toBeGreaterThanOrEqual(10)
     expect(total, '子项过多，顶栏面板会过长').toBeLessThanOrEqual(24)
   })
 
   it('每个子项都有 hint（面板的价值就在于说明「点进去能拿到什么」）', () => {
-    const noHint = megaNav.flatMap((g) => g.children ?? []).filter((c) => !c.hint || c.hint.length < 4)
+    const noHint = megaNav
+      .flatMap((g) => g.children ?? [])
+      .filter((c) => !c.hint || c.hint.length < 4)
     expect(noHint.map((c) => `${c.href}`)).toEqual([])
   })
 
@@ -151,8 +154,14 @@ describe('主导航结构', () => {
     expect([...new Set(dup)]).toEqual([])
   })
 
-  it('secondaryNav 由 megaNav 拍平而来，两处不会各写一遍而漏项', () => {
-    const flat = megaNav.flatMap((g) => g.children ?? []).map((c) => c.href).sort()
+  it('次级导航从主导航和保留的学校专区派生，入口不遗漏', () => {
+    const flat = [
+      schoolNavigation,
+      ...(schoolNavigation.children ?? []),
+      ...megaNav.flatMap((g) => g.children ?? []),
+    ]
+      .map((c) => c.href)
+      .sort()
     expect(secondaryNav.map((c) => c.href).sort()).toEqual(flat)
   })
 

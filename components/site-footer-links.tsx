@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { primaryNav, secondaryNav } from '@/lib/site'
+import { secondaryNav } from '@/lib/site'
+import { siteNavigation } from '@/lib/site-navigation'
 import { pathEnabled } from '@/lib/site-modules'
 import { writeSettings } from '@/lib/settings'
 import { useSiteModules } from './site-module-context'
@@ -9,7 +10,7 @@ export function FooterLinks() {
   return (
     <>
       {[
-        [...primaryNav],
+        siteNavigation(config),
         [
           ...secondaryNav,
           ...(config.modules.some(

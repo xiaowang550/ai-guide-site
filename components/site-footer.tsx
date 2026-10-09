@@ -1,7 +1,7 @@
 import { siteConfig } from '@/lib/site'
 import { latestUpdatedAt } from '@/lib/score'
 import { tools } from '@/data'
-import { FooterLinks } from './site-footer-links'
+import { FooterNavigation } from './footer-navigation'
 
 export function SiteFooter() {
   const updated = latestUpdatedAt(tools)
@@ -19,7 +19,7 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <FooterLinks />
+          <FooterNavigation />
         </div>
 
         <div className="mt-6 flex flex-col gap-2 border-t pt-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">

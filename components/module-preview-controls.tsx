@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { moduleForPath, type SiteModule } from '@/lib/site-modules'
 import { useSiteModules } from './site-module-context'
+import { notifySiteChange } from '@/lib/site-sync'
 export function PreviewControls() {
   const { config, preview, refresh } = useSiteModules(),
     pathname = usePathname(),
@@ -25,6 +26,7 @@ export function PreviewControls() {
       })
       if (!response.ok) throw new Error((await response.json()).error)
       await refresh()
+      notifySiteChange()
       window.parent.postMessage({ type: 'site-modules-changed' }, location.origin)
     } catch (error) {
       setError(error instanceof Error ? error.message : '更新失败')

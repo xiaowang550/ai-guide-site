@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bookmark, Compass, Menu, X } from 'lucide-react'
-import { primaryNav, secondaryNav, siteConfig } from '@/lib/site'
+import { secondaryNav, siteConfig } from '@/lib/site'
+import { siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
 import { pathEnabled } from '@/lib/site-modules'
 import { cn } from '@/lib/utils'
@@ -14,9 +15,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 
 export function SiteHeader() {
   const { config } = useSiteModules()
-  const custom = config.modules.some(
-    (module) => module.kind !== 'builtin' && module.enabled && module.navigation,
-  )
+  const navigation = siteNavigation(config)
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuButton = useRef<HTMLButtonElement>(null)
@@ -67,7 +66,7 @@ export function SiteHeader() {
           aria-label="返回首页"
           aria-current={pathname === '/' ? 'page' : undefined}
           className={cn(
-            'inline-flex h-9 shrink-0 items-center rounded-xl px-2.5 text-sm transition-colors',
+            'inline-flex h-9 shrink-0 items-center rounded-xl px-2.5 text-sm transition-colors lg:hidden',
             pathname === '/'
               ? 'bg-accent font-medium text-accent-foreground'
               : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
@@ -160,55 +159,50 @@ export function SiteHeader() {
         <div id="mobile-nav" className="mobile-nav-panel border-t bg-background lg:hidden">
           <nav aria-label="移动端导航" className="container py-3">
             <ul className="grid gap-1 sm:grid-cols-2">
-              {primaryNav
-                .filter((item) => pathEnabled(config, item.href))
-                .map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={isActive(item.href) ? 'page' : undefined}
-                      className={cn(
-                        'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
-                        isActive(item.href)
-                          ? 'bg-accent font-medium text-accent-foreground'
-                          : 'hover:bg-muted',
-                      )}
-                    >
-                      {item.label}
-                      <span className="max-w-[55%] text-right text-xs text-muted-foreground">
-                        {item.hint}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+              {navigation.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive(item.href) ? 'page' : undefined}
+                    className={cn(
+                      'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
+                      isActive(item.href)
+                        ? 'bg-accent font-medium text-accent-foreground'
+                        : 'hover:bg-muted',
+                    )}
+                  >
+                    {item.label}
+                    <span className="max-w-[55%] text-right text-xs text-muted-foreground">
+                      {item.hint}
+                    </span>
+                  </Link>
+                </li>
+              ))}
               <li className="mt-1 border-t pt-1 sm:col-span-2">
                 <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                   更多
                 </p>
                 <ul className="mt-1 grid gap-0.5 sm:grid-cols-2">
-                  {[
-                    ...secondaryNav.filter((item) => pathEnabled(config, item.href)),
-                    ...(custom
-                      ? [{ href: '/modules/', label: '学习与实践模块', hint: '新资料与练习' }]
-                      : []),
-                  ].map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          'flex items-baseline justify-between rounded-lg px-3 py-1.5 text-sm',
-                          isActive(item.href)
-                            ? 'bg-accent font-medium text-accent-foreground'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                        )}
-                      >
-                        {item.label}
-                        <span className="max-w-[55%] text-right text-[11px] text-muted-foreground">
-                          {item.hint}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
+                  {[...secondaryNav.filter((item) => pathEnabled(config, item.href))].map(
+                    (item) => (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            'flex items-baseline justify-between rounded-lg px-3 py-1.5 text-sm',
+                            isActive(item.href)
+                              ? 'bg-accent font-medium text-accent-foreground'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                          )}
+                        >
+                          {item.label}
+                          <span className="max-w-[55%] text-right text-[11px] text-muted-foreground">
+                            {item.hint}
+                          </span>
+                        </Link>
+                      </li>
+                    ),
+                  )}
                 </ul>
               </li>
               <li className="sm:col-span-2">
