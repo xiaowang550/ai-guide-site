@@ -195,6 +195,136 @@ describe('助手私有配置与公开推理', () => {
     env.cookies.clear()
     expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(503)
   })
+  it('默认无限制，即使旧计数超过所有旧上限仍可调用，统计不清零', async () => {
+    const { env } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    await login(env)
+    const settings = await request(env, 'GET', '/api/admin/assistant')
+    for (const field of ['dailyLimit', 'visitorDailyLimit', 'minuteLimit', 'concurrentLimit'])
+      expect(settings.json[field]).toBe(0)
+    env.cookies.clear()
+    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(200)
+    await env.db.run('UPDATE assistant_usage SET count=100001')
+    for (let i = 0; i < 3; i++)
+      await env.db.run('INSERT INTO assistant_slots VALUES(?,?)', [
+        'existing-' + i,
+        Date.now() + 60000,
+      ])
+    for (let i = 0; i < 11; i++)
+      expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(200)
+    await login(env)
+    expect((await request(env, 'GET', '/api/admin/assistant')).json.todayRequests).toBe(100012)
+    expect((await env.db.all('SELECT * FROM assistant_slots')).length).toBe(3)
+  })
+  it.each([
+    ['dailyLimit', '本站今日'],
+    ['visitorDailyLimit', '你今天的 1 次'],
+    ['minuteLimit', '发送有些频繁'],
+  ])('管理员可以启用 %s，再改为无限制立即解除已达上限的计数', async (field, warning) => {
+    const { env } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    await login(env)
+    expect((await request(env, 'PATCH', '/api/admin/assistant', { [field]: 1 })).status).toBe(200)
+    env.cookies.clear()
+    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(200)
+    const blocked = await request(env, 'POST', '/api/assistant/chat', message)
+    expect(blocked.status).toBe(429)
+    expect(blocked.json.error).toContain(warning)
+    await login(env)
+    expect((await request(env, 'PATCH', '/api/admin/assistant', { [field]: 0 })).status).toBe(200)
+    env.cookies.clear()
+    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(200)
+    await login(env)
+    expect((await request(env, 'GET', '/api/admin/assistant')).json.todayRequests).toBe(2)
+  })
+  it('自定义并发上限阻止新生成，无限制立即允许；过期的占位不占用并发', async () => {
+    const { env } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    await login(env)
+    await request(env, 'PATCH', '/api/admin/assistant', { concurrentLimit: 1 })
+    await env.db.run('INSERT INTO assistant_slots VALUES(?,?)', ['active', Date.now() + 60000])
+    env.cookies.clear()
+    const blocked = await request(env, 'POST', '/api/assistant/chat', message)
+    expect(blocked.status).toBe(429)
+    expect(blocked.json.error).toContain('1 份回答')
+    await login(env)
+    await request(env, 'PATCH', '/api/admin/assistant', { concurrentLimit: 0 })
+    env.cookies.clear()
+    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(200)
+    await env.db.run('UPDATE assistant_slots SET until_ms=0')
+    await login(env)
+    await request(env, 'PATCH', '/api/admin/assistant', { concurrentLimit: 1 })
+    env.cookies.clear()
+    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(200)
+  })
+  it('旧设置保留已设的每日上限，其余限制默认无限制；非法配置不修改其他设置', async () => {
+    const { env } = await fixture()
+    await request(env, 'GET', '/api/assistant/models')
+    await env.db.run('INSERT INTO assistant_store VALUES(?,?,?)', [
+      'preferences',
+      JSON.stringify({ dailyLimit: 30, enabled: true }),
+      new Date().toISOString(),
+    ])
+    await login(env)
+    const legacy = await request(env, 'GET', '/api/admin/assistant')
+    expect(legacy.json.dailyLimit).toBe(30)
+    expect(legacy.json.visitorDailyLimit).toBe(0)
+    expect(legacy.json.minuteLimit).toBe(0)
+    expect(legacy.json.concurrentLimit).toBe(0)
+    for (const field of ['dailyLimit', 'visitorDailyLimit', 'minuteLimit', 'concurrentLimit']) {
+      for (const value of [-1, 1.5, '0', null, 100001])
+        expect(
+          (await request(env, 'PATCH', '/api/admin/assistant', { enabled: false, [field]: value }))
+            .status,
+        ).toBe(400)
+    }
+    expect((await request(env, 'GET', '/api/admin/assistant')).json.enabled).toBe(true)
+    const unlimited = await request(env, 'PATCH', '/api/admin/assistant', {
+      dailyLimit: 0,
+      visitorDailyLimit: 0,
+      minuteLimit: 0,
+      concurrentLimit: 0,
+    })
+    expect(unlimited.json.dailyLimit).toBe(0)
+    expect(
+      (await request(env, 'PATCH', '/api/admin/assistant', { dailyLimit: 100000 })).status,
+    ).toBe(200)
+  })
+  it('后台实际回答测试也默认不限频率，管理员设置频率后生效', async () => {
+    const { env } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    await login(env)
+    for (let i = 0; i < 5; i++) {
+      const result = await request(env, 'POST', '/api/admin/assistant/test', {
+        provider: 'openrouter',
+        model: MODEL.id,
+        infer: true,
+      })
+      expect(result.status).toBe(200)
+      expect(result.json.probe.ok).toBe(true)
+    }
+    expect((await request(env, 'GET', '/api/admin/assistant')).json.todayRequests).toBe(0)
+    await request(env, 'PATCH', '/api/admin/assistant', { minuteLimit: 1 })
+    expect(
+      (
+        await request(env, 'POST', '/api/admin/assistant/test', {
+          provider: 'openrouter',
+          model: MODEL.id,
+          infer: true,
+        })
+      ).status,
+    ).toBe(429)
+    await request(env, 'PATCH', '/api/admin/assistant', { minuteLimit: 0 })
+    expect(
+      (
+        await request(env, 'POST', '/api/admin/assistant/test', {
+          provider: 'openrouter',
+          model: MODEL.id,
+          infer: true,
+        })
+      ).status,
+    ).toBe(200)
+  })
 })
 
 describe('连接诊断与断流恢复', () => {

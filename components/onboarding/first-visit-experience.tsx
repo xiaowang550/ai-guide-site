@@ -67,7 +67,13 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
     else chooseRoute(true)
   }
   async function generate() {
-    if (stage !== 'send' || !tutor.ready || tutor.busy || !prompt.trim()) return
+    if (
+      (stage !== 'send' && !(stage === 'answer' && tutor.error)) ||
+      !tutor.ready ||
+      tutor.busy ||
+      !prompt.trim()
+    )
+      return
     const id = ++request.current.id
     setAnswer('')
     setKind('正在回答…')
@@ -195,7 +201,12 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
               <button
                 className="intro-primary"
                 data-spotlight={stage === 'send' && !tutor.busy}
-                disabled={stage !== 'send' || !tutor.ready || tutor.busy || !prompt.trim()}
+                disabled={
+                  (stage !== 'send' && !(stage === 'answer' && tutor.error)) ||
+                  !tutor.ready ||
+                  tutor.busy ||
+                  !prompt.trim()
+                }
                 onClick={() => void generate()}
               >
                 {tutor.busy ? (
@@ -203,7 +214,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
                 ) : (
                   <Send size={16} />
                 )}
-                {tutor.busy ? '正在回答…' : '发送消息'}
+                {tutor.busy ? '正在回答…' : tutor.error ? '重试发送' : '发送消息'}
               </button>
               {tutor.busy && <button onClick={tutor.stop}>停止生成</button>}
               {stage === 'input' && (

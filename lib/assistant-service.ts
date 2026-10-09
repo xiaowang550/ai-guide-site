@@ -5,6 +5,7 @@ import {
   type AssistantProvider,
   type ModelCatalog,
   type ConnectionReport,
+  type AssistantLimits,
 } from './assistant-models.ts'
 import {
   normalizeAssistantUrl,
@@ -31,13 +32,20 @@ export interface AssistantEnv {
   SITE_SALT?: string
   ASSISTANT_FETCH?: typeof fetch
 }
-interface Preferences {
+interface Preferences extends AssistantLimits {
   enabled: boolean
   defaultModel: string
-  dailyLimit: number
   openrouterUrl?: string
 }
-const DEFAULT: Preferences = { enabled: true, defaultModel: 'openrouter/free', dailyLimit: 30 }
+const DEFAULT: Preferences = {
+  enabled: true,
+  defaultModel: 'openrouter/free',
+  dailyLimit: 0,
+  visitorDailyLimit: 0,
+  minuteLimit: 0,
+  concurrentLimit: 0,
+}
+const LIMIT_FIELDS = ['dailyLimit', 'visitorDailyLimit', 'minuteLimit', 'concurrentLimit'] as const
 const ENDPOINT = 'https://openrouter.ai/api/v1/models'
 const SCHEMA = `CREATE TABLE IF NOT EXISTS assistant_store(id TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS assistant_usage(id TEXT PRIMARY KEY,count INTEGER NOT NULL DEFAULT 0);
@@ -208,14 +216,24 @@ export async function assistantTest(db: Db, env: AssistantEnv, request: Request)
       (body.model === undefined ? report.models.find((m) => m.available) : undefined)
     if (!model || (provider === 'openrouter' && !report.catalogVerified))
       return fail(400, '请选择刚刚核验目录中的免费文字模型。')
-    // 显式测试最多两份同时生成、每分钟四次；不占访客的十次体验名额。
+    // 测试跟随本站的频率与并发设置，不占本站或访客每日请求计数。
+    const prefs = await preferences(db)
     const slot = crypto.randomUUID(),
       minute = 'test:' + Math.floor(Date.now() / 60000)
     await db.run('INSERT OR IGNORE INTO assistant_usage VALUES(?,0)', [minute])
     await db.batch([
       {
-        sql: 'INSERT INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<2 AND (SELECT count FROM assistant_usage WHERE id=?)<4',
-        params: [slot, Date.now() + 245000, Date.now(), minute],
+        sql: 'INSERT INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (?=0 OR (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<?) AND (?=0 OR (SELECT count FROM assistant_usage WHERE id=?)<?)',
+        params: [
+          slot,
+          Date.now() + 245000,
+          prefs.concurrentLimit,
+          Date.now(),
+          prefs.concurrentLimit,
+          prefs.minuteLimit,
+          minute,
+          prefs.minuteLimit,
+        ],
       },
       {
         sql: 'UPDATE assistant_usage SET count=count+1 WHERE id=? AND EXISTS(SELECT 1 FROM assistant_slots WHERE id=?)',
@@ -408,6 +426,9 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
           'removeKey',
           'enabled',
           'dailyLimit',
+          'visitorDailyLimit',
+          'minuteLimit',
+          'concurrentLimit',
           'defaultModel',
           'refresh',
           'baseUrl',
@@ -425,13 +446,13 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
   const prefs = await preferences(db)
   if (body.enabled !== undefined && typeof body.enabled !== 'boolean')
     return fail(400, '开关格式不正确。')
-  if (
-    body.dailyLimit !== undefined &&
-    (!Number.isInteger(body.dailyLimit) ||
-      Number(body.dailyLimit) < 2 ||
-      Number(body.dailyLimit) > 1000)
-  )
-    return fail(400, '每日体验上限应为 2–1000 次。')
+  for (const field of LIMIT_FIELDS) {
+    if (
+      body[field] !== undefined &&
+      (!Number.isInteger(body[field]) || Number(body[field]) < 0 || Number(body[field]) > 100000)
+    )
+      return fail(400, '调用上限应为 0–100000 的整数，0 表示无限制。')
+  }
   if (body.defaultModel !== undefined) {
     const current = await catalog(db, env)
     if (!current.models.some((m) => m.id === body.defaultModel && m.available))
@@ -470,7 +491,12 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
   await save(db, 'preferences', {
     ...prefs,
     ...(body.enabled !== undefined ? { enabled: body.enabled } : {}),
-    ...(body.dailyLimit !== undefined ? { dailyLimit: body.dailyLimit } : {}),
+    ...Object.fromEntries(
+      LIMIT_FIELDS.filter((field) => body[field] !== undefined).map((field) => [
+        field,
+        body[field],
+      ]),
+    ),
     ...(body.defaultModel !== undefined ? { defaultModel: body.defaultModel } : {}),
   })
   if (body.refresh) await catalog(db, env, true)
@@ -581,8 +607,23 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
   const slot = crypto.randomUUID()
   await db.batch([
     {
-      sql: `INSERT INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<2 AND (SELECT count FROM assistant_usage WHERE id=?)<? AND (SELECT count FROM assistant_usage WHERE id=?)<10 AND (SELECT count FROM assistant_usage WHERE id=?)<4`,
-      params: [slot, Date.now() + 245000, Date.now(), ids[0], prefs.dailyLimit, ids[1], ids[2]],
+      sql: `INSERT INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (?=0 OR (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<?) AND (?=0 OR (SELECT count FROM assistant_usage WHERE id=?)<?) AND (?=0 OR (SELECT count FROM assistant_usage WHERE id=?)<?) AND (?=0 OR (SELECT count FROM assistant_usage WHERE id=?)<?)`,
+      params: [
+        slot,
+        Date.now() + 245000,
+        prefs.concurrentLimit,
+        Date.now(),
+        prefs.concurrentLimit,
+        prefs.dailyLimit,
+        ids[0],
+        prefs.dailyLimit,
+        prefs.visitorDailyLimit,
+        ids[1],
+        prefs.visitorDailyLimit,
+        prefs.minuteLimit,
+        ids[2],
+        prefs.minuteLimit,
+      ],
     },
     ...ids.map((id) => ({
       sql: 'UPDATE assistant_usage SET count=count+1 WHERE id=? AND EXISTS(SELECT 1 FROM assistant_slots WHERE id=?)',
@@ -597,13 +638,13 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
     )
     return fail(
       429,
-      (counts[0]?.count ?? 0) >= prefs.dailyLimit
+      prefs.dailyLimit > 0 && (counts[0]?.count ?? 0) >= prefs.dailyLimit
         ? '本站今日体验次数已用完，按 UTC 日重置；管理员可在后台调整上限。'
-        : (counts[1]?.count ?? 0) >= 10
-          ? '你今天的 10 次体验已用完，按 UTC 日重置。'
-          : (counts[2]?.count ?? 0) >= 4
+        : prefs.visitorDailyLimit > 0 && (counts[1]?.count ?? 0) >= prefs.visitorDailyLimit
+          ? `你今天的 ${prefs.visitorDailyLimit} 次体验已用完，按 UTC 日重置；管理员可在后台调整上限。`
+          : prefs.minuteLimit > 0 && (counts[2]?.count ?? 0) >= prefs.minuteLimit
             ? '发送有些频繁，请一分钟后再试。'
-            : '目前有两份回答正在生成，请稍后再试。',
+            : `目前已有 ${prefs.concurrentLimit} 份回答正在生成，请稍后再试。`,
     )
   }
   const release = () => db.run('DELETE FROM assistant_slots WHERE id=?', [slot])

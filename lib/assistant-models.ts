@@ -1,4 +1,11 @@
 export type AssistantProvider = 'openrouter' | 'opencode'
+/** 本站调用限制；0 表示无限制，不改变平台自己的免费额度。 */
+export interface AssistantLimits {
+  dailyLimit: number
+  visitorDailyLimit: number
+  minuteLimit: number
+  concurrentLimit: number
+}
 export interface FreeModel {
   id: string
   name: string

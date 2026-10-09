@@ -1,11 +1,21 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiSend } from './api-client'
-import type { AssistantProvider, FreeModel, ConnectionReport } from '@/lib/assistant-models'
-interface State {
+import type {
+  AssistantProvider,
+  FreeModel,
+  ConnectionReport,
+  AssistantLimits,
+} from '@/lib/assistant-models'
+const limits = [
+  { field: 'dailyLimit', label: '全站每日请求', fallback: 30, unit: '次 / 天' },
+  { field: 'visitorDailyLimit', label: '单人每日请求', fallback: 10, unit: '次 / 天' },
+  { field: 'minuteLimit', label: '单人发送频率', fallback: 4, unit: '次 / 分钟' },
+  { field: 'concurrentLimit', label: '同时生成数量', fallback: 2, unit: '份' },
+] as const
+interface State extends AssistantLimits {
   enabled: boolean
   defaultModel: string
-  dailyLimit: number
   connected: Record<AssistantProvider, boolean>
   models: FreeModel[]
   checkedAt: string
@@ -104,7 +114,11 @@ export function AssistantSettingsView() {
         setKey('')
         setReport(null)
       }
-      setMessage('已保存，访客重新打开助手后即可使用。')
+      setMessage(
+        limits.some(({ field }) => body[field] !== undefined)
+          ? '调用限制已保存，立即对新请求生效。'
+          : '已保存，访客重新打开助手后即可使用。',
+      )
     } catch (e) {
       setMessage(e instanceof Error ? e.message : '保存失败，请重试。')
     } finally {
@@ -121,7 +135,7 @@ export function AssistantSettingsView() {
           </p>
         </div>
         <span className="rounded-full bg-accent px-3 py-1 text-xs text-primary">
-          今日 {state?.todayRequests ?? 0} / {state?.dailyLimit ?? 30} 次请求
+          {state ? `今日 ${state.todayRequests} 次请求` : '正在读取调用设置…'}
         </span>
       </div>
       <div className="mt-5 flex items-center gap-3">
@@ -137,7 +151,7 @@ export function AssistantSettingsView() {
         </button>
         <span className="text-sm">开放免费 AI 体验</span>
       </div>
-      <div className="mt-5 grid gap-5 md:grid-cols-2">
+      <div className="mt-5">
         <label className="grid gap-2 text-sm">
           默认模型
           <select
@@ -155,25 +169,78 @@ export function AssistantSettingsView() {
               ))}
           </select>
         </label>
-        <label className="grid gap-2 text-sm">
-          全站每日体验上限
-          <input
-            type="number"
-            min={2}
-            max={1000}
-            className="rounded-xl border bg-background p-2.5"
-            defaultValue={state?.dailyLimit ?? 30}
-            key={state?.dailyLimit}
-            disabled={!state || busy}
-            onBlur={(e) => {
-              const value = Number(e.target.value)
-              if (value !== state?.dailyLimit) void update({ dailyLimit: value })
-            }}
-          />
-          <small className="text-xs text-muted-foreground">
-            按 UTC 日重置。平台额度另行限制；每次生成计一次请求。
-          </small>
-        </label>
+      </div>
+      <div className="mt-5 rounded-xl border p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-sm font-medium">本站调用限制</h3>
+          <button
+            type="button"
+            disabled={!state || busy || limits.every(({ field }) => state[field] === 0)}
+            className="min-h-11 rounded-lg bg-accent px-3 text-xs text-primary"
+            onClick={() =>
+              void update({
+                dailyLimit: 0,
+                visitorDailyLimit: 0,
+                minuteLimit: 0,
+                concurrentLimit: 0,
+              })
+            }
+          >
+            全部设为无限制
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-6 text-muted-foreground">
+          默认无限制，需要时逐项设置。保存后立即对新请求生效，统计仍正常记录。每日计数按 UTC
+          日重置；单人计数按当天匿名网络标识，同一网络可能共享。
+        </p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {limits.map(({ field, label, fallback, unit }) => (
+            <div key={field} className="space-y-2">
+              <label className="grid gap-2 text-sm">
+                {label}
+                <select
+                  aria-label={`${label}限制方式`}
+                  className="min-h-11 rounded-xl border bg-background p-2.5"
+                  value={state?.[field] === 0 ? 'unlimited' : 'limited'}
+                  disabled={!state || busy}
+                  onChange={(event) =>
+                    void update({ [field]: event.target.value === 'unlimited' ? 0 : fallback })
+                  }
+                >
+                  <option value="unlimited">无限制</option>
+                  <option value="limited">设置上限</option>
+                </select>
+              </label>
+              {state && state[field] > 0 && (
+                <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <input
+                    aria-label={`${label}上限`}
+                    type="number"
+                    min={1}
+                    max={100000}
+                    step={1}
+                    className="min-h-11 min-w-0 flex-1 rounded-xl border bg-background p-2.5 text-sm text-foreground"
+                    defaultValue={state[field]}
+                    key={state[field]}
+                    disabled={busy}
+                    onBlur={(event) => {
+                      if (!event.target.value.trim() || !event.target.validity.valid) {
+                        setMessage('请填写 1–100000 的整数，或选择无限制。')
+                        return
+                      }
+                      const value = Number(event.target.value)
+                      if (value !== state[field]) void update({ [field]: value })
+                    }}
+                  />
+                  {unit}
+                </label>
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs leading-6 text-muted-foreground">
+          这里调整本站限制。OpenRouter / OpenCode 的免费额度、模型限流和服务状态仍以平台为准。
+        </p>
       </div>
       <div className="mt-6 rounded-xl border p-4">
         <div className="flex flex-wrap gap-2">
