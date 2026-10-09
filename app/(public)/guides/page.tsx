@@ -49,7 +49,7 @@ export default function GuidesPage() {
         </div>
         {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 重播需要完整初始化首次体验，不能复用已经关闭的路由状态。 */}
         <a href="/?tour=1" className="mb-8 inline-flex min-h-11 items-center text-sm text-primary">
-          重新体验一分钟提示词对比 →
+          重新体验新手动手指引 →
         </a>
         <div className="learning-start">
           <div>

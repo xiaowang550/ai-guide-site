@@ -1,15 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { readSettings } from '@/lib/settings'
-import {
-  introDue,
-  INTRO_KEY,
-  INTRO_SESSION,
-  localDay,
-  readLocal,
-  finishIntro,
-} from '@/lib/onboarding-state'
+import { introDue, INTRO_KEY, localDay, readLocal, finishIntro } from '@/lib/onboarding-state'
 import { FirstVisitExperience } from './first-visit-experience'
 export function GuidedTour() {
   const pathname = usePathname(),
@@ -19,17 +11,8 @@ export function GuidedTour() {
     if (initialized.current || pathname.startsWith('/admin') || pathname.startsWith('/start'))
       return
     initialized.current = true
-    let seen = false
-    try {
-      seen = sessionStorage.getItem(INTRO_SESSION) === localDay()
-    } catch {}
     const force = new URLSearchParams(location.search).get('tour') === '1'
-    if (
-      introDue(readLocal(INTRO_KEY, {}), localDay(), seen, readSettings().onboardingDone, force)
-    ) {
-      try {
-        sessionStorage.setItem(INTRO_SESSION, localDay())
-      } catch {}
+    if (introDue(readLocal(INTRO_KEY, {}), localDay(), force)) {
       if (force) {
         const url = new URL(location.href)
         url.searchParams.delete('tour')
@@ -44,8 +27,8 @@ export function GuidedTour() {
   if (!active) return null
   return (
     <FirstVisitExperience
-      onClose={(today, completed) => {
-        finishIntro(today, completed)
+      onClose={(today) => {
+        finishIntro(today)
         setActive(false)
       }}
     />

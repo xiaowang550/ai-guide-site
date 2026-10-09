@@ -1,22 +1,13 @@
-export const INTRO_KEY = 'ai-map:intro:v2'
-export const INTRO_SESSION = 'ai-map:intro-seen:v2'
+// Do not inherit permanent completion or snooze flags from the old walkthrough.
+export const INTRO_KEY = 'ai-map:intro:v3'
 export const ROOKIE_KEY = 'ai-map:rookie:v1'
 export function localDay(now = new Date()) {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
-export function introDue(
-  value: unknown,
-  day: string,
-  seen: boolean,
-  legacyDone: boolean,
-  force = false,
-) {
+export function introDue(value: unknown, day: string, force = false) {
   if (force) return true
-  const state =
-    value && typeof value === 'object'
-      ? (value as { completed?: unknown; snoozeDay?: unknown })
-      : {}
-  return !seen && !legacyDone && state.completed !== true && state.snoozeDay !== day
+  const state = value && typeof value === 'object' ? (value as { snoozeDay?: unknown }) : {}
+  return state.snoozeDay !== day
 }
 export function readLocal<T>(key: string, fallback: T): T {
   try {
@@ -30,16 +21,12 @@ export function saveLocal(key: string, value: unknown) {
     localStorage.setItem(key, JSON.stringify(value))
   } catch {}
 }
-export function finishIntro(today: boolean, completed: boolean) {
+export function finishIntro(today: boolean) {
   const previous = readLocal<Record<string, unknown>>(INTRO_KEY, {})
   saveLocal(INTRO_KEY, {
     ...previous,
     ...(today ? { snoozeDay: localDay() } : {}),
-    ...(completed ? { completed: true } : {}),
   })
-  try {
-    sessionStorage.setItem(INTRO_SESSION, localDay())
-  } catch {}
   window.dispatchEvent(new Event('ai-map:intro-closed'))
 }
 export function rookieProgress(value: unknown, count = 6) {

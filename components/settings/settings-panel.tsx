@@ -137,7 +137,7 @@ export function SettingsPanel() {
       />
       <Row
         title="重新播放新手引导"
-        description="一分钟动手体验。可以随时关闭，或选择今天不再提示。"
+        description="跟着小芽试一次对话，再选择学习路线。可以跳过，或选择今天不再提示。"
         control={
           <button
             type="button"
