@@ -44,6 +44,7 @@ import {
   assistantAdmin,
   assistantCatalog,
   assistantChat,
+  assistantTest,
   type AssistantEnv,
 } from '../assistant-service.ts'
 import { createD1Db, D1BindingMissingError } from '../db/d1.ts'
@@ -210,6 +211,12 @@ function matchPath(pattern: string, pathname: string): Record<string, string> | 
 // ── 路由表 ─────────────────────────────────────────────────────────────────
 
 const ROUTES: Route[] = [
+  {
+    method: 'POST',
+    pattern: '/api/admin/assistant/test',
+    auth: 'required',
+    handler: ({ db, env, request }) => assistantTest(db, env, request),
+  },
   {
     method: 'GET',
     pattern: '/api/assistant/models',

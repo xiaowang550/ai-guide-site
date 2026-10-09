@@ -2,16 +2,18 @@
 
 公开站的「小芽」提供模型选择、流式对话、停止生成、保留本次会话、提示词实验和站内查找。访客无需网站账号。生成结果旁的教程链接、学习夹和工具对比是实际的站内功能。
 
-管理员在 **管理后台 → 站点设置 → 免费模型与站内助手** 填写 OpenRouter Key。太空兔使用 OpenCode 独立入口，需要另填 OpenCode Zen Key；OpenRouter 当前的太空兔端点没有可用提供商，因此不能借用 OpenRouter Key 调用 OpenCode。连接状态表示已配置凭据，具体模型可用性以服务端响应为准。
+管理员在 **管理后台 → 站点设置 → 免费模型与站内助手** 填写 OpenRouter Key。太空兔使用 OpenCode 独立入口，需要另填 OpenCode Zen Key；OpenRouter 当前的太空兔端点没有可用提供商，因此不能借用 OpenRouter Key 调用 OpenCode。填写平台官网或 API 地址后，输入稳定 900 毫秒会检查 Key 和账号目录；留空 Key 可检查已经保存的连接。候选 Key 不自动覆盖已有连接。平台地址规范化到官方 HTTPS API，并拒绝代理和重定向，避免将共享凭据发送到其他主机。
 
-目录从 OpenRouter 官方模型 API 获取，每小时重新核验，保留所有当前零价格模型，包括不用于文字助手的音频条目。调用名单必须具有明确的零输入、零输出及零附加费用；不会把 `:free` 字样当作价格证据。缓存过期且无法重新核验时停止 OpenRouter 推理。请求固定零价提供商约束，不自动转到付费模型。
+目录从 OpenRouter 官方模型 API 获取，每小时重新核验，保留所有当前零价格模型，包括不用于文字助手的音频条目。已连接账号通过 `/models/user` 核对提供商、隐私与模型限制；不在账号目录中的模型不可调用。后台显示平台返回的免费请求额度，未返回时明确标注未知，不把本站计数当平台额度。调用名单必须具有明确的零输入、零输出及零附加费用；不会把 `:free` 字样当作价格证据。缓存过期且无法重新核验时停止 OpenRouter 推理。请求固定零价提供商约束，允许平台在符合零价条件的提供商之间回退，不自动转到付费模型。
 
 共享 Key 使用独立 `AI_CREDENTIALS_KEY` Secret 经 AES-GCM 加密，数据库只保存密文。Key 不进入前端、浏览器存储、审计详情或 Git。加密 Secret 已配置在 Cloudflare；不要随意替换它，否则已保存的连接需要重新填写。也可使用服务端 `OPENROUTER_API_KEY` / `OPENCODE_API_KEY` Secret。
 
-默认全站每日 30 次请求，管理员可以调整；每个临时访客限流键每日 10 次、每分钟 4 次，同时最多两份生成。请求计数按 UTC 日重置，不等于平台剩余额度。限流键使用每日变换的站点盐哈希，不存原始 IP 或对话正文。平台的免费额度、排队与预览状态仍会影响调用。
+默认全站每日 30 次请求，管理员可以调整；每个临时访客限流键每日 10 次、每分钟 4 次，同时最多两份生成。请求计数按 UTC 日重置，不等于平台剩余额度。限流键使用每日变换的站点盐哈希，不存原始 IP 或对话正文。平台的免费额度、排队与预览状态仍会影响调用。后台的实际回答测试需要管理员明确点击，最多每分钟四次，不占访客的十次名额；平台仍会计入请求额度。目录核验和实际流式回答测试分别显示，不能把目录中可选当作模型已实测。
+
+流式生成根据上游数据和注释心跳重置 60 秒空闲超时，整体最长四分钟；向浏览器每 15 秒发送等待心跳，取消或错误时释放上游连接。回答预算提高到 4096 tokens，对支持推理的模型使用较低思考强度。长度截断明确提示，保留部分文字，提供重试与接着回答。后台只记录最近一次生成的时间、模型、完成原因及安全错误码，不记录对话、原始平台错误或凭据。
 
 站内上下文由当前已发布工具资料和本次构建的公开知识目录提供，已关闭模块不参与检索。模型回答按普通文字呈现，站内操作链接独立来自已验证目录，不由模型文本决定管理员权限。
 
-验证包括价格过滤、权限、密钥加密、零价路由、中文 SSE 分片、错误及中断处理、额度、模态焦点、移动布局、实际查找与收藏。用户尚未提供 Key 时，用明确的接口和界面测试数据验证流式链路，不宣称已经完成真实外部模型推理。
+验证包括价格过滤、权限、密钥加密、零价路由、中文 SSE 分片、错误及中断处理、额度、模态焦点、移动布局、实际查找与收藏。自动测试使用明确的接口测试数据，不宣称每个免费模型均已实测。上线验证用已保存的服务端 Key 发起简短真实推理，不导出 Key。
 
-参考：[官方模型 API](https://openrouter.ai/api/v1/models)、[OpenRouter 流式接口](https://openrouter.ai/docs/api_reference/streaming)、[OpenRouter 额度](https://openrouter.ai/docs/api_reference/limits)、[太空兔端点](https://openrouter.ai/api/v1/models/stealth/space-bunny-alpha/endpoints)、[OpenCode 模型](https://opencode.ai/zen/v1/models)。
+参考：[官方模型 API](https://openrouter.ai/api/v1/models)、[OpenRouter 流式接口](https://openrouter.ai/docs/api_reference/streaming)、[账号模型目录](https://openrouter.ai/docs/client-sdks/typescript/api-reference/models/models)、[推理与输出预算](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens)、[OpenRouter 额度](https://openrouter.ai/docs/api_reference/limits)、[太空兔端点](https://openrouter.ai/api/v1/models/stealth/space-bunny-alpha/endpoints)、[OpenCode 模型](https://opencode.ai/zen/v1/models)。

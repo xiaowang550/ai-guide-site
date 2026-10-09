@@ -139,13 +139,14 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
     await readSse(response.body, (data) => {
       const event = JSON.parse(data)
       if (event.type === 'meta') onMeta?.(event.name, event.sources)
+      if (event.type === 'model') onMeta?.(event.name, [])
       if (event.type === 'delta') onText(event.text)
       if (event.type === 'done') complete = true
       if (event.type === 'error') streamError = event.message
     })
     if (streamError || !complete) throw new Error(streamError || '生成中断了，可以重试。')
   }
-  async function ask(text = draft) {
+  async function ask(text = draft, recovery?: { id: string; continue: boolean }) {
     const q = text.trim()
     if (!q || busy) return
     setDraft('')
@@ -157,7 +158,12 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
         text: '',
         model: mode === 'search' ? '站内查找' : model?.name,
       }
-    const history = turns.filter((t) => t.text && !t.error).slice(-6)
+    const recoveringAt = recovery ? turns.findIndex((t) => t.id === recovery.id) : -1
+    const prior =
+      recoveringAt >= 0
+        ? turns.slice(0, recovery?.continue ? recoveringAt + 1 : recoveringAt - 1)
+        : turns
+    const history = prior.filter((t) => t.text && (!t.error || recovery?.continue)).slice(-6)
     setTurns((old) => [...old.slice(-18), user, reply])
     setBusy(true)
     const update = (patch: Partial<Turn>) =>
@@ -193,14 +199,20 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
         let accumulated = ''
         await generate(
           [
-            ...history.map((t) => ({ role: t.role, content: t.text.slice(0, 1500) })),
+            ...history.map((t) => ({
+              role: t.role,
+              content:
+                recovery?.continue && t.id === recovery.id
+                  ? t.text.slice(-3000)
+                  : t.text.slice(0, 1500),
+            })),
             { role: 'user', content: q },
           ],
           (text) => {
             accumulated += text
             update({ text: accumulated })
           },
-          (name, sources) => update({ model: name, sources }),
+          (name, sources) => update({ model: name, ...(sources.length ? { sources } : {}) }),
         )
       }
     } catch (e) {
@@ -417,6 +429,37 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
                       {t.error}
                     </p>
                   )}
+                  {t.error &&
+                    t.role === 'assistant' &&
+                    t.id === turns.at(-1)?.id &&
+                    mode === 'chat' && (
+                      <div className="assistant-message-actions">
+                        <button
+                          type="button"
+                          disabled={busy || !ready}
+                          onClick={() => {
+                            const q = turns[turns.findIndex((x) => x.id === t.id) - 1]?.text
+                            if (q) void ask(q, { id: t.id, continue: false })
+                          }}
+                        >
+                          重试回答
+                        </button>
+                        {t.text && (
+                          <button
+                            type="button"
+                            disabled={busy || !ready}
+                            onClick={() =>
+                              void ask('请接着上一个回答继续，不要重复已有内容。', {
+                                id: t.id,
+                                continue: true,
+                              })
+                            }
+                          >
+                            接着回答
+                          </button>
+                        )}
+                      </div>
+                    )}
                   {t.role === 'assistant' && t.text && (
                     <div className="assistant-message-actions">
                       <button type="button" onClick={() => void copy(t.text, t.id)}>

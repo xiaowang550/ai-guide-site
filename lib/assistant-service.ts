@@ -1,7 +1,22 @@
 import snapshot from '../data/assistant-models.ts'
 import knowledge from '../data/assistant-knowledge.ts'
-import { freeModels, type AssistantProvider, type ModelCatalog } from './assistant-models.ts'
-import { readSse } from './assistant-stream.ts'
+import {
+  freeModels,
+  type AssistantProvider,
+  type ModelCatalog,
+  type ConnectionReport,
+} from './assistant-models.ts'
+import {
+  normalizeAssistantUrl,
+  OPENROUTER_BASE,
+  ZEN_BASE,
+  UpstreamError,
+  upstreamMessage,
+  upstreamFailure,
+  generationWatchdog,
+  generationOptions,
+  consumeGeneration,
+} from './assistant-upstream.ts'
 import { readSiteConfig } from './admin/modules.ts'
 import { pathEnabled } from './site-modules.ts'
 import { sha256Base64Url, toBase64Url, fromBase64Url } from './admin/crypto.ts'
@@ -19,6 +34,7 @@ interface Preferences {
   enabled: boolean
   defaultModel: string
   dailyLimit: number
+  openrouterUrl?: string
 }
 const DEFAULT: Preferences = { enabled: true, defaultModel: 'openrouter/free', dailyLimit: 30 }
 const ENDPOINT = 'https://openrouter.ai/api/v1/models'
@@ -75,6 +91,194 @@ async function save(db: Db, id: string, value: unknown) {
     [id, JSON.stringify(value), new Date().toISOString()],
   )
 }
+async function readConnection(db: Db, provider: string): Promise<ConnectionReport | null> {
+  const row = await db.first<{ data: string }>('SELECT data FROM assistant_store WHERE id=?', [
+    'connection:' + provider,
+  ])
+  return row ? JSON.parse(row.data) : null
+}
+async function checkConnection(
+  env: AssistantEnv,
+  provider: AssistantProvider,
+  key: string,
+): Promise<ConnectionReport> {
+  const baseUrl = provider === 'openrouter' ? OPENROUTER_BASE : ZEN_BASE
+  const report: ConnectionReport = {
+    checkedAt: new Date().toISOString(),
+    baseUrl,
+    authenticated: false,
+    catalogVerified: false,
+    models: [],
+  }
+  const fetcher = env.ASSISTANT_FETCH ?? fetch
+  const options = () => ({
+    headers: { Authorization: 'Bearer ' + key },
+    redirect: 'error' as const,
+    signal: AbortSignal.timeout(15000),
+  })
+  try {
+    const response = await fetcher(
+      baseUrl + (provider === 'openrouter' ? '/key' : '/models'),
+      options(),
+    )
+    if (!response.ok) throw await upstreamFailure(response)
+    const payload = (await response.json()) as { data?: Record<string, unknown> }
+    if (provider === 'opencode') {
+      // Zen 的目录是公开接口，只有实际推理测试才能证明凭据有效。
+      report.error = 'OpenCode 目录已连通，点击实际回答测试核验 Key。'
+      report.models = [
+        {
+          id: 'opencode:space-bunny-free',
+          name: 'Space Bunny · 太空兔',
+          provider,
+          context: 0,
+          vision: false,
+          reasoning: false,
+          tools: false,
+          available: true,
+          note: '免费预览，以实际回答测试为准',
+        },
+      ]
+      return report
+    }
+    if (!payload.data || typeof payload.data !== 'object') throw new UpstreamError(502)
+    report.authenticated = true
+    const account = payload.data,
+      quota = account.free_model_daily_requests as Record<string, unknown> | undefined
+    const number = (v: unknown) =>
+      typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null
+    report.account = {
+      isFreeTier: account.is_free_tier === true,
+      limitRemaining: number(account.limit_remaining),
+      freeDaily:
+        quota && ['used', 'limit', 'remaining'].every((k) => number(quota[k]) !== null)
+          ? {
+              used: Number(quota.used),
+              limit: Number(quota.limit),
+              remaining: Number(quota.remaining),
+            }
+          : null,
+    }
+    const modelsResponse = await fetcher(baseUrl + '/models/user', options())
+    if (!modelsResponse.ok) throw await upstreamFailure(modelsResponse)
+    const catalog = await modelsResponse.json()
+    if (!Array.isArray((catalog as { data?: unknown })?.data)) throw new UpstreamError(502)
+    report.models = freeModels(catalog)
+    report.allowedIds = report.models.map((m) => m.id)
+    report.catalogVerified = true
+  } catch (error) {
+    report.error =
+      error instanceof UpstreamError ? error.message : '连接检查超时或网络暂不可用，请重试。'
+  }
+  return report
+}
+/** 仅管理员可访问；空 Key 使用已保存连接，新 Key 仅测试，不自动覆盖。 */
+export async function assistantTest(db: Db, env: AssistantEnv, request: Request) {
+  await ensure(db)
+  const body = await readJson<Record<string, unknown>>(request)
+  if (
+    !body ||
+    Object.keys(body).some(
+      (k) => !['provider', 'apiKey', 'baseUrl', 'model', 'infer'].includes(k),
+    ) ||
+    !['openrouter', 'opencode'].includes(String(body.provider)) ||
+    (body.infer !== undefined && typeof body.infer !== 'boolean')
+  )
+    return fail(400, '连接测试格式不正确。')
+  const provider = body.provider as AssistantProvider
+  try {
+    normalizeAssistantUrl(body.baseUrl, provider)
+  } catch {
+    return fail(400, '请使用所选平台的官方接口地址。')
+  }
+  const storedKey = await credential(db, env, provider)
+  const candidate = typeof body.apiKey === 'string' ? body.apiKey.trim() : ''
+  const key = candidate || storedKey
+  if (!key || key.length < 12 || key.length > 512 || /[^\x21-\x7e]/.test(key))
+    return fail(400, '请填写完整的 Key，或先保存一个连接。')
+  const report = await checkConnection(env, provider, key)
+  if (body.infer && (report.authenticated || provider === 'opencode')) {
+    const model =
+      report.models.find((m) => m.id === body.model && m.available) ??
+      (body.model === undefined ? report.models.find((m) => m.available) : undefined)
+    if (!model || (provider === 'openrouter' && !report.catalogVerified))
+      return fail(400, '请选择刚刚核验目录中的免费文字模型。')
+    // 显式测试最多两份同时生成、每分钟四次；不占访客的十次体验名额。
+    const slot = crypto.randomUUID(),
+      minute = 'test:' + Math.floor(Date.now() / 60000)
+    await db.run('INSERT OR IGNORE INTO assistant_usage VALUES(?,0)', [minute])
+    await db.batch([
+      {
+        sql: 'INSERT INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<2 AND (SELECT count FROM assistant_usage WHERE id=?)<4',
+        params: [slot, Date.now() + 245000, Date.now(), minute],
+      },
+      {
+        sql: 'UPDATE assistant_usage SET count=count+1 WHERE id=? AND EXISTS(SELECT 1 FROM assistant_slots WHERE id=?)',
+        params: [minute, slot],
+      },
+    ])
+    if (!(await db.first('SELECT id FROM assistant_slots WHERE id=?', [slot])))
+      return fail(429, '正在生成或测试次数过密，请稍后再试。')
+    const started = Date.now(),
+      watch = generationWatchdog(request.signal)
+    report.probe = { ok: false, model: model.id, latencyMs: 0, firstTokenMs: null }
+    try {
+      const response = await (env.ASSISTANT_FETCH ?? fetch)(report.baseUrl + '/chat/completions', {
+        method: 'POST',
+        redirect: 'error',
+        signal: watch.controller.signal,
+        headers: {
+          Authorization: 'Bearer ' + key,
+          'content-type': 'application/json',
+          'X-Title': 'AI Capability Map',
+          'HTTP-Referer': new URL(request.url).origin,
+        },
+        body: JSON.stringify({
+          model: provider === 'openrouter' ? model.id : 'space-bunny-free',
+          messages: [{ role: 'user', content: '这是连接测试。请只回答：连接正常。不要解释。' }],
+          stream: true,
+          ...(provider === 'openrouter'
+            ? generationOptions(model.reasoning || model.id === 'openrouter/free', 2048)
+            : { max_tokens: 2048 }),
+        }),
+      })
+      const result = await consumeGeneration(
+        response,
+        () => {
+          report.probe!.firstTokenMs ??= Date.now() - started
+        },
+        watch.activity,
+      )
+      report.probe = {
+        ...report.probe,
+        ...result,
+        ok: result.finishReason !== 'length',
+        latencyMs: Date.now() - started,
+        ...(result.finishReason === 'length'
+          ? { code: 'length', message: '模型返回了文字，但达到测试长度上限。' }
+          : {}),
+      }
+      if (provider === 'opencode') report.authenticated = true
+    } catch (error) {
+      const code = watch.controller.signal.aborted
+        ? 504
+        : error instanceof UpstreamError
+          ? error.code
+          : 502
+      report.probe = {
+        ...report.probe,
+        latencyMs: Date.now() - started,
+        code,
+        message: upstreamMessage(code),
+      }
+    } finally {
+      watch.clear()
+      await db.run('DELETE FROM assistant_slots WHERE id=?', [slot])
+    }
+  }
+  if (key === storedKey) await save(db, 'connection:' + provider, report)
+  return json(report)
+}
 async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelCatalog> {
   await ensure(db)
   const prefs = await preferences(db)
@@ -116,6 +320,24 @@ async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelC
     }
   } else stale = false
   const models = freeModels(data)
+  let connection = await readConnection(db, 'openrouter')
+  const routerKey = await credential(db, env, 'openrouter')
+  if (
+    routerKey &&
+    (force || !connection || Date.now() - Date.parse(connection.checkedAt) > 3600000)
+  ) {
+    const fresh = await checkConnection(env, 'openrouter', routerKey)
+    if (fresh.catalogVerified || !connection) connection = fresh
+    else connection = { ...connection, checkedAt: fresh.checkedAt, error: fresh.error }
+    await save(db, 'connection:openrouter', connection)
+  }
+  if (connection?.catalogVerified && connection.allowedIds) {
+    for (const model of models)
+      if (!connection.allowedIds.includes(model.id)) {
+        model.available = false
+        model.note = '当前账号设置未开放此模型，可由管理员重新检查连接'
+      }
+  }
   // OpenCode 的免费模型目录不提供价格字段，仅接入已核对的太空兔免费变体。
   models.push({
     id: 'opencode:space-bunny-free',
@@ -139,8 +361,10 @@ async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelC
     connected,
     defaultModel: models.some((m) => m.id === prefs.defaultModel && m.available)
       ? prefs.defaultModel
-      : ((models.find((m) => m.id === 'openrouter/free') ?? models.find((m) => m.available))?.id ??
-        'openrouter/free'),
+      : ((
+          models.find((m) => m.id === 'openrouter/free' && m.available) ??
+          models.find((m) => m.available)
+        )?.id ?? 'openrouter/free'),
     enabled: prefs.enabled && (await readSiteConfig(db)).features.assistant !== false,
   }
 }
@@ -162,6 +386,9 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
       stale: current.stale,
       encryptedStorageReady: !!env.AI_CREDENTIALS_KEY,
       todayRequests: used?.count ?? 0,
+      baseUrl: OPENROUTER_BASE,
+      connection: await readConnection(db, 'openrouter'),
+      recentGeneration: await readConnection(db, 'generation'),
     })
   }
   const body = await readJson<Record<string, unknown>>(request)
@@ -177,10 +404,18 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
           'dailyLimit',
           'defaultModel',
           'refresh',
+          'baseUrl',
         ].includes(k),
     )
   )
     return fail(400, '助手设置格式不正确。')
+  if (body.baseUrl !== undefined) {
+    try {
+      normalizeAssistantUrl(body.baseUrl, body.provider === 'opencode' ? 'opencode' : 'openrouter')
+    } catch {
+      return fail(400, '请填写平台官方地址 https://openrouter.ai/api/v1。')
+    }
+  }
   const prefs = await preferences(db)
   if (body.enabled !== undefined && typeof body.enabled !== 'boolean')
     return fail(400, '开关格式不正确。')
@@ -199,25 +434,20 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
   if (body.apiKey !== undefined || body.removeKey) {
     if (body.provider !== 'openrouter' && body.provider !== 'opencode')
       return fail(400, '请选择连接平台。')
-    if (body.removeKey)
-      await db.run('DELETE FROM assistant_store WHERE id=?', ['key:' + body.provider])
-    else {
+    if (body.removeKey) {
+      await db.run('DELETE FROM assistant_store WHERE id IN (?,?)', [
+        'key:' + body.provider,
+        'connection:' + body.provider,
+      ])
+    } else {
       if (!env.AI_CREDENTIALS_KEY)
         return fail(503, '服务端尚未配置密钥加密，请先配置 AI_CREDENTIALS_KEY。')
       const key = typeof body.apiKey === 'string' ? body.apiKey.trim() : ''
       if (key.length < 12 || key.length > 512 || /[^\x21-\x7e]/.test(key))
         return fail(400, '请填写完整的 API Key。')
-      // 保存前验证账号权限，不发起付费推理。
-      const testUrl =
-        body.provider === 'openrouter'
-          ? 'https://openrouter.ai/api/v1/key'
-          : 'https://opencode.ai/zen/v1/models'
-      const checked = await (env.ASSISTANT_FETCH ?? fetch)(testUrl, {
-        headers: { Authorization: 'Bearer ' + key },
-        signal: AbortSignal.timeout(12000),
-      })
-      if (!checked.ok) return fail(400, '连接验证失败，请检查 Key 和平台账户状态。')
-      await checked.body?.cancel()
+      const report = await checkConnection(env, body.provider, key)
+      if (!report.authenticated && (body.provider === 'openrouter' || !report.models.length))
+        return fail(400, report.error ?? '连接验证失败。')
       const iv = crypto.getRandomValues(new Uint8Array(12))
       const ciphertext = await crypto.subtle.encrypt(
         { name: 'AES-GCM', iv, additionalData: new TextEncoder().encode(body.provider) },
@@ -228,6 +458,7 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
         iv: toBase64Url(iv),
         ciphertext: toBase64Url(new Uint8Array(ciphertext)),
       })
+      if (body.provider === 'openrouter') await save(db, 'connection:openrouter', report)
     }
   }
   await save(db, 'preferences', {
@@ -287,14 +518,6 @@ async function siteContext(db: Db, query: string, page: string): Promise<Assista
     .slice(0, 5)
     .map((x) => x.d)
 }
-const reason = (status: number) =>
-  status === 429
-    ? '模型现在较忙或免费额度已用完，请稍后再试，或选择其他免费模型。'
-    : status === 401 || status === 403
-      ? '模型连接需要管理员检查，站内查找仍可使用。'
-      : status === 402
-        ? '免费通道暂不可用，请管理员检查平台账户；本站不会自动切换付费模型。'
-        : '这个免费模型暂时没有响应，请稍后重试或切换模型。'
 export async function assistantChat(db: Db, env: AssistantEnv, request: Request) {
   const length = Number(request.headers.get('content-length') ?? 0)
   if (length > 64000) return fail(413, '这次输入过长，请缩短后再试。')
@@ -347,21 +570,42 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
   await db.batch([
     {
       sql: `INSERT INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<2 AND (SELECT count FROM assistant_usage WHERE id=?)<? AND (SELECT count FROM assistant_usage WHERE id=?)<10 AND (SELECT count FROM assistant_usage WHERE id=?)<4`,
-      params: [slot, Date.now() + 95000, Date.now(), ids[0], prefs.dailyLimit, ids[1], ids[2]],
+      params: [slot, Date.now() + 245000, Date.now(), ids[0], prefs.dailyLimit, ids[1], ids[2]],
     },
     ...ids.map((id) => ({
       sql: 'UPDATE assistant_usage SET count=count+1 WHERE id=? AND EXISTS(SELECT 1 FROM assistant_slots WHERE id=?)',
       params: [id, slot],
     })),
   ])
-  if (!(await db.first('SELECT id FROM assistant_slots WHERE id=?', [slot])))
-    return fail(429, '当前体验次数已达上限或有人正在生成，请稍后再试。')
+  if (!(await db.first('SELECT id FROM assistant_slots WHERE id=?', [slot]))) {
+    const counts = await Promise.all(
+      ids.map((id) =>
+        db.first<{ count: number }>('SELECT count FROM assistant_usage WHERE id=?', [id]),
+      ),
+    )
+    return fail(
+      429,
+      (counts[0]?.count ?? 0) >= prefs.dailyLimit
+        ? '本站今日体验次数已用完，按 UTC 日重置；管理员可在后台调整上限。'
+        : (counts[1]?.count ?? 0) >= 10
+          ? '你今天的 10 次体验已用完，按 UTC 日重置。'
+          : (counts[2]?.count ?? 0) >= 4
+            ? '发送有些频繁，请一分钟后再试。'
+            : '目前有两份回答正在生成，请稍后再试。',
+    )
+  }
   const release = () => db.run('DELETE FROM assistant_slots WHERE id=?', [slot])
   let response: Response
-  const controller = new AbortController(),
-    timer = setTimeout(() => controller.abort(), 90000)
-  const abort = () => controller.abort()
-  request.signal.addEventListener('abort', abort, { once: true })
+  const watch = generationWatchdog(request.signal),
+    controller = watch.controller
+  const started = Date.now()
+  const record = (value: Record<string, unknown>) =>
+    save(db, 'connection:generation', {
+      checkedAt: new Date().toISOString(),
+      model: model.id,
+      latencyMs: Date.now() - started,
+      ...value,
+    })
   try {
     const fetcher = env.ASSISTANT_FETCH ?? fetch
     if (model.provider === 'opencode') {
@@ -376,7 +620,7 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         )
       if (!available) {
         await release()
-        clearTimeout(timer)
+        watch.clear()
         return fail(503, '太空兔的免费入口暂时不可用，请选择 OpenRouter 免费模型。')
       }
     }
@@ -390,10 +634,11 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       JSON.stringify(sources)
     const url =
       model.provider === 'openrouter'
-        ? 'https://openrouter.ai/api/v1/chat/completions'
-        : 'https://opencode.ai/zen/v1/chat/completions'
+        ? OPENROUTER_BASE + '/chat/completions'
+        : ZEN_BASE + '/chat/completions'
     response = await fetcher(url, {
       method: 'POST',
+      redirect: 'error',
       signal: controller.signal,
       headers: {
         Authorization: 'Bearer ' + key,
@@ -405,69 +650,63 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         model: model.provider === 'openrouter' ? model.id : 'space-bunny-free',
         messages: [{ role: 'system', content: system }, ...messages],
         stream: true,
-        max_tokens: 1800,
         ...(model.provider === 'openrouter'
-          ? { provider: { max_price: { prompt: 0, completion: 0 }, allow_fallbacks: false } }
-          : {}),
+          ? generationOptions(model.reasoning || model.id === 'openrouter/free')
+          : { max_tokens: 4096 }),
       }),
     })
     if (!response.ok || !response.body) {
-      await response.body?.cancel()
+      const failure = response.ok ? new UpstreamError(502) : await upstreamFailure(response)
+      await record({ ok: false, code: failure.code, message: failure.message })
       await release()
-      clearTimeout(timer)
-      return fail(response.status === 429 ? 429 : 502, reason(response.status))
+      watch.clear()
+      return fail(failure.code === 429 ? 429 : 502, failure.message)
     }
     const encoder = new TextEncoder()
+    let heartbeat: ReturnType<typeof setInterval> | undefined
     const stream = new ReadableStream<Uint8Array>({
       start: async (out) => {
         const emit = (value: unknown) =>
           out.enqueue(encoder.encode('data: ' + JSON.stringify(value) + '\n\n'))
-        let characters = 0,
-          finished = false,
-          bad = false
+        heartbeat = setInterval(() => {
+          try {
+            out.enqueue(encoder.encode(': waiting\n\n'))
+          } catch {
+            clearInterval(heartbeat)
+          }
+        }, 15000)
         try {
           emit({ type: 'meta', model: model.id, name: model.name, sources })
-          await readSse(response.body!, async (data) => {
-            if (data === '[DONE]') {
-              finished = true
-              return
-            }
-            let event: {
-              error?: unknown
-              choices?: { delta?: { content?: string }; finish_reason?: string }[]
-            }
-            try {
-              event = JSON.parse(data)
-            } catch {
-              throw new Error('invalid stream')
-            }
-            if (event.error || event.choices?.some((c) => c.finish_reason === 'error')) {
-              bad = true
-              throw new Error('provider failed')
-            }
-            const text = event.choices?.[0]?.delta?.content
-            if (typeof text === 'string' && text) {
-              characters += text.length
-              if (characters > 20000) throw new Error('too long')
-              emit({ type: 'delta', text })
-            }
-            if (event.choices?.[0]?.finish_reason) finished = true
-          })
-          if (!finished || !characters || bad)
+          const result = await consumeGeneration(
+            response,
+            (text) => emit({ type: 'delta', text }),
+            watch.activity,
+            (actualModel) => emit({ type: 'model', name: actualModel }),
+          )
+          const truncated = result.finishReason === 'length'
+          if (truncated)
             emit({
               type: 'error',
-              message: '生成中断了，已收到的文字保留在这里。可以重试或换一个免费模型。',
+              message: '本次回答已达到长度上限，文字已保留。点击「接着回答」继续。',
+              code: 'length',
             })
           else emit({ type: 'done' })
-        } catch {
+          await record({ ok: !truncated, code: truncated ? 'length' : 'complete', ...result })
+        } catch (error) {
+          const code = controller.signal.aborted
+            ? 504
+            : error instanceof UpstreamError
+              ? error.code
+              : 502
           if (!request.signal.aborted) {
             try {
-              emit({ type: 'error', message: reason(503) })
+              emit({ type: 'error', message: upstreamMessage(code), code })
             } catch {}
+            await record({ ok: false, code, message: upstreamMessage(code) })
           }
         } finally {
-          clearTimeout(timer)
-          request.signal.removeEventListener('abort', abort)
+          clearInterval(heartbeat)
+          watch.clear()
           await release()
           try {
             out.close()
@@ -476,7 +715,8 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       },
       cancel: () => {
         controller.abort()
-        clearTimeout(timer)
+        clearInterval(heartbeat)
+        watch.clear()
         void release()
       },
     })
@@ -488,9 +728,10 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       },
     })
   } catch {
-    clearTimeout(timer)
-    request.signal.removeEventListener('abort', abort)
+    watch.clear()
     await release()
-    return fail(502, reason(503))
+    const code = controller.signal.aborted ? 504 : 502
+    await record({ ok: false, code, message: upstreamMessage(code) })
+    return fail(502, upstreamMessage(code))
   }
 }

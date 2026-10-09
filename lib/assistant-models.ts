@@ -18,6 +18,30 @@ export interface ModelCatalog {
   defaultModel: string
   enabled: boolean
 }
+export interface ConnectionReport {
+  checkedAt: string
+  baseUrl: string
+  authenticated: boolean
+  catalogVerified: boolean
+  models: FreeModel[]
+  allowedIds?: string[]
+  error?: string
+  account?: {
+    isFreeTier: boolean
+    limitRemaining: number | null
+    freeDaily: { used: number; limit: number; remaining: number } | null
+  }
+  probe?: {
+    ok: boolean
+    model: string
+    actualModel?: string
+    latencyMs: number
+    firstTokenMs: number | null
+    generationId?: string
+    code?: number | string
+    message?: string
+  }
+}
 /** 价格缺失、负数、非数值、额外正价或过期模型都不进入免费调用名单。 */
 export function freeModels(value: unknown, now = Date.now()): FreeModel[] {
   if (!value || typeof value !== 'object' || !Array.isArray((value as { data?: unknown }).data))

@@ -2,6 +2,7 @@
 export async function readSse(
   stream: ReadableStream<Uint8Array>,
   onData: (data: string) => void | Promise<void>,
+  onActivity?: () => void,
 ): Promise<void> {
   const reader = stream.getReader(),
     decoder = new TextDecoder()
@@ -29,11 +30,15 @@ export async function readSse(
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
+      onActivity?.()
       pending += decoder.decode(value, { stream: true })
       await consume()
     }
     pending += decoder.decode()
     await consume(true)
+  } catch (error) {
+    await reader.cancel().catch(() => {})
+    throw error
   } finally {
     reader.releaseLock()
   }
