@@ -197,6 +197,10 @@ export async function assistantTest(db: Db, env: AssistantEnv, request: Request)
   if (!key || key.length < 12 || key.length > 512 || /[^\x21-\x7e]/.test(key))
     return fail(400, '请填写完整的 Key，或先保存一个连接。')
   const report = await checkConnection(env, provider, key)
+  if (!body.infer && key === storedKey) {
+    const previous = await readConnection(db, provider)
+    if (previous?.probe) report.probe = previous.probe
+  }
   if (body.infer && (report.authenticated || provider === 'opencode')) {
     const model =
       report.models.find((m) => m.id === body.model && m.available) ??
@@ -327,7 +331,8 @@ async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelC
     (force || !connection || Date.now() - Date.parse(connection.checkedAt) > 3600000)
   ) {
     const fresh = await checkConnection(env, 'openrouter', routerKey)
-    if (fresh.catalogVerified || !connection) connection = fresh
+    if (fresh.catalogVerified || !connection)
+      connection = { ...fresh, ...(connection?.probe ? { probe: connection.probe } : {}) }
     else connection = { ...connection, checkedAt: fresh.checkedAt, error: fresh.error }
     await save(db, 'connection:openrouter', connection)
   }

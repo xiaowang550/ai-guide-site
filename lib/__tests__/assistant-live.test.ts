@@ -19,6 +19,7 @@ async function fixture(
 ) {
   const env = await makeTestEnv()
   const fetcher = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+    if (_init?.redirect === 'error') throw new Error('Cloudflare requires manual redirect mode')
     new Request(String(input), _init)
     if (String(input).endsWith('/chat/completions'))
       return new Response(stream, { headers: { 'content-type': 'text/event-stream' } })
@@ -274,6 +275,10 @@ describe('连接诊断与断流恢复', () => {
     expect(tested.json.probe.ok).toBe(true)
     expect(tested.json.probe.actualModel).toBe('test/actual-free')
     expect(tested.json.probe.firstTokenMs).not.toBeNull()
+    const rechecked = await request(env, 'POST', '/api/admin/assistant/test', {
+      provider: 'openrouter',
+    })
+    expect(rechecked.json.probe).toEqual(tested.json.probe)
     expect(JSON.stringify(tested.json)).not.toContain(KEY)
     expect(JSON.stringify(await env.db.all('SELECT * FROM assistant_store'))).not.toContain(
       '连接正常',
