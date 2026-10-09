@@ -151,11 +151,14 @@ export const megaNav: readonly NavItem[] = [
 ]
 
 /** 移动端与页脚用的扁平列表：由 megaNav 拍平而来，避免两处各写一遍而漏项 */
-export const primaryNav: readonly NavChild[] = megaNav.map((g) => ({
-  href: g.href,
-  label: g.label,
-  hint: g.hint,
-}))
+export const primaryNav: readonly NavChild[] = [
+  { href: '/', label: '首页', hint: '回到网站首页' },
+  ...megaNav.map((g) => ({
+    href: g.href,
+    label: g.label,
+    hint: g.hint,
+  })),
+]
 
 export const secondaryNav: readonly NavChild[] = megaNav.flatMap((g) => g.children ?? [])
 

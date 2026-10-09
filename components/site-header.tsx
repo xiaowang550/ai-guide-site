@@ -58,8 +58,22 @@ export function SiteHeader() {
             <Compass className="h-[18px] w-[18px]" aria-hidden />
           </span>
           {/* 窄屏用 sr-only 而不是 hidden：hidden 会让链接在移动端失去可访问名称 */}
-          <span className="hidden text-[15px] sm:inline">{siteConfig.name}</span>
-          <span className="sr-only sm:hidden">{siteConfig.name}</span>
+          <span className="hidden text-[15px] xl:inline">{siteConfig.name}</span>
+          <span className="sr-only xl:hidden">{siteConfig.name}</span>
+        </Link>
+
+        <Link
+          href="/"
+          aria-label="返回首页"
+          aria-current={pathname === '/' ? 'page' : undefined}
+          className={cn(
+            'inline-flex h-9 shrink-0 items-center rounded-xl px-2.5 text-sm transition-colors',
+            pathname === '/'
+              ? 'bg-accent font-medium text-accent-foreground'
+              : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+          )}
+        >
+          首页
         </Link>
 
         <MegaNav />
@@ -152,6 +166,7 @@ export function SiteHeader() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      aria-current={isActive(item.href) ? 'page' : undefined}
                       className={cn(
                         'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
                         isActive(item.href)
