@@ -50,30 +50,36 @@
 .public-site .site-header > .container {
   height: 76px;
 }
-.brand-symbol {
+.brand-identity {
+  display: block;
+  position: relative;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+}
+.brand-identity img {
   width: 48px;
   height: 48px;
   object-fit: contain;
 }
-.brand-wordmark {
-  display: block;
-  position: relative;
-  width: 200px;
-  height: 56px;
-  overflow: hidden;
-}
-.brand-wordmark img {
-  position: absolute;
-  width: 278px;
-  max-width: none;
-  height: auto;
-  left: -42px;
-  top: -13px;
-  mix-blend-mode: multiply;
-}
-.dark .brand-wordmark {
-  background: #fff;
-  border-radius: 12px;
+@media (min-width: 1280px) {
+  .brand-identity {
+    width: 200px;
+    height: 56px;
+  }
+  .brand-identity img {
+    position: absolute;
+    width: 278px;
+    max-width: none;
+    height: auto;
+    left: -42px;
+    top: -13px;
+    mix-blend-mode: multiply;
+  }
+  .dark .brand-identity {
+    background: #fff;
+    border-radius: 12px;
+  }
 }
 .public-site .site-header a[aria-current='page'] {
   border-radius: 999px;
@@ -83,7 +89,8 @@
     height: 66px;
     gap: 8px;
   }
-  .brand-symbol {
+  .brand-identity,
+  .brand-identity img {
     width: 42px;
     height: 42px;
   }

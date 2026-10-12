@@ -54,12 +54,7 @@ export function SiteHeader() {
           className="flex shrink-0 items-center gap-2 font-semibold"
           aria-label={`${siteConfig.name} 首页`}
         >
-          <span className="xl:hidden">
-            <BrandMark />
-          </span>
-          <span className="hidden xl:inline-flex">
-            <BrandMark wordmark />
-          </span>
+          <BrandMark />
           {/* 窄屏用 sr-only 而不是 hidden：hidden 会让链接在移动端失去可访问名称 */}
           <span className="sr-only">{siteConfig.name}</span>
         </Link>
