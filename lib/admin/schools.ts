@@ -184,12 +184,17 @@ export async function saveSchoolAccount(
       throw new SchoolConflictError('账号已被修改或名称已占用，请刷新后重试。')
     throw e
   }
-  return account(
-    (await db.first<AccountRow>(
-      'SELECT id,school_name,username,enabled,version,created_at,updated_at,last_login_at FROM school_accounts WHERE id=?',
-      [nextId],
-    ))!,
-  )
+  // A committed write must not depend on a second, potentially delayed read.
+  return {
+    id: nextId,
+    schoolName: name.trim(),
+    username,
+    enabled,
+    version: old ? old.version + 1 : 1,
+    createdAt: old?.created_at ?? now,
+    updatedAt: now,
+    lastLoginAt: old?.last_login_at ?? null,
+  } satisfies SchoolAccount
 }
 export function schoolCookie(token: string, secure: boolean, maxAge = SESSION_TTL_SECONDS) {
   return `${SCHOOL_COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${secure ? '; Secure' : ''}`

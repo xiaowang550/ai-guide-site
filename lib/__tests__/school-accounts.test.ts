@@ -5,6 +5,7 @@ import { schoolPath } from '../admin/schools'
 import { searchDocs } from '@/data'
 import sitemap from '@/app/sitemap'
 import { buildFreshnessReport } from '@/lib/freshness'
+import type { SqlParam } from '@/lib/db/types'
 
 const PASSWORD = 'Teacher-test-password-2026'
 const browser = (env: TestEnv): TestEnv => ({ ...env, cookies: new Map() })
@@ -27,6 +28,19 @@ async function signIn(env: TestEnv, username = 'school01', password = PASSWORD) 
 }
 
 describe('学校账号与大众端隔离', () => {
+  it('创建已提交时不依赖立即回读，避免账号已创建却被报告失败', async () => {
+    const env = await owner(),
+      original = env.db.first.bind(env.db)
+    env.db.first = async <T>(sql: string, params?: SqlParam[]): Promise<T | null> => {
+      if (sql.includes('FROM school_accounts WHERE id=?')) return null
+      return original<T>(sql, params)
+    }
+    const created = await create(env)
+    expect(created.version).toBe(1)
+    const stored = (await request(env, 'GET', '/api/admin/school-accounts')).json.accounts
+    expect(stored[0].id).toBe(created.id)
+    expect(stored[0].schoolName).toBe(created.schoolName)
+  })
   it('仅所有者分配账号，学校账号与管理员账号不能相互登录', async () => {
     const env = await owner(),
       guest = browser(env)
