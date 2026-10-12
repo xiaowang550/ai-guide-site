@@ -52,6 +52,8 @@ export function AssistantPanel({
   const panelDrag = useRef<{ id: number; dx: number; dy: number } | null>(null)
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null),
     [index, setIndex] = useState<AssistantToolsIndex | null>(null)
+  const [indexStatus, setIndexStatus] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [indexAttempt, setIndexAttempt] = useState(0)
   const [mode, setMode] = useState<'chat' | 'practice' | 'search'>('chat'),
     [selected, setSelected] = useState('openrouter/free'),
     [draft, setDraft] = useState(''),
@@ -65,7 +67,7 @@ export function AssistantPanel({
   const state = mascotState({
     busy,
     searching: mode === 'search',
-    error: outcome === 'confused',
+    error: outcome === 'confused' || (mode === 'search' && indexStatus === 'error'),
     success: outcome === 'success',
     reading: mode === 'practice',
   })
@@ -157,19 +159,39 @@ export function AssistantPanel({
     const timer = setInterval(() => {
       if (!document.hidden) void load()
     }, 60000)
-    fetch('/assistant-index.json')
-      .then((r) => r.json())
-      .then((data) => {
-        if (alive) setIndex(data)
-      })
-      .catch(() => {
-        if (alive) setNotice('站内资料正在加载，请稍后重试。')
-      })
     return () => {
       alive = false
       clearInterval(timer)
     }
   }, [open])
+  useEffect(() => {
+    if (!open || index) return
+    const controller = new AbortController()
+    setIndexStatus('loading')
+    void fetch('/assistant-index.json', { signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error('Index unavailable')
+        return r.json()
+      })
+      .then((data: AssistantToolsIndex) => {
+        if (
+          !Array.isArray(data.tools) ||
+          !Array.isArray(data.searchDocs) ||
+          !Array.isArray(data.concepts) ||
+          !Array.isArray(data.guides) ||
+          !Array.isArray(data.scenarios)
+        )
+          throw new Error('Invalid index')
+        if (!controller.signal.aborted) {
+          setIndex(data)
+          setIndexStatus('ready')
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setIndexStatus('error')
+      })
+    return () => controller.abort()
+  }, [open, index, indexAttempt])
   useEffect(() => {
     if (
       feed.current &&
@@ -209,7 +231,7 @@ export function AssistantPanel({
 
   async function ask(text = draft, recovery?: { id: string; continue: boolean }) {
     const q = text.trim()
-    if (!q || busy) return
+    if (!q || busy || (mode === 'search' && !index)) return
     setDraft('')
     setOutcome(null)
     setNotice('')
@@ -668,7 +690,7 @@ export function AssistantPanel({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                     e.preventDefault()
-                    if (draft.trim() && !busy && (mode === 'search' || ready)) void ask()
+                    if (draft.trim() && !busy && (mode === 'search' ? !!index : ready)) void ask()
                   }
                 }}
               />
@@ -681,7 +703,13 @@ export function AssistantPanel({
                     busy={busy}
                   />
                 ) : (
-                  <span className="assistant-local-tag">本站资料 · 无需 AI 连接</span>
+                  <span className="assistant-local-tag" role="status">
+                    {indexStatus === 'loading'
+                      ? '正在加载站内资料…'
+                      : indexStatus === 'error'
+                        ? '资料未连上'
+                        : '本站资料 · 无需 AI 连接'}
+                  </span>
                 )}
                 {busy ? (
                   <button
@@ -697,13 +725,25 @@ export function AssistantPanel({
                     type="submit"
                     className="assistant-send"
                     aria-label="发送消息"
-                    disabled={!draft.trim() || (mode === 'chat' && !ready)}
+                    disabled={!draft.trim() || (mode === 'search' ? !index : !ready)}
                   >
                     <ArrowUp size={19} />
                   </button>
                 )}
               </div>
             </form>
+          )}
+          {mode === 'search' && indexStatus === 'error' && (
+            <p className="assistant-notice" role="status">
+              站内资料暂未加载成功，你输入的内容已保留。
+              <button
+                type="button"
+                className="ml-2 underline"
+                onClick={() => setIndexAttempt((v) => v + 1)}
+              >
+                重试加载
+              </button>
+            </p>
           )}
           {mode === 'practice' && (
             <div className="assistant-practice-controls">
