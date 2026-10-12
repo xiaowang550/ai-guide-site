@@ -16,12 +16,12 @@ const ELEMENTS = [
 
 export function PromptMap() {
   return (
-    <section className="lesson-section">
+    <section id="prompt-map" className="lesson-section">
       <h2 className="text-xl">一张图，记住怎么问</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         简单任务先说“目标＋格式”，复杂任务再补其他项。
       </p>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="prompt-elements mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {ELEMENTS.map(({ icon: Icon, ...item }, i) => (
           <div key={item.label} className="prompt-element">
             <div className="flex items-center justify-between">

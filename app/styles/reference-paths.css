@@ -1,0 +1,200 @@
+.path-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+.path-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  border-radius: 22px;
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+.path-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px -20px hsl(var(--primary) / 0.3);
+}
+.path-card-art {
+  height: 190px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: radial-gradient(ellipse at center, hsl(var(--accent)), transparent 75%);
+  color: hsl(var(--primary));
+}
+.path-art-sheet {
+  display: grid;
+  padding: 18px;
+  gap: 8px;
+  border-radius: 16px;
+  background: hsl(var(--card));
+  transform: rotate(10deg);
+  box-shadow: 0 8px 20px hsl(var(--primary) / 0.1);
+}
+.path-art-sheet i {
+  width: 50px;
+  height: 5px;
+  border-radius: 8px;
+  background: hsl(var(--accent));
+}
+.path-card-body {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.path-card h2 {
+  font-size: 23px;
+  line-height: 1.45;
+  font-weight: 650;
+}
+.path-card-summary {
+  font-size: 16px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.path-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 16px;
+  margin-top: auto;
+}
+.path-card-meta span {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.path-card-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 16px;
+}
+.path-card-compact .path-card-art {
+  height: 115px;
+}
+.path-card-compact .path-card-art > svg {
+  width: 55px;
+}
+.path-card-compact .path-card-body {
+  padding: 18px;
+}
+.path-card-compact h2 {
+  font-size: 19px;
+}
+.path-card-compact .path-card-summary {
+  -webkit-line-clamp: 2;
+  font-size: 14px;
+}
+.path-card-compact .path-card-action {
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+  padding: 9px;
+}
+.path-progress-summary {
+  background: hsl(var(--accent) / 0.4);
+  border-radius: 20px;
+  padding: 22px;
+}
+.path-phase {
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  background: hsl(var(--card));
+  padding: 20px;
+}
+.path-phase > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.path-phase > summary::-webkit-details-marker {
+  display: none;
+}
+.path-phase-number {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+  font-size: 24px;
+}
+.path-phase > summary svg {
+  margin-left: auto;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.path-phase[open] > summary svg {
+  transform: rotate(180deg);
+}
+.path-phase-items {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  grid-template-columns: 1fr;
+}
+.path-phase-items li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  background: hsl(var(--background));
+}
+@media (min-width: 640px) {
+  .path-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .path-phase-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .path-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .path-phase-items {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 639px) {
+  .path-phase {
+    padding: 16px;
+  }
+  .path-phase h2 {
+    font-size: 17px;
+  }
+  .path-phase-number {
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .path-card:hover {
+    transform: none;
+  }
+}

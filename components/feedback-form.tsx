@@ -210,9 +210,9 @@ export function FeedbackForm() {
           disabled={busy}
           maxLength={1980}
           required
-          rows={6}
+          rows={4}
           aria-describedby="feedback-tip"
-          placeholder="在哪一步遇到了问题？你希望怎样改进？也欢迎分享学到了什么、哪些地方让你觉得好用。"
+          placeholder="请说明遇到的问题、建议或使用感受…"
           className="min-h-44 text-base leading-7"
         />
         <span

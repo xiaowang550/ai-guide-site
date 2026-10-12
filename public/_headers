@@ -54,7 +54,9 @@
 # logo 与图标：一个月
 /logos/*
   Cache-Control: public, max-age=2592000
-/icon.svg
+/brand/*
+  Cache-Control: public, max-age=2592000
+/icon.png
   Cache-Control: public, max-age=2592000
 /manifest.webmanifest
   Cache-Control: public, max-age=3600

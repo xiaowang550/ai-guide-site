@@ -6,14 +6,10 @@ import { CATEGORY_LABELS } from '@/lib/site'
 import { capabilityShort, rankedCapabilities } from '@/lib/score'
 import { cn } from '@/lib/utils'
 import { ToolLogo } from '@/components/tool-logo'
-import { ScoreBadge, ScoreDot, ScoreValue } from '@/components/score-badge'
+import { ScoreBadge, ScoreValue } from '@/components/score-badge'
 import { UpdatedBadge } from '@/components/updated-badge'
 
-/**
- * 工具媒体卡：大圆角 + 封面预览区 + hover 微放大。
- * 借鉴 motionsites 画廊的卡片观感：先给一个"封面"，再给标题与元信息，
- * 而不是把信息平铺在一块描边盒子里。
- */
+/** 紧凑工具卡：用途、关键能力与使用条件直接可见，评分依据放在详情。 */
 export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: number }) {
   // 列表投影里只有分数，没有 basis 文本；这里还原成既有纯函数可用的形状
   const top = rankedCapabilities(scoresToCapabilityMap(tool.scores), 4).slice(0, 3)
@@ -21,65 +17,49 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
 
   return (
     <article
-      className="media-card spotlight reveal group"
+      className="media-card compact-tool-card reveal group"
       style={{ ['--d' as string]: `${Math.min(index, 8) * 45}ms` }}
     >
-      {/* 封面：logo 放大做视觉锚点，角上放分类小标签 */}
-      <div className="media-cover h-36 pt-8">
-        <ToolLogo
-          src={tool.logo}
-          alt={`${tool.name} 标志`}
-          size={52}
-          variant="cover"
-          rounded="rounded-none"
-          className="opacity-90"
-        />
-        <span className="absolute left-5 right-14 top-4 line-clamp-2 text-xs font-medium text-muted-foreground">
-          {tool.categories.map((c) => CATEGORY_LABELS[c]).join(' · ')}
-        </span>
-        {isFree ? (
-          <span className="absolute right-3 top-3 text-xs font-medium text-score-3">免费</span>
-        ) : null}
-      </div>
-
-      {/* 标题区 */}
-      <div className="flex flex-1 flex-col p-6">
-        <h3 className="flex items-baseline justify-between gap-3">
-          <Link
-            href={`/tools/${tool.id}`}
-            className="text-base font-semibold leading-snug hover:text-primary"
-          >
-            {tool.name}
-            <span className="absolute inset-0" aria-hidden />
-          </Link>
-          <ScoreBadge score={tool.overallScore} showMax label={tool.name} />
-        </h3>
-        <p className="mt-1 text-xs text-muted-foreground">{tool.vendor}</p>
-        <p className="mt-2 line-clamp-2 flex-1 text-sm leading-6 text-foreground/80">
-          {tool.tagline}
-        </p>
-
-        {/* 最强维度：小色点 + 分数，不用药丸 */}
-        <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          {top.map((c) => (
-            <li key={c.key} className="inline-flex items-center gap-1">
-              <ScoreDot score={c.score} />
-              {capabilityShort(c.key)} {c.score}
-            </li>
-          ))}
-        </ul>
-
-        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-hairline pt-4 text-xs text-muted-foreground">
-          <UpdatedBadge date={tool.updatedAt} prefix="更新于" showStale={false} />
-          <span className="inline-flex items-center gap-1 text-foreground/70 transition-colors group-hover:text-primary">
-            {tool.chinaAccessible ? '大陆可直连' : '大陆需借助网络工具'}
-            <ArrowRight
-              className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
-              aria-hidden
-            />
-          </span>
+      <div className="compact-tool-title">
+        <ToolLogo src={tool.logo} alt={`${tool.name} 标志`} size={48} />
+        <div>
+          <h3 className="flex items-baseline justify-between gap-3">
+            <Link
+              href={`/tools/${tool.id}`}
+              className="text-base font-semibold leading-snug hover:text-primary"
+            >
+              {tool.name}
+              <span className="absolute inset-0" aria-hidden />
+            </Link>
+            <ScoreBadge score={tool.overallScore} showMax label={tool.name} />
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">{tool.vendor}</p>
         </div>
       </div>
+      <p className="mt-2 line-clamp-2 flex-1 text-sm leading-6 text-foreground/80">
+        {tool.tagline}
+      </p>
+
+      <ul className="tool-strengths" aria-label="较强的能力，满分 5 分">
+        {top.map((c) => (
+          <li key={c.key}>
+            <strong>{c.score} / 5</strong>
+            {capabilityShort(c.key)}
+          </li>
+        ))}
+      </ul>
+
+      <footer>
+        <UpdatedBadge date={tool.updatedAt} prefix="更新于" showStale={false} />
+        <span className="inline-flex items-center gap-1 text-foreground/70 transition-colors group-hover:text-primary">
+          {tool.chinaAccessible ? '大陆可直连' : '大陆需借助网络工具'}
+          <ArrowRight
+            className="h-3 w-3 transition-transform group-hover:translate-x-0.5"
+            aria-hidden
+          />
+        </span>
+        {isFree && <span className="text-primary">免费 / 开源</span>}
+      </footer>
     </article>
   )
 }

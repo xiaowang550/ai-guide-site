@@ -1,7 +1,10 @@
-﻿import type { Metadata } from 'next'
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-cases.css'
+import type { Metadata } from 'next'
 import { cases, toolsById } from '@/data'
 import { PageHeader } from '@/components/page-header'
 import { CaseExplorer } from '@/components/case-explorer'
+import { DocumentScene } from '@/components/document-scene'
 
 export const metadata: Metadata = {
   title: '案例库',
@@ -17,6 +20,8 @@ export default function CasesPage() {
   return (
     <>
       <PageHeader
+        illustrated
+        art={<DocumentScene />}
         title="案例库：别人到底怎么用的"
         description="选一个任务，看看资料准备、提示词和核对方法。"
         breadcrumbs={[{ label: '首页', href: '/' }, { label: '案例' }]}

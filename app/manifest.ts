@@ -8,22 +8,22 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: `${siteConfig.name} —— ${siteConfig.description.slice(0, 20)}…`,
     short_name: siteConfig.shortName,
-    description:
-      siteConfig.description,
+    description: siteConfig.description,
     start_url: '/',
     scope: '/',
     display: 'standalone',
     background_color: '#fdfdfc',
-    theme_color: '#3b3ba8',
+    theme_color: '#3e6b59',
     lang: 'zh-CN',
     categories: ['education', 'productivity', 'reference'],
     icons: [
       {
-        src: '/icon.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
+        src: '/brand/app-icon-192-v3.png',
+        sizes: '192x192',
+        type: 'image/png',
         purpose: 'any',
       },
+      { src: '/brand/app-icon-512-v3.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
     ],
     shortcuts: [
       { name: '场景决策器', url: '/find' },

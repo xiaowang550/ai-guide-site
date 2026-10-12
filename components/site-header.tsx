@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bookmark, Compass, Menu, X } from 'lucide-react'
+import { Bookmark, Menu, X } from 'lucide-react'
+import { BrandMark } from './brand-mark'
 import { secondaryNav, siteConfig } from '@/lib/site'
 import { siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
@@ -53,12 +54,14 @@ export function SiteHeader() {
           className="flex shrink-0 items-center gap-2 font-semibold"
           aria-label={`${siteConfig.name} 首页`}
         >
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Compass className="h-[18px] w-[18px]" aria-hidden />
+          <span className="xl:hidden">
+            <BrandMark />
+          </span>
+          <span className="hidden xl:inline-flex">
+            <BrandMark wordmark />
           </span>
           {/* 窄屏用 sr-only 而不是 hidden：hidden 会让链接在移动端失去可访问名称 */}
-          <span className="hidden text-base xl:inline">{siteConfig.name}</span>
-          <span className="sr-only xl:hidden">{siteConfig.name}</span>
+          <span className="sr-only">{siteConfig.name}</span>
         </Link>
 
         <Link

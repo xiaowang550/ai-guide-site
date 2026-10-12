@@ -1,9 +1,12 @@
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-home.css'
+import '@/app/styles/reference-tools.css'
 import { moduleForPath } from '@/lib/site-modules'
 import { ModuleSection } from '@/components/module-visibility'
 import { HomeLayout } from '@/components/home-layout'
-import { NewsBoard } from '@/components/news/news-board'
+import { NewsPreview } from '@/components/news/news-preview'
 import { seedNewsItems } from '@/lib/news/seed-view'
-import '@/app/styles/news.css'
+import '@/app/styles/news-preview.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
@@ -11,17 +14,17 @@ import {
   ArrowUpRight,
   BookOpen,
   Check,
-  Compass,
   Feather,
   Layers,
+  Lightbulb,
   Sparkles,
-  Workflow,
 } from 'lucide-react'
 import { cases, concepts, guides, paths, tools } from '@/data'
 import { formatDate, latestUpdatedAt } from '@/lib/score'
 import { ToolCard } from '@/components/tool-card'
 import { toListItems } from '@/lib/tool-list-item'
 import { Section } from '@/components/page-header'
+import { ReferenceArt } from '@/components/reference-art'
 
 export const metadata: Metadata = {
   description: '用清晰的能力地图、实用教程和场景决策器，找到适合你的 AI 工具。',
@@ -30,27 +33,27 @@ export const metadata: Metadata = {
 
 const startingPoints = [
   {
-    icon: Compass,
-    title: '找到合适的工具',
-    description: '按任务推荐，快速找到合适的工具。',
-    href: '/find',
-    label: '帮我选工具',
+    icon: BookOpen,
+    title: '系统教程',
+    description: '从入门到进阶，带你掌握核心用法与最佳实践。',
+    href: '/guides',
+    label: '开始学习',
     tone: 'sage',
   },
   {
-    icon: BookOpen,
-    title: '把方法学会',
-    description: '跟着步骤，学会提问和核对。',
-    href: '/learn',
-    label: '开始学习',
+    icon: Lightbulb,
+    title: '精选案例',
+    description: '真实场景应用，看看别人如何用 AI 提升效率。',
+    href: '/cases',
+    label: '浏览案例',
     tone: 'sand',
   },
   {
-    icon: Workflow,
-    title: '看看别人怎么做',
-    description: '参考案例，做出自己的成品。',
-    href: '/cases',
-    label: '浏览案例',
+    icon: Layers,
+    title: '实用工具库',
+    description: '收录优质 AI 工具，快速找到适合你的生产力助手。',
+    href: '/tools',
+    label: '探索工具',
     tone: 'lavender',
   },
 ]
@@ -61,8 +64,8 @@ const tasks = [
 ]
 
 export default function HomePage() {
-  const featured = tools.filter((t) => t.featured).slice(0, 6)
-  const featuredItems = toListItems(featured.length ? featured : tools.slice(0, 6))
+  const featured = tools.filter((t) => t.featured).slice(0, 3)
+  const featuredItems = toListItems(featured.length ? featured : tools.slice(0, 3))
   const updated = latestUpdatedAt(tools)
   const counts = [
     { value: tools.length, label: '个工具，清楚比较' },
@@ -78,13 +81,13 @@ export default function HomePage() {
           id: 'hero',
           content: (
             <section className="home-hero">
-              <div className="container grid items-center gap-12 py-12 lg:grid-cols-[1.12fr_1fr] lg:gap-16 lg:py-20">
-                <div>
+              <div className="home-cover-grid container">
+                <div className="home-cover-copy">
                   <p className="hero-eyebrow">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    <span className="hero-eyebrow-line" />
                     给好奇心，一个清晰的方向
                   </p>
-                  <h1 className="mt-6 text-[2.65rem] font-semibold leading-[1.28] tracking-[-0.045em] sm:text-[3.5rem] xl:text-[3.8rem]">
+                  <h1 className="home-cover-title">
                     让 AI 成为
                     <br />
                     <span className="text-primary">你顺手的工具。</span>
@@ -115,6 +118,7 @@ export default function HomePage() {
                     ))}
                   </div>
                 </div>
+                <ReferenceArt home />
                 <ModuleSection id="finder">
                   <div className="hero-workbench">
                     <div className="mb-7 flex items-center justify-between">
@@ -178,9 +182,9 @@ export default function HomePage() {
           id: 'start',
           content: (
             <Section
-              title="从这里，找到你的起点"
-              description="选你现在最需要的一件事。"
-              eyebrow="开始探索"
+              title="从这里，开启你的 AI 能力成长"
+              description="精选资源与实用工具，帮你把 AI 用到真实的学习和工作场景中。"
+              className="home-growth"
             >
               <div className="grid gap-4 md:grid-cols-3">
                 {startingPoints.map(({ icon: Icon, ...item }) => (
@@ -193,9 +197,8 @@ export default function HomePage() {
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">
                         {item.description}
                       </p>
-                      <span className="mt-7 inline-flex items-center gap-2 text-xs font-semibold">
-                        {item.label}
-                        <ArrowRight className="h-3.5 w-3.5" />
+                      <span className="entry-card-arrow" aria-hidden="true">
+                        <ArrowRight className="h-4 w-4" />
                       </span>
                     </Link>
                   </ModuleSection>
@@ -283,7 +286,7 @@ export default function HomePage() {
                   </Link>
                 }
               >
-                <NewsBoard initial={seedNewsItems().slice(0, 4)} compact />
+                <NewsPreview initial={seedNewsItems().slice(0, 4)} />
               </Section>
             </ModuleSection>
           ),

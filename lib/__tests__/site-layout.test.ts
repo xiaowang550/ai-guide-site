@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_LAYOUT, homeCandidates, orderedIds } from '@/lib/site-layout'
+import { DEFAULT_LAYOUT, homeCandidates, orderedIds, layoutOf } from '@/lib/site-layout'
 import { DEFAULT_SITE_CONFIG } from '@/lib/site-modules'
 import { siteNavigation } from '@/lib/site-navigation'
 import { login, makeTestEnv, request } from './helpers/admin-test-env'
 
 describe('DIY 导航与首页布局', () => {
+  it('新版封面把学习入口放在数量概览之前，仅迁移未编辑的旧默认顺序', () => {
+    const old = { ...DEFAULT_LAYOUT, home: ['hero', 'metrics', 'start', 'tools', 'guides', 'news'] }
+    expect(layoutOf({ ...DEFAULT_SITE_CONFIG, layout: old }).home).toEqual(DEFAULT_LAYOUT.home)
+    const edited = { ...old, version: 2 }
+    expect(layoutOf({ ...DEFAULT_SITE_CONFIG, layout: edited })).toBe(edited)
+    const custom = { ...old, home: ['news', 'hero', 'start'] }
+    expect(layoutOf({ ...DEFAULT_SITE_CONFIG, layout: custom })).toBe(custom)
+    expect(old.home[1]).toBe('metrics')
+  })
   it('默认导航符合站主指定顺序，首页可移动，学校专区不进入大众端', () => {
     expect(siteNavigation(DEFAULT_SITE_CONFIG).map((item) => item.label)).toEqual([
       '首页',

@@ -8,7 +8,7 @@ export interface SiteLayout {
 }
 export const DEFAULT_LAYOUT: SiteLayout = {
   navigation: ['home', 'guides', 'cases', 'tools', 'knowledge', 'news'],
-  home: ['hero', 'metrics', 'start', 'tools', 'guides', 'news'],
+  home: ['hero', 'start', 'metrics', 'tools', 'guides', 'news'],
   hiddenNavigation: ['school', 'advanced', 'beginner', 'saved', 'finder'],
   hiddenHome: [],
   version: 1,
@@ -255,5 +255,9 @@ export function orderedIds(order: string[], candidates: { id: string }[]) {
   ]
 }
 export function layoutOf(config: PublicSiteConfig): SiteLayout {
-  return config.layout ?? DEFAULT_LAYOUT
+  const layout = config.layout ?? DEFAULT_LAYOUT
+  // 仅升级从未编辑过的旧默认布局；管理员 DIY 顺序始终优先。
+  if (layout.version === 1 && layout.home.join(',') === 'hero,metrics,start,tools,guides,news')
+    return { ...layout, home: [...DEFAULT_LAYOUT.home] }
+  return layout
 }

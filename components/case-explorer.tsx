@@ -1,9 +1,17 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Search, X, ArrowUpRight } from 'lucide-react'
+import {
+  Search,
+  X,
+  ArrowUpRight,
+  FileText,
+  Wrench,
+  Users,
+  GraduationCap,
+  BarChart3,
+} from 'lucide-react'
 import { CASE_TOPICS, filterCases, type CasePreview, type CaseTopic } from '@/lib/case-filters'
-import { CoverArt } from './cover-art'
 import { SaveButton } from './learning/save-button'
 
 export function CaseExplorer({ items }: { items: CasePreview[] }) {
@@ -111,29 +119,38 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
       </section>
       {filtered.length ? (
         <div className="grid gap-x-7 gap-y-9 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
-          {filtered.map((item, i) => (
-            <article key={item.id} className="media-card flex flex-col overflow-hidden">
-              <Link href={`/cases/${item.id}`} aria-label={`查看${item.title}`}>
-                <CoverArt
-                  id={item.id}
-                  eyebrow={`${item.industry} · ${item.role}`}
-                  index={i + 1}
-                  tools={item.tools}
-                  height="md"
-                />
-              </Link>
-              <div className="flex flex-1 flex-col p-6 lg:p-7">
+          {filtered.map((item) => (
+            <article key={item.id} className="media-card case-card flex flex-col overflow-hidden">
+              <div className="flex flex-1 flex-col">
                 <p className="mb-2 text-xs text-muted-foreground">
                   {item.illustrative ? '演示案例 · 虚构材料练习' : '典型场景 · 编辑整理'}
                 </p>
-                <h2 className="text-base font-semibold leading-8">
-                  <Link className="hover:text-primary" href={`/cases/${item.id}`}>
-                    {item.title}
-                  </Link>
-                </h2>
-                <p className="mt-4 line-clamp-3 text-sm leading-7 text-muted-foreground">
-                  {item.summary}
-                </p>
+                <div className="case-card-head">
+                  <span className="case-card-icon">
+                    {(() => {
+                      const Icon = /报修|后勤/.test(item.title)
+                        ? Wrench
+                        : /会议|协调|行动清单/.test(item.title)
+                          ? Users
+                          : /数据|表格|统计|分析/.test(item.title)
+                            ? BarChart3
+                            : /教师|课程|作业|课堂/.test(item.title)
+                              ? GraduationCap
+                              : FileText
+                      return <Icon size={28} />
+                    })()}
+                  </span>
+                  <h2>
+                    <Link className="hover:text-primary" href={`/cases/${item.id}`}>
+                      {item.title}
+                    </Link>
+                  </h2>
+                </div>
+                <div className="case-card-tags">
+                  <span>{item.industry}</span>
+                  <span>{item.role}</span>
+                </div>
+                <p className="case-summary line-clamp-3 text-muted-foreground">{item.summary}</p>
                 <div className="mt-auto pt-6">
                   <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-5">
                     <Link

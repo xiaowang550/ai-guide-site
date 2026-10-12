@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, Circle, ExternalLink, RotateCcw } from 'lucide-react'
+import { CheckCircle2, Circle, ExternalLink, RotateCcw, ChevronDown } from 'lucide-react'
 import type { LearningPath, PathItem } from '@/data/types'
 import { cn } from '@/lib/utils'
 
@@ -46,7 +46,12 @@ export function PathProgress({ path }: { path: LearningPath }) {
 
   const phaseStats = path.phases.map((phase) => {
     const c = phase.items.filter((item) => done[item.href]).length
-    return { phase, done: c, total: phase.items.length, percent: phase.items.length ? Math.round((c / phase.items.length) * 100) : 0 }
+    return {
+      phase,
+      done: c,
+      total: phase.items.length,
+      percent: phase.items.length ? Math.round((c / phase.items.length) * 100) : 0,
+    }
   })
 
   function toggle(href: string) {
@@ -60,7 +65,7 @@ export function PathProgress({ path }: { path: LearningPath }) {
   return (
     <div>
       {/* 总进度 */}
-      <div className="sticky top-14 z-30 mb-8 border-t border-hairline pt-4 sm:static">
+      <div className="path-progress-summary mb-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm font-medium">
             进度 {completed} / {allItems.length} 项
@@ -96,34 +101,36 @@ export function PathProgress({ path }: { path: LearningPath }) {
       </div>
 
       {/* 阶段 */}
-      <div className="space-y-8">
-        {phaseStats.map(({ phase, done: d, total, percent: p }) => (
-          <section key={phase.title}>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg">{phase.title}</h2>
-              <span className="text-xs text-muted-foreground">
+      <div className="space-y-4">
+        {phaseStats.map(({ phase, done: d, total, percent: p }, index) => (
+          <details className="path-phase" key={phase.title} open={index === 0}>
+            <summary>
+              <span className="path-phase-number">{index + 1}</span>
+              <h2 className="min-w-0 flex-1 text-lg font-semibold">{phase.title}</h2>
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {d}/{total} 已完成
               </span>
-            </div>
+              <ChevronDown size={20} aria-hidden />
+            </summary>
             <p className="mt-1.5 rounded-lg bg-accent/40 px-3 py-2 text-sm leading-6 text-foreground/85">
               学完你能做什么：{phase.outcome}
             </p>
-            <ul className="mt-3 space-y-2">
+            <ul className="path-phase-items">
               {phase.items.map((item) => {
                 const checked = Boolean(done[item.href])
                 return (
                   <li
                     key={item.href}
                     className={cn(
-                      'flex items-center gap-3 border-t border-hairline py-3 transition-colors',
-                      checked ? 'border-primary/40 bg-accent/20' : 'bg-card'
+                      'transition-colors',
+                      checked ? 'border-primary/40 bg-accent/20' : 'bg-card',
                     )}
                   >
                     <button
                       type="button"
                       onClick={() => toggle(item.href)}
                       aria-pressed={checked}
-                      className="shrink-0 rounded text-primary"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded text-primary"
                       aria-label={checked ? `取消勾选 ${item.label}` : `标记完成：${item.label}`}
                     >
                       {checked ? (
@@ -136,18 +143,16 @@ export function PathProgress({ path }: { path: LearningPath }) {
                       <span
                         className={cn(
                           'block text-sm font-medium',
-                          checked && 'text-muted-foreground line-through'
+                          checked && 'text-muted-foreground line-through',
                         )}
                       >
                         {item.label}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {TYPE_LABEL[item.type]}
-                      </span>
+                      <span className="text-xs text-muted-foreground">{TYPE_LABEL[item.type]}</span>
                     </span>
                     <Link
                       href={item.href}
-                      className="shrink-0 text-xs font-medium text-primary hover:underline"
+                      className="inline-flex min-h-11 shrink-0 items-center text-xs font-medium text-primary hover:underline"
                     >
                       去学习
                       <ExternalLink className="ml-1 inline h-3 w-3" aria-hidden />
@@ -162,7 +167,7 @@ export function PathProgress({ path }: { path: LearningPath }) {
                 style={{ width: `${p}%` }}
               />
             </div>
-          </section>
+          </details>
         ))}
       </div>
     </div>

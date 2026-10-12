@@ -1,3 +1,5 @@
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-concept.css'
 import { SaveButton } from '@/components/learning/save-button'
 import { ConceptMap } from '@/components/learning/concept-map'
 import { conceptMaps } from '@/data/concept-maps'
@@ -61,6 +63,7 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PageHeader
+        illustrated
         breadcrumbs={[
           { label: '首页', href: '/' },
           { label: '知识库', href: '/learn' },
@@ -94,7 +97,11 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
           <article className="min-w-0">
             {/* 1 是什么 */}
-            <Block icon={<Lightbulb className="h-4 w-4" aria-hidden />} title="它是什么">
+            <Block
+              icon={<Lightbulb className="h-4 w-4" aria-hidden />}
+              title="它是什么"
+              id="concept-definition"
+            >
               <p className="text-base leading-8 text-foreground">{concept.definition}</p>
             </Block>
 
@@ -107,7 +114,7 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
             )}
             {concept.id === 'context-window' && <ContextVisual />}
             {concept.id === 'prompt' && <PromptMap />}
-            <details className="lesson-details mb-7">
+            <details id="concept-why" className="lesson-details mb-7">
               <summary>为什么重要？再打个比方</summary>
               {conceptMaps[concept.id] && (
                 <p className="mt-4 text-sm leading-7">{concept.example}</p>
@@ -125,7 +132,11 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
             </details>
 
             {/* 5 常见误解 */}
-            <Block icon={<TriangleAlert className="h-4 w-4" aria-hidden />} title="常见误解">
+            <Block
+              icon={<TriangleAlert className="h-4 w-4" aria-hidden />}
+              title="常见误解"
+              id="concept-mistakes"
+            >
               <ul className="space-y-3">
                 {concept.misconceptions.map((m) => (
                   <li key={m} className="border-l-2 border-amber-500/50 bg-amber-500/5 p-3.5">
@@ -136,7 +147,11 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
             </Block>
 
             {/* 6 延伸阅读 */}
-            <Block icon={<Link2 className="h-4 w-4" aria-hidden />} title="延伸阅读（相关概念）">
+            <Block
+              icon={<Link2 className="h-4 w-4" aria-hidden />}
+              title="延伸阅读（相关概念）"
+              id="concept-related"
+            >
               {related.length > 0 ? (
                 <ul className="grid gap-2 sm:grid-cols-2">
                   {related.map((r) => (
@@ -199,7 +214,15 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
           </article>
 
           {/* 侧栏 */}
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start print:hidden">
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start print:hidden">
+            <nav className="concept-toc" aria-label="本文目录">
+              <h2 className="font-semibold">本文目录</h2>
+              <a href="#concept-definition">它是什么</a>
+              {concept.id === 'prompt' && <a href="#prompt-map">一张图，记住怎么问</a>}
+              <a href="#concept-why">为什么重要与生活比喻</a>
+              <a href="#concept-mistakes">常见误解</a>
+              <a href="#concept-related">相关概念</a>
+            </nav>
             {terms.length > 0 ? (
               <div className="border-b border-hairline pb-5">
                 <h2 className="text-sm font-semibold">本页相关术语</h2>
@@ -253,13 +276,15 @@ function Block({
   title,
   children,
   icon,
+  id,
 }: {
   title: string
   children: React.ReactNode
   icon?: React.ReactNode
+  id?: string
 }) {
   return (
-    <section className="mt-8 first:mt-0">
+    <section id={id} className="concept-block">
       <h2 className="mb-3 flex items-center gap-2 text-lg">
         {icon}
         {title}

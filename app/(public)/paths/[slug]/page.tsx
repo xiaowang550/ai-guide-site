@@ -1,3 +1,5 @@
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-paths.css'
 import { SaveButton } from '@/components/learning/save-button'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -38,6 +40,7 @@ export default async function PathDetailPage({ params }: { params: Promise<{ slu
   return (
     <>
       <PageHeader
+        illustrated
         breadcrumbs={[
           { label: '首页', href: '/' },
           { label: '学习路径', href: '/paths' },

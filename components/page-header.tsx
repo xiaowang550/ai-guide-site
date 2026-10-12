@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ReferenceArt } from './reference-art'
 
 export interface Crumb {
   label: string
@@ -35,6 +36,9 @@ export function PageHeader({
   meta,
   actions,
   className,
+  illustrated = false,
+  aside,
+  art,
 }: {
   title: string
   description?: string
@@ -42,12 +46,29 @@ export function PageHeader({
   meta?: React.ReactNode
   actions?: React.ReactNode
   className?: string
+  illustrated?: boolean
+  aside?: React.ReactNode
+  art?: React.ReactNode
 }) {
   return (
-    <div className={cn('page-heading border-b border-border/60', className)}>
+    <div
+      className={cn(
+        'page-heading border-b border-border/60',
+        illustrated && 'reference-heading',
+        className,
+      )}
+    >
       <div className="container py-10 sm:py-14">
-        {breadcrumbs?.length ? <Breadcrumbs items={breadcrumbs} className="mb-4" /> : null}
-        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        {breadcrumbs?.length && (!illustrated || breadcrumbs.length > 2) ? (
+          <Breadcrumbs items={breadcrumbs} className="mb-4" />
+        ) : null}
+        <div
+          className={
+            illustrated
+              ? ['reference-heading-grid', aside && 'has-aside'].filter(Boolean).join(' ')
+              : 'flex flex-col gap-5 md:flex-row md:items-end md:justify-between'
+          }
+        >
           <div className="min-w-0 flex-1">
             <h1 className="title-serif text-[1.875rem] sm:text-[2.5rem]">{title}</h1>
             {description ? (
@@ -59,6 +80,8 @@ export function PageHeader({
               <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">{meta}</div>
             ) : null}
           </div>
+          {illustrated && (art ?? <ReferenceArt />)}
+          {aside && <aside className="reference-panel hero-aside">{aside}</aside>}
           {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
         </div>
       </div>
@@ -95,7 +118,7 @@ export function Section({
               <Heading
                 className={cn(
                   'title-serif',
-                  headingLevel === 'h2' ? 'mt-2 text-2xl' : 'mt-1 text-lg'
+                  headingLevel === 'h2' ? 'mt-2 text-2xl' : 'mt-1 text-lg',
                 )}
               >
                 {title}

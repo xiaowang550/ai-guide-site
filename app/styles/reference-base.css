@@ -1,0 +1,95 @@
+.public-site .assistant-pet-button {
+  border-radius: 50%;
+  border: 4px solid hsl(var(--card));
+  background: radial-gradient(circle, hsl(var(--card)), hsl(var(--accent)));
+  box-shadow: 0 5px 20px hsl(var(--primary) / 0.18);
+}
+.public-site .assistant-pet-shadow {
+  width: 11px;
+  height: 11px;
+  right: 3px;
+  left: auto;
+  bottom: 4px;
+  background: #4c9a70;
+  filter: none;
+  border: 2px solid hsl(var(--card));
+}
+.public-site .assistant-pet-float {
+  padding: 3px;
+}
+.public-site {
+  --background: 145 35% 98%;
+  --card: 0 0% 100%;
+  --foreground: 165 21% 12%;
+  --border: 151 14% 89%;
+  --hairline: 151 15% 92%;
+  --muted: 148 23% 95%;
+  --muted-foreground: 160 10% 41%;
+  --accent: 148 35% 92%;
+  background:
+    radial-gradient(ellipse at 90% 5%, hsl(var(--accent) / 0.65), transparent 35%),
+    hsl(var(--background));
+}
+.dark .public-site {
+  --background: 158 12% 11%;
+  --card: 158 11% 14%;
+  --foreground: 40 19% 92%;
+  --border: 158 8% 25%;
+  --hairline: 158 8% 22%;
+  --muted: 158 9% 18%;
+  --muted-foreground: 145 9% 66%;
+  --accent: 153 15% 22%;
+}
+.public-site .container {
+  max-width: 1680px;
+  padding-inline: clamp(1rem, 3.6vw, 4rem);
+}
+.public-site .site-header {
+  background: hsl(var(--card) / 0.98);
+}
+.public-site .site-header > .container {
+  height: 76px;
+}
+.brand-symbol {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.brand-wordmark {
+  display: block;
+  position: relative;
+  width: 200px;
+  height: 56px;
+  overflow: hidden;
+}
+.brand-wordmark img {
+  position: absolute;
+  width: 278px;
+  max-width: none;
+  height: auto;
+  left: -42px;
+  top: -13px;
+  mix-blend-mode: multiply;
+}
+.dark .brand-wordmark {
+  background: #fff;
+  border-radius: 12px;
+}
+.public-site .site-header a[aria-current='page'] {
+  border-radius: 999px;
+}
+@media (max-width: 639px) {
+  .public-site .site-header > .container {
+    height: 66px;
+    gap: 8px;
+  }
+  .brand-symbol {
+    width: 42px;
+    height: 42px;
+  }
+}
+@media print {
+  .public-site {
+    background: white;
+  }
+}

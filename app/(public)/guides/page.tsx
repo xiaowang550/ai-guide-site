@@ -1,82 +1,123 @@
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-guides.css'
+import '@/app/styles/reference-paths.css'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { guides, tools } from '@/data'
+import { BookOpen, BriefcaseBusiness, Feather, GraduationCap, Workflow } from 'lucide-react'
+import { guides, paths, tools } from '@/data'
 import { GuideExplorer } from '@/components/guide-explorer'
 import { PageHeader } from '@/components/page-header'
+import { LearningEntries } from '@/components/reference-art'
+import { PathCard } from '@/components/path-card'
 import { latestUpdatedAt } from '@/lib/score'
 import { UpdatedBadge } from '@/components/updated-badge'
 import { lessonSummaries } from '@/data/lesson-summaries'
 import { QuickPractice } from '@/components/learning/quick-practice'
-import { WorkflowVisual } from '@/components/learning/workflow-visual'
 import { ModuleSection } from '@/components/module-visibility'
-
 export const metadata: Metadata = {
   title: '教程：AI 怎么用',
-  description:
-    '两类教程分开写：通用方法课讲怎么把话说清楚，场景实操课照着做完就能交活。含可复制提示词、预期输出与出错处理。',
+  description: '从零基础到进阶，选一个任务，跟着步骤做出结果。',
   alternates: { canonical: '/guides' },
 }
-
 export default function GuidesPage() {
   return (
     <>
       <PageHeader
-        title="教程：AI 怎么用"
-        description="选一个任务，跟着步骤做出结果。"
-        breadcrumbs={[{ label: '首页', href: '/' }, { label: '教程' }]}
+        illustrated
+        title="教程：从不会用，到会用、会判断、会产出"
+        description="系统、实用、可操作。从基础认知到高阶应用，把 AI 用到学习和工作里。"
         meta={<UpdatedBadge date={latestUpdatedAt(tools)} prefix="内容更新于" />}
+        aside={
+          <>
+            <h2>推荐学习入口</h2>
+            <LearningEntries />
+          </>
+        }
       />
       <div className="container py-8">
-        <div className="mb-8 grid gap-4 md:grid-cols-2">
-          <ModuleSection id="beginner">
-            <Link href="/start/" className="rounded-2xl border bg-accent/60 p-6">
-              <p className="eyebrow">从零开始 · 进度自动保留</p>
-              <h2 className="mt-3 text-xl">零基础一对一</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                对话 → 作图 → 看图 → 语音，小芽带你逐步练习。
-              </p>
-              <span className="mt-4 inline-block text-sm text-primary">开始或继续学习 →</span>
+        <div className="topic-entries">
+          {[
+            {
+              href: '/start/',
+              title: '零基础入门',
+              text: '对话、作图、看图、语音，手把手练习',
+              icon: GraduationCap,
+            },
+            {
+              href: '/guides/prompt-basics',
+              title: '提示词方法',
+              text: '说清要求，获得更好的结果',
+              icon: Feather,
+            },
+            {
+              href: '/guides/long-pdf-summary',
+              title: '长文理解',
+              text: '读懂、整理和核对长文档',
+              icon: BookOpen,
+            },
+            {
+              href: '/paths/workplace-30d',
+              title: '办公提效',
+              text: '写作、表格、汇报与沟通',
+              icon: BriefcaseBusiness,
+            },
+            {
+              href: '/learn/advanced',
+              title: 'Agent 进阶',
+              text: '选模型、搭流程、检查结果',
+              icon: Workflow,
+            },
+          ].map(({ href, title, text, icon: Icon }) => (
+            <Link key={href} href={href}>
+              <Icon size={28} />
+              <span>
+                <strong>{title}</strong>
+                <small>{text}</small>
+              </span>
             </Link>
-          </ModuleSection>
-          <Link href="/learn/access/" className="rounded-2xl border bg-card p-6">
-            <p className="eyebrow">使用前先排除障碍</p>
-            <h2 className="mt-3 text-xl">海外工具打不开？</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              排查地区、账号和网络限制，找到可用的替代工具。
-            </p>
-            <span className="mt-4 inline-block text-sm text-primary">查看使用帮助 →</span>
-          </Link>
+          ))}
         </div>
-        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 重播需要完整初始化首次体验，不能复用已经关闭的路由状态。 */}
-        <a href="/?tour=1" className="mb-8 inline-flex min-h-11 items-center text-sm text-primary">
-          重新体验新手动手指引 →
-        </a>
-        <div className="learning-start">
-          <div>
-            <p className="eyebrow">不用先读完所有教程</p>
-            <h2 className="mt-3 text-2xl">先完成一个小任务。</h2>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              准备材料 → 说清要求 → 核对结果。
-            </p>
-            <a href="#quick-practice" className="home-button mt-5">
-              开始一个练习 →
-            </a>
-          </div>
-          <WorkflowVisual />
-        </div>
-        <Link
-          href="/learn/advanced"
-          className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-primary/[0.045] p-5"
-        >
-          <span>
-            <strong className="text-sm">想把 AI 用成工作流？</strong>
-            <span className="mt-2 block text-xs text-muted-foreground">
-              选模型、搭流程、检查结果。
+        <ModuleSection id="beginner">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-card p-5">
+            <span>
+              <strong>随时继续零基础一对一</strong>
+              <small className="mt-1 block text-sm text-muted-foreground">
+                小芽陪你练习，进度自动保留。
+              </small>
             </span>
-          </span>
-          <span className="section-link">查看进阶路线 →</span>
-        </Link>
-        <QuickPractice />
+            <Link className="home-button" href="/start/">
+              开始或继续学习 →
+            </Link>
+          </div>
+        </ModuleSection>
+        <section className="mb-8" aria-label="精选学习路径">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-2xl font-semibold">精选学习路径</h2>
+            <Link href="/paths" className="section-link">
+              查看全部路径 →
+            </Link>
+          </div>
+          <div className="path-grid">
+            {paths.map((path, index) => (
+              <PathCard key={path.id} path={path} index={index} compact />
+            ))}
+          </div>
+        </section>
+        <div className="mb-6 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl bg-accent/40 px-5 py-3">
+          <Link href="/learn/access/" className="section-link">
+            海外工具打不开？查看使用帮助 →
+          </Link>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- 完整初始化首次动手指引 */}
+          <a href="/?tour=1" className="section-link">
+            重新体验新手动手指引 →
+          </a>
+        </div>
+        <details className="mb-8 rounded-2xl border bg-card p-5">
+          <summary className="cursor-pointer font-semibold">先试一次：比较不同提示词的效果</summary>
+          <div className="mt-5">
+            <QuickPractice />
+          </div>
+        </details>
         <GuideExplorer
           guides={guides.map((g) => ({
             id: g.id,

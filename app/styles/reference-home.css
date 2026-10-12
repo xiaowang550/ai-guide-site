@@ -1,0 +1,207 @@
+.home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 57% 58%, hsl(142 37% 85% / 0.65), transparent 48%),
+    linear-gradient(110deg, hsl(var(--background)), hsl(var(--accent) / 0.38));
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 440px;
+  height: 240px;
+  border-radius: 90% 0 90% 0;
+  background: hsl(var(--primary) / 0.035);
+  transform: rotate(-25deg);
+  right: -200px;
+  bottom: -20px;
+}
+.home-cover-grid {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  padding-block: 36px;
+}
+.home-cover-copy {
+  position: relative;
+  z-index: 2;
+}
+.home-cover-title {
+  margin-top: 32px;
+  font-size: clamp(42px, 4.1vw, 72px);
+  line-height: 1.22;
+  font-weight: 750;
+  letter-spacing: -0.055em;
+}
+.home-cover-copy > p:not(.hero-eyebrow) {
+  font-size: 22px;
+  line-height: 1.75;
+}
+.home-hero .hero-workbench > p:first-of-type {
+  font-size: 28px;
+}
+.home-hero .home-button {
+  font-size: 18px;
+}
+.hero-eyebrow-line {
+  width: 40px;
+  height: 2px;
+  background: currentColor;
+  margin-right: 8px;
+}
+.home-hero .home-button {
+  min-height: 58px;
+  padding-inline: 24px;
+}
+.home-hero .hero-workbench {
+  transform: none;
+  padding: 30px;
+  border-radius: 26px;
+  background: hsl(var(--card) / 0.94);
+}
+.home-hero .hero-task {
+  padding: 14px;
+  min-height: 78px;
+}
+.home-growth {
+  padding: 20px 34px 28px;
+  border-radius: 30px;
+  background: hsl(var(--card) / 0.9);
+  border: 1px solid hsl(var(--border));
+  margin-top: 0;
+}
+.home-growth > div:first-child {
+  justify-content: center;
+  text-align: center;
+}
+.home-growth .entry-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr);
+  gap: 8px 18px;
+  align-items: center;
+  padding: 20px;
+  height: 100%;
+}
+.home-growth .entry-icon {
+  grid-row: span 2;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: hsl(var(--card));
+}
+.home-hero .hero-workbench > div:first-child {
+  margin-bottom: 20px;
+}
+.home-hero .hero-workbench > div:last-child {
+  margin-top: 20px;
+}
+.home-growth h2 {
+  margin-top: 0;
+}
+.home-growth > div:first-child {
+  margin-bottom: 18px;
+}
+.home-growth .entry-card {
+  padding-right: 62px;
+}
+.entry-card-arrow {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+.home-growth .entry-icon svg {
+  width: 32px;
+  height: 32px;
+}
+.home-growth h3,
+.home-growth .entry-card p,
+.home-growth .entry-card > span:last-child {
+  margin-top: 0;
+}
+.home-growth .entry-card > span:last-child {
+  font-size: 14px;
+}
+.public-site .entry-sage {
+  background: hsl(var(--accent) / 0.38);
+}
+.public-site .entry-sand {
+  background: hsl(42 90% 96%);
+}
+.home-growth .entry-sand .entry-icon { color: hsl(42 72% 47%); background: hsl(44 85% 94%); }
+.home-growth .entry-lavender .entry-icon { color: hsl(199 43% 37%); background: hsl(204 80% 93%); }
+.public-site .entry-lavender {
+  background: hsl(204 85% 96%);
+}
+.dark .public-site .entry-sand,
+.dark .public-site .entry-lavender {
+  background: hsl(var(--card));
+}
+@media (min-width: 1100px) {
+  .home-cover-grid {
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.88fr) minmax(0, 1.16fr);
+    gap: 16px;
+    padding-block: 34px;
+    min-height: 585px;
+  }
+  .home-cover-grid > .reference-art {
+    width: 112%;
+    margin-left: -6%;
+  }
+}
+@media (max-width: 1099px) {
+  .home-cover-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  }
+  .home-cover-grid > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 639px) {
+  .home-cover-grid {
+    grid-template-columns: 1fr;
+    padding-top: 28px;
+    gap: 16px;
+  }
+  .home-cover-grid > div:last-child {
+    grid-column: auto;
+  }
+  .home-cover-grid > .reference-art {
+    max-width: 300px;
+  }
+  .home-cover-title {
+    font-size: 42px;
+    margin-top: 20px;
+  }
+  .home-hero .home-button {
+    min-height: 48px;
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+  .home-hero .hero-workbench {
+    padding: 20px;
+  }
+  .home-growth {
+    padding: 22px 16px;
+  }
+  .home-growth .entry-card {
+    padding: 16px;
+    padding-right: 60px;
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+  .home-growth .entry-icon {
+    width: 50px;
+    height: 50px;
+  }
+}

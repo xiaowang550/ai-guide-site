@@ -1,3 +1,5 @@
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-tools.css'
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Compass } from 'lucide-react'
@@ -8,6 +10,7 @@ import { PageHeader, Section } from '@/components/page-header'
 import { UpdatedBadge } from '@/components/updated-badge'
 import { CAPABILITY_META, latestUpdatedAt } from '@/lib/score'
 import { siteConfig } from '@/lib/site'
+import { ExplorationAside } from '@/components/exploration-aside'
 
 export const metadata: Metadata = {
   title: '工具库',
@@ -25,25 +28,30 @@ export default function ToolsPage() {
   return (
     <>
       <PageHeader
+        illustrated
         title="工具库"
         description="按你要做的事选工具，再比较能力、费用和使用条件。"
         breadcrumbs={[{ label: '首页', href: '/' }, { label: '工具库' }]}
         meta={<UpdatedBadge date={updated} prefix="数据更新于" />}
+        aside={
+          <>
+            <h2>
+              <Compass size={26} />
+              打开场景决策器
+            </h2>
+            <p className="text-sm leading-7 text-muted-foreground">
+              告诉我们你想做的事，找到合适的工具组合。
+            </p>
+            <Link className="home-button mt-5 w-full" href="/find">
+              打开场景决策器 →
+            </Link>
+          </>
+        }
       />
 
-      <div className="container py-6">
-        <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-hairline px-5 py-4 pt-5 text-sm">
-          <p className="font-medium">还没想好用哪个？</p>
-          <Link
-            href="/find"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-highlight px-3 py-1.5 text-xs font-semibold text-highlight-foreground hover:opacity-90"
-          >
-            <Compass className="h-3.5 w-3.5" aria-hidden />
-            打开场景决策器
-          </Link>
-        </div>
-
+      <div className="discovery-layout container py-6">
         <ToolExplorer tools={listItems} />
+        <ExplorationAside tools />
       </div>
 
       <div className="container">
@@ -55,9 +63,7 @@ export default function ToolsPage() {
             </p>
           </details>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              · 每个工具附官方来源和复核日期；超过 90 天未复核会提示。
-            </li>
+            <li>· 每个工具附官方来源和复核日期；超过 90 天未复核会提示。</li>
             <li>
               · 本站不做自建评测；评分属于编辑判断，依据见{' '}
               <Link href="/about" className="text-primary underline underline-offset-4">

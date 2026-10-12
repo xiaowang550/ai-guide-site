@@ -215,7 +215,7 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
   ]
 
   const filterPanel = (
-    <div className="space-y-6">
+    <div className="tool-filter-fields">
       <FilterGroup title="关键词">
         <div className="relative">
           <Search
@@ -295,38 +295,43 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
         </div>
       </FilterGroup>
 
-      <FilterGroup title="平台">
-        <ChipGroup>
-          {ALL_PLATFORMS.map((p) => (
-            <Chip
-              key={p}
-              active={filters.platforms.includes(p)}
-              onClick={() => setFilters((f) => ({ ...f, platforms: toggle(f.platforms, p) }))}
-            >
-              {PLATFORM_LABELS[p]}
-            </Chip>
-          ))}
-        </ChipGroup>
-      </FilterGroup>
+      <details className="tool-more-filters">
+        <summary>更多筛选：平台与幻觉风险</summary>
+        <div>
+          <FilterGroup title="平台">
+            <ChipGroup>
+              {ALL_PLATFORMS.map((p) => (
+                <Chip
+                  key={p}
+                  active={filters.platforms.includes(p)}
+                  onClick={() => setFilters((f) => ({ ...f, platforms: toggle(f.platforms, p) }))}
+                >
+                  {PLATFORM_LABELS[p]}
+                </Chip>
+              ))}
+            </ChipGroup>
+          </FilterGroup>
 
-      <FilterGroup title="幻觉风险">
-        <ChipGroup>
-          {ALL_RISKS.map((r) => (
-            <Chip
-              key={r}
-              active={filters.risks.includes(r)}
-              onClick={() => setFilters((f) => ({ ...f, risks: toggle(f.risks, r) }))}
-            >
-              {RISK_LABELS[r]}
-            </Chip>
-          ))}
-        </ChipGroup>
-      </FilterGroup>
+          <FilterGroup title="幻觉风险">
+            <ChipGroup>
+              {ALL_RISKS.map((r) => (
+                <Chip
+                  key={r}
+                  active={filters.risks.includes(r)}
+                  onClick={() => setFilters((f) => ({ ...f, risks: toggle(f.risks, r) }))}
+                >
+                  {RISK_LABELS[r]}
+                </Chip>
+              ))}
+            </ChipGroup>
+          </FilterGroup>
+        </div>
+      </details>
     </div>
   )
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+    <div className="tool-explorer">
       {/* 桌面筛选栏 */}
       <aside className="hidden lg:block">
         <div className="sticky top-20 border-t border-hairline pt-4">
@@ -521,7 +526,7 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
             }
           />
         ) : filters.view === 'grid' ? (
-          <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8">
+          <div className="tool-results-grid">
             {result.map((tool, i) => (
               <ToolCard key={tool.id} tool={tool} index={i} />
             ))}

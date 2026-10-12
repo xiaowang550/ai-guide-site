@@ -1,3 +1,4 @@
+import '@/app/styles/reference-hero.css'
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/page-header'
 import { NewsBoard } from '@/components/news/news-board'
@@ -14,6 +15,7 @@ export default function NewsPage() {
   return (
     <>
       <PageHeader
+        illustrated
         title="AI 实时资讯"
         description="最新消息，简短看懂。找到与你的学习、教学和工作有关的变化。"
         breadcrumbs={[{ label: '首页', href: '/' }, { label: 'AI 实时资讯' }]}

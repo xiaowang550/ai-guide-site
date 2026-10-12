@@ -1,7 +1,9 @@
+import '@/app/styles/reference-hero.css'
+import '@/app/styles/reference-feedback.css'
 import type { Metadata } from 'next'
+import { BookOpen, Sprout, Zap } from 'lucide-react'
 import { FeedbackForm } from '@/components/feedback-form'
-import { PageHeader } from '@/components/page-header'
-
+import { ReferenceArt } from '@/components/reference-art'
 export const metadata: Metadata = {
   title: '问题反馈',
   description: '提出使用问题、建议与感受，支持文字和截图，无需登录。',
@@ -9,43 +11,50 @@ export const metadata: Metadata = {
 }
 export default function FeedbackPage() {
   return (
-    <>
-      <PageHeader
-        title="让这里更好用，也更有收获"
-        description="遇到了问题，有一个建议，或想聊聊使用感受？告诉我们。"
-        breadcrumbs={[{ label: '首页', href: '/' }, { label: '问题反馈' }]}
-      />
-      <div className="container grid gap-8 py-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
-        <FeedbackForm />
-        <aside className="space-y-6 lg:pt-4">
-          <div className="rounded-2xl bg-accent/60 p-6">
-            <h2 className="text-lg font-semibold">你的反馈，帮助我们改进</h2>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              我们会结合使用规范评估，并非所有建议都会采纳。改进始终围绕三个方向：
-            </p>
-            <ol className="mt-5 space-y-4">
-              {[
-                ['方便', '想找的内容，容易找到。'],
-                ['快捷', '更少操作，就能动手实践。'],
-                ['易理解', '说明清楚，学完真的会用。'],
-              ].map(([title, text], index) => (
-                <li key={title} className="flex gap-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background text-sm text-primary">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <h3 className="font-semibold">{title}</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{text}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-          <p className="px-2 text-sm leading-7 text-muted-foreground">
-            希望你每次进来，都能带着一项新知识、一种新方法，或一个能用起来的成果离开。
+    <div className="container pb-10">
+      <div className="feedback-layout">
+        <section className="feedback-intro">
+          <h1>
+            让这里更好用，
+            <br />
+            也更有收获
+          </h1>
+          <p>
+            遇到了问题，有一个建议，或想聊聊使用感受？
+            <br />
+            欢迎告诉我们，一起让 AI 能力图谱变得更好。
           </p>
-        </aside>
+          <ReferenceArt />
+        </section>
+        <div className="min-w-0">
+          <FeedbackForm />
+        </div>
       </div>
-    </>
+      <section className="reference-panel">
+        <h2>你的反馈，帮助我们改进</h2>
+        <p className="text-sm text-muted-foreground">
+          我们会结合使用规范评估，并非所有建议都会采纳。改进围绕三个方向：
+        </p>
+        <div className="feedback-principles">
+          {[
+            { title: '方便', text: '想找的内容，容易找到。减少步骤，让你更顺手。', icon: Sprout },
+            { title: '快捷', text: '更少操作，就能动手实践。把时间留给真正的任务。', icon: Zap },
+            {
+              title: '易理解',
+              text: '说明清楚，学完真的会用。每次进来，都能带着收获离开。',
+              icon: BookOpen,
+            },
+          ].map(({ title, text, icon: Icon }) => (
+            <article key={title}>
+              <Icon size={30} />
+              <span>
+                <strong>{title}</strong>
+                <p>{text}</p>
+              </span>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
   )
 }
