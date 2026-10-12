@@ -6,7 +6,7 @@ import { CATEGORY_LABELS } from '@/lib/site'
 import { capabilityShort, rankedCapabilities } from '@/lib/score'
 import { cn } from '@/lib/utils'
 import { ToolLogo } from '@/components/tool-logo'
-import { ScoreBadge, ScoreValue } from '@/components/score-badge'
+import { BenchmarkTag } from '@/components/benchmark-evidence'
 import { UpdatedBadge } from '@/components/updated-badge'
 import { toTenPointScore } from '@/lib/display-score'
 import type { ToolTrends } from '@/lib/tool-trends'
@@ -42,7 +42,7 @@ export function ToolCard({
               {tool.name}
               <span className="absolute inset-0" aria-hidden />
             </Link>
-            <ScoreBadge score={tool.overallScore} variant="star" label={tool.name} />
+            <BenchmarkTag evidence={tool.benchmark} />
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">{tool.vendor}</p>
           {trends && <ToolHotBadge id={tool.id} trends={trends} />}
@@ -52,14 +52,17 @@ export function ToolCard({
         {tool.tagline}
       </p>
 
-      <ul className="tool-strengths" aria-label="较强的能力，满分 10 分">
+      <ul className="tool-strengths" aria-label="编辑整理的适用能力，不是实测评分">
         {top.map((c) => (
           <li key={c.key}>
-            <strong>{toTenPointScore(c.score).toFixed(1)}</strong>
+            <strong>{c.score === 5 ? '重点适用' : '适用'}</strong>
             {capabilityShort(c.key)}
           </li>
         ))}
       </ul>
+      <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+        {tool.benchmark.results[0]?.model ?? '按用途与使用条件选择'} · <span>实测依据见详情</span>
+      </p>
 
       <footer>
         <UpdatedBadge date={tool.updatedAt} prefix="更新于" showStale={false} />
@@ -96,10 +99,10 @@ export function ToolTable({ tools, trends }: { tools: ToolListItem[]; trends?: T
               分类
             </th>
             <th scope="col" className="px-4 py-2.5 text-right font-medium text-muted-foreground">
-              综合分 / 10
+              公开实测
             </th>
             <th scope="col" className="px-4 py-2.5 text-right font-medium text-muted-foreground">
-              中文 / 10
+              中文参考 / 10
             </th>
             <th scope="col" className="px-4 py-2.5 text-left font-medium text-muted-foreground">
               大陆直连
@@ -137,7 +140,7 @@ export function ToolTable({ tools, trends }: { tools: ToolListItem[]; trends?: T
                 {tool.categories.map((c) => CATEGORY_LABELS[c]).join(' / ')}
               </td>
               <td className="px-4 py-2.5 text-right">
-                <ScoreValue score={tool.overallScore} />
+                <BenchmarkTag evidence={tool.benchmark} />
               </td>
               <td className="px-4 py-2.5 text-right tabular-nums">
                 {toTenPointScore(tool.chineseQuality).toFixed(1)}

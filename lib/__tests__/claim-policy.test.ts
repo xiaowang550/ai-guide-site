@@ -56,7 +56,27 @@ const files = SCAN_DIRS.flatMap((d) => walk(d)).filter((f) => /\.(ts|tsx|md|mdx)
  * 允许出现的场景：说明「本站不做实测」这类**否定**表述。
  * 匹配「不…实测」「没有…实测」时不算违规。
  */
-const NEGATION = /(不做|不做自建|不来自|未经|不做任何|不来自本地|不会|未能|无法|不涉及|不靠|不以|而非|不是)/
+const NEGATION =
+  /(不做|不做自建|不来自|未经|不做任何|不来自本地|不会|未能|无法|不涉及|不靠|不以|而非|不是|没有|尚未)/
+
+// The user now requests sourced, third-party benchmark results. Reviewed evidence
+// components may describe those results positively; claims of our own tests are
+// still rejected before this exception, including inside these very components.
+const EXTERNAL_BENCHMARK_FILES = new Set([
+  'app/(public)/about/page.tsx',
+  'app/(public)/tools/page.tsx',
+  'app/(public)/tools/[slug]/page.tsx',
+  'components/benchmark-evidence.tsx',
+  'components/benchmark-method.tsx',
+  'components/tool-card.tsx',
+  'components/compare-workbench.tsx',
+  'components/compare-table.tsx',
+  'components/weekly-recommendations.tsx',
+  'data/tool-benchmarks.ts',
+  'lib/tool-benchmarks.ts',
+  'lib/scoring-statement.ts',
+])
+const OWN_TEST_CLAIM = /(我们|本站|本网站|本团队|自建|自主)[^。；\n]{0,18}(实测|亲测)/
 
 /**
  * 显式豁免：这些位置出现「实测」是**诚实且必要**的。
@@ -71,7 +91,10 @@ const NEGATION = /(不做|不做自建|不来自|未经|不做任何|不来自�
  */
 const ALLOW: { match: (line: string) => boolean; reason: string }[] = [
   {
-    match: (l) => l.trimStart().startsWith('//') || l.trimStart().startsWith('*') || l.trimStart().startsWith('/*'),
+    match: (l) =>
+      l.trimStart().startsWith('//') ||
+      l.trimStart().startsWith('*') ||
+      l.trimStart().startsWith('/*'),
     reason: '代码注释：记录开发时真实测得的数字（包体积、模型行为），不是对外评测声明',
   },
   {
@@ -110,21 +133,21 @@ describe('评分口径：不得声称做过自建实测', () => {
       files.map((f) => {
         const parts = f.split(/[\\/]/)
         return parts.length > 1 ? parts[1] : parts[0]
-      })
+      }),
     )
     expect(
       topDirs.size,
-      `只扫到了 ${topDirs.size} 个目录：${[...topDirs].join(', ')}`
+      `只扫到了 ${topDirs.size} 个目录：${[...topDirs].join(', ')}`,
     ).toBeGreaterThanOrEqual(6)
 
     // 关于页必须在内：它是讲「怎么做评测」的地方，最容易写出违规表述
     expect(
       files.some((f) => f.includes('about')),
-      '关于页没有被扫到 —— 门禁对它失明了'
+      '关于页没有被扫到 —— 门禁对它失明了',
     ).toBe(true)
   })
 
-  it('用户可见文案里不出现未加否定的「实测」', () => {
+  it('不得把外部实测或编辑参考描述为本站自己的实测', () => {
     const offenders: string[] = []
 
     for (const file of files) {
@@ -133,14 +156,26 @@ describe('评分口径：不得声称做过自建实测', () => {
         if (!line.includes('实测')) return
         if (NEGATION.test(line)) return
         if (ALLOW.some((a) => a.match(line))) return
+        if (!OWN_TEST_CLAIM.test(line) && EXTERNAL_BENCHMARK_FILES.has(file.replace(/\\/g, '/')))
+          return
         offenders.push(`${file}:${i + 1}  ${line.trim().slice(0, 90)}`)
       })
     }
 
     expect(
       offenders,
-      `以下文案声称我们做过自建评测，但本站明确「不做自建评测」：\n${offenders.join('\n')}`
+      `以下文案声称我们做过自建评测，但本站明确「不做自建评测」：\n${offenders.join('\n')}`,
     ).toEqual([])
+  })
+
+  it('第三方来源例外仍拒绝自建实测声明，且原始来源有明确链接', () => {
+    expect(OWN_TEST_CLAIM.test('我们自己的实测结果')).toBe(true)
+    expect(OWN_TEST_CLAIM.test('本站亲测 GPT 最新模型')).toBe(true)
+    expect(OWN_TEST_CLAIM.test('公开实测来自原榜')).toBe(false)
+    const source = readFileSync('lib/tool-benchmarks.ts', 'utf8')
+    expect(source).toContain('https://artificialanalysis.ai/leaderboards/models')
+    expect(source).toContain('https://arena.ai/leaderboard/chat/text')
+    expect(readFileSync('components/benchmark-evidence.tsx', 'utf8')).toContain('checkedAt')
   })
 
   it('豁免项都写明了理由（防止豁免被无声堆积）', () => {

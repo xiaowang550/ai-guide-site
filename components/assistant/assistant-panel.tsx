@@ -11,6 +11,7 @@ import { copyText } from '@/lib/copy-text'
 import { computeDockPosition } from '@/lib/dock-position'
 import { toggleSaved, validLearningEntry, type LearningEntry } from '@/lib/learning/library'
 import { AssistantAvatar } from './assistant-avatar'
+import { mascotState, MASCOT_STATES, type MascotState } from '@/lib/assistant-mascot'
 import { ModelPicker } from './model-picker'
 import { useSiteModules } from '@/components/site-module-context'
 import { pathEnabled, moduleEnabled } from '@/lib/site-modules'
@@ -33,7 +34,16 @@ interface Turn {
 const BASIC = '帮我写一份通知。'
 const IMPROVED =
   '你是学校办公室的老师。请为全体高中教师起草一份教研活动通知，80–120 字。已知：本周五下午 4 点，在学校会议室交流 AI 辅助备课经验；每人带一个使用案例。用标题、时间地点、准备事项三部分输出。缺失信息写【待补充】，不要编造。这是教学练习示例。'
-export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function AssistantPanel({
+  open,
+  onClose,
+  onStateChange,
+}: {
+  open: boolean
+  onClose: () => void
+  onStateChange?: (state: MascotState) => void
+}) {
+  const [outcome, setOutcome] = useState<'success' | 'confused' | null>(null)
   const dialog = useRef<HTMLDialogElement>(null),
     input = useRef<HTMLTextAreaElement>(null),
     feed = useRef<HTMLDivElement>(null),
@@ -52,6 +62,21 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
     [prompts, setPrompts] = useState([BASIC, IMPROVED]),
     [results, setResults] = useState(['', ''])
   const pathname = usePathname()
+  const state = mascotState({
+    busy,
+    searching: mode === 'search',
+    error: outcome === 'confused',
+    success: outcome === 'success',
+    reading: mode === 'practice',
+  })
+  useEffect(() => {
+    if (open) onStateChange?.(state)
+  }, [open, state, onStateChange])
+  useEffect(() => {
+    if (outcome !== 'success') return
+    const timer = setTimeout(() => setOutcome(null), 4000)
+    return () => clearTimeout(timer)
+  }, [outcome])
   const { config } = useSiteModules()
   useEffect(() => {
     if (open && !dialog.current?.open) dialog.current?.showModal()
@@ -186,6 +211,7 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
     const q = text.trim()
     if (!q || busy) return
     setDraft('')
+    setOutcome(null)
     setNotice('')
     const user: Turn = { id: crypto.randomUUID(), role: 'user', text: q },
       reply: Turn = {
@@ -217,6 +243,7 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
               pathEnabled(config, new URL(d.href, location.origin).pathname),
             ),
           })
+        setOutcome(response.matched === false || !response.links.length ? 'confused' : 'success')
         update({
           text: [response.headline, ...response.paragraphs].join('\n\n'),
           sources: response.links
@@ -250,8 +277,10 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
           },
           (name, sources) => update({ model: name, ...(sources.length ? { sources } : {}) }),
         )
+        setOutcome('success')
       }
     } catch (e) {
+      setOutcome('confused')
       update({
         error:
           e instanceof DOMException && e.name === 'AbortError'
@@ -268,6 +297,7 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
   }
   async function practice() {
     if (busy) return
+    setOutcome(null)
     setBusy(true)
     setResults(['', ''])
     setNotice('')
@@ -279,7 +309,9 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
           setResults((old) => old.map((r, j) => (j === i ? accumulated : r)))
         })
       }
+      setOutcome('success')
     } catch (e) {
+      setOutcome('confused')
       setNotice(
         e instanceof DOMException && e.name === 'AbortError'
           ? '已停止，结果已保留。'
@@ -295,6 +327,7 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
   async function copy(text: string, id: string) {
     const ok = await copyText(text)
     if (ok) {
+      setOutcome('success')
       setCopied(id)
       setTimeout(() => setCopied(''), 1800)
     } else setNotice('复制未成功，请选中文字手动复制。')
@@ -374,12 +407,22 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
             panelDrag.current = null
           }}
         >
-          <AssistantAvatar thinking={busy} />
+          <AssistantAvatar state={state} />
           <div>
             <strong>
               小芽 <span>· 你的学习搭子</span>
             </strong>
-            <p>{busy ? '正在生成，文字会陆续出现' : '找工具、做练习，把想法变成步骤'}</p>
+            <p aria-live="polite">
+              {busy
+                ? mode === 'search'
+                  ? '正在查找站内资料'
+                  : '正在整理，文字会陆续出现'
+                : outcome === 'confused'
+                  ? '这一步需要确认，我会陪你继续找'
+                  : outcome === 'success'
+                    ? '这一步完成啦，看看结果是否合适'
+                    : MASCOT_STATES[state].label}
+            </p>
           </div>
           <button type="button" onClick={onClose} aria-label="收起助手">
             <X size={19} />
@@ -463,7 +506,7 @@ export function AssistantPanel({ open, onClose }: { open: boolean; onClose: () =
               {!turns.length && (
                 <div className="assistant-welcome">
                   <div className="assistant-welcome-mark">
-                    <AssistantAvatar />
+                    <AssistantAvatar state={state} />
                   </div>
                   <h2>今天，我们试点什么？</h2>
                   <p>

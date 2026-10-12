@@ -14,6 +14,7 @@ export default function PolicyPage() {
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
         title="AI 使用规范"
         description="选使用范围，看课堂场景，带走一份规范草案和记录模板。"

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { ArrowRight, BookOpen, Lightbulb, Sparkles } from 'lucide-react'
 import { ToolLogo } from './tool-logo'
-import { ScoreBadge } from './score-badge'
+import { BenchmarkTag } from './benchmark-evidence'
+import { toolBenchmark } from '@/data/tool-benchmarks'
 import { LiveHotBadge, LiveTrendSource } from './tool-trends'
 import { ModuleSection } from './module-visibility'
 import { WeeklyCarousel } from './weekly-carousel'
@@ -51,13 +52,10 @@ export function WeeklyRecommendations({ entries }: { entries: WeeklyEntry[] }) {
                 ))}
               </ul>
             </div>
-            {entry.score !== undefined && (
-              <ScoreBadge
-                score={entry.score}
-                variant="star"
-                label={entry.title}
-                className="weekly-score"
-              />
+            {entry.kind === '工具' && (
+              <span className="weekly-score">
+                <BenchmarkTag evidence={toolBenchmark(entry.id)} />
+              </span>
             )}
             <ArrowRight className="weekly-arrow" size={18} aria-hidden />
           </article>
@@ -79,7 +77,7 @@ export function WeeklyRecommendations({ entries }: { entries: WeeklyEntry[] }) {
       <WeeklyCarousel groups={groups} />
       <LiveTrendSource />
       <p className="weekly-footnote">
-        推荐为本站编辑精选；星标为能力综合分（满分 10 分）。
+        推荐为本站编辑精选；工具实测注明榜单，热门标记仅表示使用热度。
         <Link href="/tools">查看全部工具 →</Link>
       </p>
     </section>

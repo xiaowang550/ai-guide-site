@@ -18,6 +18,7 @@ import { AccountView } from './account-view'
 import { SchoolModulesView } from './school-modules-view'
 import { SchoolAccountsView } from './school-accounts-view'
 import Link from 'next/link'
+import { BrandMark } from '@/components/brand-mark'
 import {
   Activity,
   ArrowUpRight,
@@ -168,12 +169,8 @@ export function AdminShell() {
     <div className="admin-frame">
       <aside className="admin-sidebar">
         <Link href="/" className="admin-brand">
-          <span>
-            <Compass className="h-5 w-5" />
-          </span>
-          <div>
-            AI 能力图谱<small>管理工作台</small>
-          </div>
+          <BrandMark />
+          <span className="admin-brand-caption">管理工作台</span>
         </Link>
         <p className="admin-nav-label">工作空间</p>
         <nav aria-label="后台分区" className="admin-navigation">
@@ -237,6 +234,15 @@ export function AdminShell() {
           </span>
         </header>
         <div className="admin-content-area">
+          <section className="admin-section-intro">
+            <div>
+              <p className="text-sm text-primary">让每一次整理，都带来收获</p>
+              <h1>{TABS.find((t) => t.key === tab)?.label}</h1>
+              <p>{TABS.find((t) => t.key === tab)?.hint}</p>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element -- shared optimized public mascot */}
+            <img src="/brand/sprout-hero-v3.webp" width="160" height="160" alt="小芽陪你打理网站" />
+          </section>
           {tab === 'dashboard' && <DashboardView onNavigate={setTab} />}
           {tab === 'modules' && <ModulesView />}
           {tab === 'school-accounts' && <SchoolAccountsView />}

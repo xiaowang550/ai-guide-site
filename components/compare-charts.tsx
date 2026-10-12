@@ -116,7 +116,9 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <h2 className="text-xl font-semibold">先看你要做的事</h2>
-          <p className="mt-2 text-sm text-muted-foreground">0–10 分，看清各自强项。</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            编辑能力参考 · 0–10 分档；不是最新模型的实测结果。
+          </p>
         </div>
         <div
           className="grid w-full grid-cols-4 gap-1 rounded-xl bg-muted/60 p-1 sm:w-auto"

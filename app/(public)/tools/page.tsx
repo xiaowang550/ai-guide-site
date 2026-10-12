@@ -16,7 +16,7 @@ import { ExplorationAside } from '@/components/exploration-aside'
 export const metadata: Metadata = {
   title: '工具库',
   description:
-    '按 14 个能力维度筛选和排序 AI 工具：分类、能力门槛、是否免费、大陆可直连、平台、幻觉风险。所有评分带依据，所有工具都写清楚弱项。',
+    'AI 工具公开实测、具体模型版本、榜单来源与使用条件。按用途筛选，分别比较 AA 智能指数和 Arena 文本偏好。',
   alternates: { canonical: '/tools' },
 }
 
@@ -50,6 +50,19 @@ export default function ToolsPage() {
         }
       />
 
+      <div className="container pt-6">
+        <div className="benchmark-intro">
+          <div>
+            <h2 className="text-base font-semibold">实测有来源，选工具有依据</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              AA 看模型能力，Arena 看盲测偏好。保留原榜单位；应用与模型分别看，不再混成一个总分。
+            </p>
+          </div>
+          <Link href="/about#benchmarks" className="text-sm text-primary underline">
+            怎样读这些分数 ↗
+          </Link>
+        </div>
+      </div>
       <div className="discovery-layout container py-6">
         <ToolExplorer tools={listItems} />
         <ExplorationAside tools />
@@ -66,9 +79,9 @@ export default function ToolsPage() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>· 每个工具附官方来源和复核日期；超过 90 天未复核会提示。</li>
             <li>
-              · 本站不做自建评测；评分属于编辑判断，依据见{' '}
+              · 本站不做自建评测；公开实测来自原榜快照；14 维能力参考属于编辑整理，依据见{' '}
               <Link href="/about" className="text-primary underline underline-offset-4">
-                我们怎么打分
+                实测与参考的区别
               </Link>
               。
             </li>

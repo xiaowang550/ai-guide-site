@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { Compass, LogOut } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
+import { LogOut } from 'lucide-react'
 import Link from 'next/link'
 type Identity = {
   authenticated: boolean
@@ -45,13 +46,11 @@ export function SchoolSessionHeader() {
     }
   }
   return (
-    <header className="border-b bg-card">
+    <header className="school-session-header border-b bg-card">
       <div className="container flex flex-wrap items-center justify-between gap-4 py-5">
         <a href="/edu/" className="inline-flex items-center gap-3 font-semibold">
-          <span className="rounded-full bg-primary p-3 text-primary-foreground">
-            <Compass className="h-5 w-5" />
-          </span>
-          AI 能力图谱 <span className="text-sm font-normal text-muted-foreground">学校教师端</span>
+          <BrandMark />
+          <span className="text-sm font-normal text-muted-foreground">学校教师端</span>
         </a>
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <span>{identity?.schoolName ?? '正在确认学校身份…'}</span>

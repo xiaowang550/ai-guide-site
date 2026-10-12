@@ -62,6 +62,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
         breadcrumbs={[
           { label: '学校首页', href: '/edu' },
@@ -143,7 +144,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
           </div>
         ) : null}
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
           <article className="min-w-0">
             {/* 前置要求与验收 */}
             <div className="grid gap-4 sm:grid-cols-2">
@@ -254,7 +255,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                 <p className="mt-1.5 text-sm text-muted-foreground">
                   概念、教程与工具详情都在主站，讲课时可直接引用，避免口径不一。
                 </p>
-                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {related.map((r) =>
                     r ? (
                       <li key={r.href}>

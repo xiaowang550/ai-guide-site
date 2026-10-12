@@ -5,6 +5,7 @@ import type { CompareTool as Tool } from '@/lib/compare-tool'
 import { ComparePicker } from '@/components/compare-picker'
 import { CompareTable } from '@/components/compare-table'
 import { CompareCharts } from '@/components/compare-charts'
+import { BenchmarkEvidence } from '@/components/benchmark-evidence'
 
 /**
  * 对比页主容器：URL ?ids=a,b,c ↔ 选中状态双向同步。
@@ -41,6 +42,18 @@ export function CompareWorkbench({ tools, defaultIds }: { tools: Tool[]; default
       <ComparePicker tools={tools} selected={selected} onChange={setSelected} />
       {selectedTools.length >= 2 ? (
         <>
+          <p className="mt-5 text-sm leading-7 text-muted-foreground">
+            先看公开实测。只比较同榜指标；模型版本和推理档位不同会影响结果。下方 14
+            维图表仍为编辑能力参考。
+          </p>
+          <div className="benchmark-compare">
+            {selectedTools.map((t) => (
+              <div key={t.id}>
+                <h3>{t.name}</h3>
+                <BenchmarkEvidence evidence={t.benchmark} compact />
+              </div>
+            ))}
+          </div>
           <CompareCharts tools={selectedTools} />
           <details className="mt-10 rounded-2xl border bg-card p-5 sm:p-7">
             <summary className="cursor-pointer text-base font-semibold">

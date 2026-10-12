@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { answer, detectIntent, guessFlags, guessScenario, type AssistantToolsIndex } from '../assistant'
+import {
+  answer,
+  detectIntent,
+  guessFlags,
+  guessScenario,
+  type AssistantToolsIndex,
+} from '../assistant'
 import { tools } from '@/data/tools'
 import { concepts } from '@/data/concepts'
 import { guides } from '@/data/guides'
@@ -131,6 +137,7 @@ describe('answer（回答生成）', () => {
   it('搜索兜底不会凭空编造链接', () => {
     const a = answer('zzzz不存在的东西', index, NOW)
     expect(a.intent).toBe('search')
+    expect(a.matched).toBe(false)
     a.links.forEach((l) => expect(l.href).toMatch(/^\//))
   })
 

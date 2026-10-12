@@ -8,6 +8,8 @@ import type { AssistantDock } from '@/lib/settings'
 import { readSettings, subscribeSettings, writeSettings } from '@/lib/settings'
 import { computeDockPosition, DOCK_BUTTON_SIZE } from '@/lib/dock-position'
 import { AssistantBubble, useAssistantPresence } from './assistant-presence'
+import { mascotState, type MascotState } from '@/lib/assistant-mascot'
+import { useMascotContext } from './use-mascot-context'
 
 /**
  * AI 小助手浮窗（只负责「停在哪里 / 展开收起 / 拖拽」，不含任何数据与引擎）。
@@ -27,8 +29,11 @@ export function AssistantDock() {
   const [dock, setDock] = useState<AssistantDock>('bottom-right')
   const [ready, setReady] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [panelState, setPanelState] = useState<MascotState>('welcome')
   const path = usePathname()
   const inAdmin = path?.startsWith('/admin') ?? false
+  const activity = useMascotContext(ready && enabled && !inAdmin)
 
   const dragState = useRef<{
     id: number
@@ -107,6 +112,15 @@ export function AssistantDock() {
   // 同 GuidedTour —— 后台无法脱离公开站根布局，所以由组件自行识别路径退出。
 
   if (!ready || !enabled || inAdmin) return null
+  const state = open
+    ? panelState
+    : mascotState({
+        ...activity,
+        dragging: isDragging,
+        greeting: hint?.hello,
+        hint: !!hint,
+        reading: /^\/(learn|guides|paths|start|edu)(\/|$)/.test(path),
+      })
 
   const position = computeDockPosition(dock, viewport(), false, {
     width: DOCK_BUTTON_SIZE,
@@ -132,7 +146,10 @@ export function AssistantDock() {
     const st = dragState.current,
       el = wrapRef.current
     if (!st || !el || st.id !== e.pointerId) return
-    if (Math.hypot(e.clientX - st.startX, e.clientY - st.startY) > 8) st.moved = true
+    if (Math.hypot(e.clientX - st.startX, e.clientY - st.startY) > 8) {
+      st.moved = true
+      setIsDragging(true)
+    }
     if (!st.moved) return
     const next = computeDockPosition(
       { x: e.clientX - st.dx, y: e.clientY - st.dy },
@@ -154,6 +171,7 @@ export function AssistantDock() {
       el = wrapRef.current
     if (!st || !el || st.id !== e.pointerId) return
     dragState.current = null
+    setIsDragging(false)
     dragging.current = false
     delete el.dataset.dragging
     suppressClick.current = st.moved
@@ -181,6 +199,7 @@ export function AssistantDock() {
       data-print-hide
       className="assistant-launcher fixed z-40"
       data-greeting={hint?.hello ? 'true' : undefined}
+      data-state={state}
       style={{
         left: position.left,
         top: position.top,
@@ -192,6 +211,7 @@ export function AssistantDock() {
       {mounted ? (
         <AssistantPanel
           open={open}
+          onStateChange={setPanelState}
           onClose={() => {
             setOpen(false)
             writeSettings({ assistantPanelOpen: false })
@@ -227,7 +247,7 @@ export function AssistantDock() {
         <span className="assistant-pet-shadow" aria-hidden="true" />
         <span className="assistant-pet-gaze">
           <span className="assistant-pet-float">
-            <AssistantAvatar full />
+            <AssistantAvatar full state={state} />
           </span>
         </span>
       </button>

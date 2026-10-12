@@ -33,6 +33,7 @@ export default function SupportPage() {
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
         title="答疑与反馈回路"
         description="三种问题都能提：不知道怎么做、发现材料有问题、想按本校情况调整。反馈不是客服工单，而是内容迭代的输入。"

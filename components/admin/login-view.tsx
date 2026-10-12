@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, Compass, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
+import { ArrowLeft, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { ApiError, apiSend } from './api-client'
 
 /**
@@ -50,22 +51,28 @@ export function LoginView({ onSuccess }: { onSuccess: () => void }) {
     <div className="admin-login">
       <div className="admin-login-story">
         <Link href="/" className="flex items-center gap-3 text-sm font-semibold">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Compass className="h-5 w-5" />
-          </span>
-          AI 能力图谱
+          <BrandMark />
+          <span className="text-sm text-primary">管理工作台</span>
         </Link>
-        <div className="login-intro mt-20">
+        <div className="login-intro mt-10">
           <p className="admin-eyebrow">YOUR PRIVATE WORKSPACE</p>
           <h2 className="mt-5 text-4xl font-semibold leading-relaxed tracking-tight">
             每一次整理，
             <br />
-            都让好内容走得更远。
+            都让网站更好用。
           </h2>
           <p className="mt-6 max-w-sm text-sm leading-8 text-muted-foreground">
             看看网站的浏览趋势，更新值得分享的方法，把读者的反馈变成下一次改进。
           </p>
-          <div className="mt-12 flex items-center gap-2 text-xs text-primary">
+          {/* eslint-disable-next-line @next/next/no-img-element -- shared optimized public mascot */}
+          <img
+            className="admin-login-mascot"
+            src="/brand/sprout-hero-v3.webp"
+            width="260"
+            height="260"
+            alt="小芽欢迎你回来"
+          />
+          <div className="mt-6 flex items-center gap-2 text-xs text-primary">
             <ShieldCheck className="h-4 w-4" />
             仅供站点所有者使用
           </div>

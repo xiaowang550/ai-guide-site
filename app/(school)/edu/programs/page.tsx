@@ -23,6 +23,7 @@ export default function ProgramsPage() {
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
         title="课程体系"
         description="先选学习对象，再走第一步。每门课都留下一份能检查、能继续使用的材料。"

@@ -30,14 +30,11 @@ export interface AssistantToolsIndex {
 }
 
 export type AssistantIntent =
-  | 'recommend'
-  | 'tool-pros-cons'
-  | 'concept'
-  | 'guide'
-  | 'freshness'
-  | 'search'
+  'recommend' | 'tool-pros-cons' | 'concept' | 'guide' | 'freshness' | 'search'
 
 export interface AssistantAnswer {
+  /** False when links are fallback navigation, rather than retrieved matches. */
+  matched?: boolean
   intent: AssistantIntent
   /** 一句话结论 */
   headline: string
@@ -64,7 +61,15 @@ const RECOMMEND_HINTS = [
 const PROS_CONS_HINTS = ['有什么坑', '缺点', '弱点', '别用', '不好用', '靠不靠谱', '能信吗', '局限']
 const CONCEPT_HINTS = ['什么是', '是什么', '什么意思', '概念', '解释一下', '啥意思', '定义']
 const GUIDE_HINTS = ['怎么做', '怎么写', '教程', '方法', '步骤', '怎么用', '提示词']
-const FRESHNESS_HINTS = ['数据过时', '数据最新', '多久没更新', '过没过期', '保鲜', '可信吗', '准确吗']
+const FRESHNESS_HINTS = [
+  '数据过时',
+  '数据最新',
+  '多久没更新',
+  '过没过期',
+  '保鲜',
+  '可信吗',
+  '准确吗',
+]
 
 /**
  * 轻量归一：只做小写与标点清理，**保留疑问词**。
@@ -89,7 +94,7 @@ export function cleanQuery(q: string): string {
   return normalize(q)
     .replace(
       /(帮我|请问|麻烦|我想|我要|想要|需要|可以|能不能|好不好|有没有|是什么|什么是|啥意思|什么意思|指的是|解释一下|解释|介绍一下|介绍|告诉我|说下|说说|怎么样|咋用|怎么用|如何|怎么|怎样|为什么|哪个|哪些|推荐|建议)/g,
-      ' '
+      ' ',
     )
     .replace(/\s+/g, ' ')
     .trim()
@@ -138,7 +143,17 @@ export function detectIntent(query: string, index: AssistantToolsIndex): Assista
  */
 const SCENARIO_KEYWORDS: Record<string, string[]> = {
   write: ['写', '文案', '文章', '润色', '改写', '邮件', '周报', '稿子', '标题', '总结'],
-  'read-long-doc': ['长文档', '读文档', 'pdf', '论文', '文件', '报告', '很长的文档', '长文章', '资料'],
+  'read-long-doc': [
+    '长文档',
+    '读文档',
+    'pdf',
+    '论文',
+    '文件',
+    '报告',
+    '很长的文档',
+    '长文章',
+    '资料',
+  ],
   'make-office': ['ppt', '幻灯片', '表格', 'excel', 'word', '成品文件', '汇报材料', '课件'],
   code: ['代码', '编程', '程序', '脚本', 'bug', '调试', '前端', '后端'],
   research: ['调研', '研究', '查资料', '查一下', '资料', '竞品', '行业'],
@@ -152,7 +167,7 @@ const SCENARIO_KEYWORDS: Record<string, string[]> = {
 /** 从自然语言里猜场景（映射到站内定义的全部场景，数量由数据决定） */
 export function guessScenario(
   query: string,
-  scenarios: AssistantToolsIndex['scenarios']
+  scenarios: AssistantToolsIndex['scenarios'],
 ): string | null {
   const q = normalize(query)
 
@@ -216,7 +231,7 @@ const FOLLOWUPS = {
  */
 export function extractSiteFacts(
   query: string,
-  index: AssistantToolsIndex
+  index: AssistantToolsIndex,
 ): {
   siteSummary: string
   relevant: { title: string; href: string; note: string }[]
@@ -246,7 +261,11 @@ export function extractSiteFacts(
 }
 
 /** 生成回答（纯函数：同样的输入永远同样的输出） */
-export function answer(query: string, index: AssistantToolsIndex, now: Date = new Date()): AssistantAnswer {
+export function answer(
+  query: string,
+  index: AssistantToolsIndex,
+  now: Date = new Date(),
+): AssistantAnswer {
   const intent = detectIntent(query, index)
   const followUps = [...FOLLOWUPS[intent]]
 
@@ -269,7 +288,7 @@ export function answer(query: string, index: AssistantToolsIndex, now: Date = ne
 function answerRecommend(
   query: string,
   index: AssistantToolsIndex,
-  followUps: string[]
+  followUps: string[],
 ): AssistantAnswer {
   const scenarioId = guessScenario(query, index.scenarios)
   const rule = index.scenarios.find((s) => s.id === scenarioId)
@@ -321,9 +340,7 @@ function answerRecommend(
     .map((m) => `${capabilityLabel(m.key as CapabilityKey)}（权重 ${m.weight}）`)
     .join('、')
 
-  const alternates = result.alternates
-    .map((a) => `${a.tool.name}（${a.score}/5）`)
-    .join('、')
+  const alternates = result.alternates.map((a) => `${a.tool.name}（${a.score}/5）`).join('、')
 
   return {
     intent: 'recommend',
@@ -335,7 +352,11 @@ function answerRecommend(
       '别只看首选：这个场景我最想提醒的是——所有工具的输出都要自己核对一遍，尤其是数字和引用。',
     ].filter(Boolean),
     links: [
-      { href: `/tools/${primary.tool.id}`, label: `${primary.tool.name} 能力详情`, hint: '含弱项与别用它做' },
+      {
+        href: `/tools/${primary.tool.id}`,
+        label: `${primary.tool.name} 能力详情`,
+        hint: '含弱项与别用它做',
+      },
       { href: '/find', label: '在决策器里复现这个结论' },
       ...(alternates ? [{ href: '/compare', label: '对比这几个工具' }] : []),
     ],
@@ -347,7 +368,7 @@ function answerRecommend(
 function answerToolProsCons(
   query: string,
   index: AssistantToolsIndex,
-  followUps: string[]
+  followUps: string[],
 ): AssistantAnswer {
   const cleaned = cleanQuery(query)
   const hit =
@@ -357,6 +378,7 @@ function answerToolProsCons(
   if (!tool) {
     return {
       intent: 'tool-pros-cons',
+      matched: false,
       headline: '没找到对应的工具，换个名字试试',
       paragraphs: ['比如直接输入工具名（DeepSeek、NotebookLM、Cursor），或去工具库按维度筛选。'],
       links: [{ href: '/tools', label: '打开工具库' }],
@@ -364,7 +386,9 @@ function answerToolProsCons(
     }
   }
 
-  const notFor = tool.alternatives.map((id) => index.tools.find((t) => t.id === id)?.name).filter(Boolean)
+  const notFor = tool.alternatives
+    .map((id) => index.tools.find((t) => t.id === id)?.name)
+    .filter(Boolean)
 
   return {
     intent: 'tool-pros-cons',
@@ -381,7 +405,11 @@ function answerToolProsCons(
         : '它在站内还没有登记替代品，想换工具可以从工具库按维度找。',
     ],
     links: [
-      { href: `/tools/${tool.id}`, label: `${tool.name} 完整能力档案`, hint: '含 14 维雷达与打分依据' },
+      {
+        href: `/tools/${tool.id}`,
+        label: `${tool.name} 完整能力档案`,
+        hint: '含 14 维雷达与打分依据',
+      },
       { href: '/compare', label: '和别家横向对比' },
     ],
     followUps,
@@ -392,7 +420,7 @@ function answerToolProsCons(
 function answerConcept(
   query: string,
   index: AssistantToolsIndex,
-  followUps: string[]
+  followUps: string[],
 ): AssistantAnswer {
   // 先用清洗后的关键词搜；搜不到再退回原句，避免清洗过头丢失信息
   const cleaned = cleanQuery(query)
@@ -401,11 +429,14 @@ function answerConcept(
     searchDocs(index.searchDocs, query, 8).find((h) => h.doc.type === 'concept')
   const concept = hit
     ? index.concepts.find((c) => c.id === hit.doc.id)
-    : index.concepts.find((c) => cleaned.includes(normalize(c.term)) || normalize(c.term).includes(cleaned))
+    : index.concepts.find(
+        (c) => cleaned.includes(normalize(c.term)) || normalize(c.term).includes(cleaned),
+      )
 
   if (!concept) {
     return {
       intent: 'concept',
+      matched: false,
       headline: '这个概念还没收录到站内',
       paragraphs: ['可以先在术语表里搜一下，那里是全站概念的索引。'],
       links: [
@@ -419,7 +450,11 @@ function answerConcept(
   return {
     intent: 'concept',
     headline: `${concept.term}${concept.termEn ? `（${concept.termEn}）` : ''}`,
-    paragraphs: [concept.definition, `打个比方：${concept.analogy}`, '想知道在日常工作里怎么用，直接看这一页的延伸阅读。'],
+    paragraphs: [
+      concept.definition,
+      `打个比方：${concept.analogy}`,
+      '想知道在日常工作里怎么用，直接看这一页的延伸阅读。',
+    ],
     links: [
       { href: `/learn/${concept.id}`, label: `读完整解释`, hint: '按六段式结构展开' },
       { href: '/learn/glossary', label: '术语表' },
@@ -429,7 +464,11 @@ function answerConcept(
   }
 }
 
-function answerGuide(query: string, index: AssistantToolsIndex, followUps: string[]): AssistantAnswer {
+function answerGuide(
+  query: string,
+  index: AssistantToolsIndex,
+  followUps: string[],
+): AssistantAnswer {
   const cleaned = cleanQuery(query)
   const hits = [
     ...searchDocs(index.searchDocs, cleaned, 8),
@@ -450,6 +489,7 @@ function answerGuide(query: string, index: AssistantToolsIndex, followUps: strin
   if (!guide && methodHits.length === 0) {
     return {
       intent: 'guide',
+      matched: false,
       headline: '没有完全对应的教程，但可以按场景找',
       paragraphs: [
         '站内教程分两类：通用方法课（怎么把话说清楚）和场景实操课（照着做完就能交活）。',
@@ -485,7 +525,7 @@ function answerGuide(query: string, index: AssistantToolsIndex, followUps: strin
 function answerFreshness(
   index: AssistantToolsIndex,
   now: Date,
-  followUps: string[]
+  followUps: string[],
 ): AssistantAnswer {
   const ages = index.tools.map((t) => ({
     tool: t,
@@ -515,7 +555,11 @@ function answerFreshness(
   }
 }
 
-function answerSearch(query: string, index: AssistantToolsIndex, followUps: string[]): AssistantAnswer {
+function answerSearch(
+  query: string,
+  index: AssistantToolsIndex,
+  followUps: string[],
+): AssistantAnswer {
   const cleaned = cleanQuery(query)
   const hits = [
     ...searchDocs(index.searchDocs, cleaned, 5),
@@ -524,6 +568,7 @@ function answerSearch(query: string, index: AssistantToolsIndex, followUps: stri
   if (hits.length === 0) {
     return {
       intent: 'search',
+      matched: false,
       headline: '站内没找到相关内容',
       paragraphs: [
         '换个更短的关键词试试，比如只输入工具名、概念名，或者场景（如「PPT」「周报」）。',

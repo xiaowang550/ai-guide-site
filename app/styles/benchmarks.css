@@ -1,0 +1,75 @@
+.benchmark-tag {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border-radius: 9px;
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.benchmark-evidence {
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  background: hsl(var(--card));
+  padding: 20px;
+}
+.benchmark-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 13px;
+}
+.benchmark-result dd {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.benchmark-result dd strong {
+  font-size: 20px;
+}
+.benchmark-result dd small {
+  font-size: 12px;
+  font-weight: 400;
+}
+.benchmark-intro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  background: hsl(var(--card) / 0.9);
+}
+.benchmark-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.benchmark-compare > div {
+  min-width: 0;
+}
+.benchmark-compare h3 {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.compact-tool-card .benchmark-tag {
+  max-width: 145px;
+  text-align: right;
+}
+.tool-strengths strong {
+  font-size: 13px;
+}
+@media (max-width: 400px) {
+  .compact-tool-title h3 {
+    flex-wrap: wrap;
+  }
+  .benchmark-compare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

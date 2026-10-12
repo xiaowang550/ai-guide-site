@@ -37,6 +37,7 @@ export default async function ToolkitDetailPage({ params }: { params: Promise<{ 
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
         title={toolkit.title}
         description={`${toolkit.stage} · ${toolkit.subject} · ${toolkit.mode} · ${toolkit.lessons} 课时`}

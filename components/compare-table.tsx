@@ -1,5 +1,6 @@
 import { toTenPointScore } from '@/lib/display-score'
 import Link from 'next/link'
+import { BenchmarkTag } from '@/components/benchmark-evidence'
 import { ExternalLink, FileSearch } from 'lucide-react'
 import type { CompareTool as Tool } from '@/lib/compare-tool'
 import {
@@ -74,11 +75,10 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                 render={(t) => <span className="text-muted-foreground">{t.tagline}</span>}
               />
               <Row
-                label="综合分"
+                label="公开实测"
                 tools={tools}
                 highlight
-                render={(t) => <ScoreBadge score={t.overallScore} showMax />}
-                isBest={(t) => t.overallScore === best(tools.map((x) => x.overallScore))}
+                render={(t) => <BenchmarkTag evidence={t.benchmark} />}
               />
               <Row
                 label="分类"

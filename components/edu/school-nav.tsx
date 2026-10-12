@@ -28,7 +28,7 @@ export function SchoolNav() {
         <Link href="/edu" className="py-3 text-sm font-semibold">
           学校服务
         </Link>
-        <nav aria-label="教育服务导航" className="no-scrollbar overflow-x-auto">
+        <nav aria-label="教育服务导航" className="no-scrollbar min-w-0 overflow-x-auto">
           <ul className="flex gap-5">
             {items.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`)

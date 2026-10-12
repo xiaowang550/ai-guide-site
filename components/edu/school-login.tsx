@@ -1,7 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { BookOpen, ShieldCheck, Compass } from 'lucide-react'
+import { BrandMark } from '@/components/brand-mark'
+import { BookOpen, ShieldCheck, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
+import '@/app/styles/reference-base.css'
+import '@/app/styles/school.css'
 function destination() {
   try {
     const u = new URL(new URLSearchParams(location.search).get('next') ?? '/edu/', location.origin)
@@ -17,7 +20,8 @@ export function SchoolLogin() {
     [password, setPassword] = useState(''),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
-    [owner, setOwner] = useState(false)
+    [owner, setOwner] = useState(false),
+    [showPassword, setShowPassword] = useState(false)
   useEffect(() => {
     void fetch('/api/school/session', { cache: 'no-store', credentials: 'same-origin' })
       .then((r) => r.json())
@@ -48,16 +52,16 @@ export function SchoolLogin() {
     }
   }
   return (
-    <main className="flex min-h-screen items-center justify-center bg-accent/30 px-4 py-10">
+    <main className="public-site school-site school-login flex min-h-screen items-center justify-center px-4 py-10">
       <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border bg-card shadow-sm md:grid-cols-2">
-        <section className="hidden bg-accent/50 p-7 sm:p-10 md:block">
+        <section className="school-login-story bg-accent/50 p-7 sm:p-10">
           <Link
             href="/"
             prefetch={false}
             className="inline-flex items-center gap-3 text-sm font-semibold"
           >
-            <Compass className="h-6 w-6 text-primary" />
-            AI 能力图谱
+            <BrandMark />
+            <span className="text-sm text-primary">学校教师端</span>
           </Link>
           <p className="mt-10 text-sm text-primary">学校教师工作空间</p>
           <h2 className="mt-3 text-3xl font-semibold leading-tight">
@@ -77,7 +81,15 @@ export function SchoolLogin() {
               AI 使用规范与后续学校资源
             </li>
           </ul>
-          <p className="mt-10 text-xs text-muted-foreground">
+          {/* eslint-disable-next-line @next/next/no-img-element -- shared optimized public mascot */}
+          <img
+            className="school-login-mascot"
+            src="/brand/sprout-hero-v3.webp"
+            width="240"
+            height="240"
+            alt="小芽陪你备好一节课"
+          />
+          <p className="mt-5 text-xs text-muted-foreground">
             大众与学生无需账号，可直接浏览公开学习内容。
           </p>
         </section>
@@ -85,10 +97,10 @@ export function SchoolLogin() {
           <Link
             href="/"
             prefetch={false}
-            className="mb-7 inline-flex items-center gap-2 text-sm font-semibold md:hidden"
+            className="mb-7 hidden items-center gap-2 text-sm font-semibold"
           >
-            <Compass className="h-5 w-5 text-primary" />
-            AI 能力图谱 · 学校教师端
+            <BrandMark />
+            <span>学校教师端</span>
           </Link>
           <h1 className="text-xl font-semibold">学校账号登录</h1>
           <p className="mt-3 text-sm text-muted-foreground">使用管理员分配给学校的账号和密码。</p>
@@ -110,7 +122,7 @@ export function SchoolLogin() {
               密码
               <input
                 name="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 maxLength={128}
                 required
@@ -120,6 +132,15 @@ export function SchoolLogin() {
                 placeholder="输入密码"
               />
             </label>
+            <button
+              type="button"
+              className="inline-flex min-h-11 items-center gap-2 text-sm text-primary"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-pressed={showPassword}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? '隐藏密码' : '显示密码'}
+            </button>
             {error && (
               <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
                 {error}

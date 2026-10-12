@@ -36,8 +36,9 @@ export default function EduPage() {
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
-        title="从一节课开始，让 AI 变得可理解、可使用。"
+        title="从一节课开始，把 AI 用进教学。"
         description="初中先认识，高中再实践；教师从正在发生的教学任务入手。"
         breadcrumbs={[{ label: '学校首页', href: '/edu' }, { label: '学校服务' }]}
       />

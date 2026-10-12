@@ -1,4 +1,5 @@
-﻿import type { Metadata } from 'next'
+﻿import { BenchmarkMethod } from '@/components/benchmark-method'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CircleHelp, Mail, Scale } from 'lucide-react'
 import { CAPABILITY_META, OVERALL_WEIGHTS, STALE_DAYS, latestUpdatedAt } from '@/lib/score'
@@ -13,15 +14,14 @@ import { FeedbackStatsPanel } from '@/components/feedback-stats'
 
 export const metadata: Metadata = {
   title: '关于与评分方法',
-  description:
-    '本站的立场、14 维评分标准与打分依据、综合分权重、场景决策器算法、数据更新机制、已知局限与勘误入口。',
+  description: '第三方实测的原始来源与版本、14 维编辑能力参考、场景匹配方法、数据更新与勘误入口。',
   alternates: { canonical: '/about' },
 }
 
 const SCORE_RUBRIC = [
-  { score: '10 分', meaning: '当前该领域的第一梯队，可直接用于生产场景' },
+  { score: '10 分', meaning: '编辑认为重点适用，需要在真实任务中核验' },
   { score: '8 分', meaning: '明显强于平均水平，有明确优势场景' },
-  { score: '6 分', meaning: '够用，不出错但没有优势' },
+  { score: '6 分', meaning: '编辑认为可用于基础任务，仍需核验结果' },
   { score: '4 分', meaning: '能力弱或经常出错，需要人工兜底' },
   { score: '2 分', meaning: '基本不具备该能力' },
   { score: '0 分', meaning: '完全不提供该能力' },
@@ -34,11 +34,11 @@ const FAQ = [
   },
   {
     q: '为什么不做自建评测？',
-    a: '做不到。各家闭源模型的权重不公开，无法在本地复现；能复现的开源模型，和线上服务提供的又不是一回事。硬做一个「跑一遍」的评测，测到的是我们的接入方式，不是工具本身。所以我们选择把依据摊开给你看，而不是给一个看起来更权威但无法验证的数字。',
+    a: '本站目前没有统一维护的实测环境，因此采用能核查方法与版本的第三方原榜快照。闭源模型可以通过 API 测试；但模型、推理档位、提示词与执行环境都会影响结果，不能把不同条件的成绩混成产品总分。',
   },
   {
     q: '为什么综合分不等于「最好的工具」？',
-    a: '综合分是 14 个维度的加权平均，用来看一个工具的「全能程度」。真实选型几乎都是单维度的：你要写代码就只看编程维度，你要做图就只看图像生成维度。所以我们更推荐用场景决策器，它按场景权重算分，比综合分更贴近你的需求。',
+    a: '原来的 14 维加权总分会混合不相关的功能，已从工具卡撤下。现在按同榜的指定模型实测比较；没有可比测试的应用不强行赋分。场景决策器仍使用编辑参考做任务匹配，匹配分不是实测能力分。',
   },
   {
     q: '为什么不收录一些小众工具？',
@@ -69,6 +69,7 @@ export default function AboutPage() {
       <div className="container py-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
           <div className="min-w-0 space-y-12">
+            <BenchmarkMethod />
             <Section title="三条产品原则">
               <ol className="space-y-3">
                 {[
@@ -132,7 +133,7 @@ export default function AboutPage() {
                 </table>
               </div>
 
-              <h3 className="mt-6 text-base">14 个维度与综合分权重</h3>
+              <h3 className="mt-6 text-base">历史编辑覆盖权重（已撤下公开总分）</h3>
               <div className="mt-3 overflow-x-auto rounded-xl border">
                 <table className="w-full border-collapse text-sm">
                   <thead className="bg-muted/50">
@@ -144,7 +145,7 @@ export default function AboutPage() {
                         说明
                       </th>
                       <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                        综合分权重
+                        历史覆盖权重
                       </th>
                     </tr>
                   </thead>
@@ -164,9 +165,8 @@ export default function AboutPage() {
                 </table>
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                综合分 = Σ(维度分 × 权重) ÷ Σ(权重)，结果保留两位小数。 写作 / 逻辑推理 /
-                编程略微加权（1.2），图像 / 视频 / 语音 / 实时降低权重（0.5-0.6），
-                因为它们对「通用生产力」的贡献远小于分数看起来的差异。综合分在数据文件中不手填，由代码计算。
+                旧算法按维度加权平均，容易让缺少不相关功能的工具显得分数低。
+                这里保留历史口径用于核对；工具卡已改为公开实测，不再用这个覆盖分代表模型质量。
               </p>
 
               <h3 className="mt-6 text-base">打分依据从哪来</h3>
@@ -185,11 +185,11 @@ export default function AboutPage() {
                 </li>
               </ul>
               <p className="mt-3 rounded-lg border border-amber-500/40 bg-amber-500/5 px-3 py-2.5 text-sm leading-6">
-                本站<strong className="font-medium">不做自建评测</strong>：各家闭源模型权重不公开，
-                无法在本地复现；能复现的开源模型又和线上服务不是一回事。
-                硬做一个「跑一遍」的评测，测的是我们的接入方式而不是工具本身。 所以这里给的是
-                <strong className="font-medium">编辑判断</strong>，不是测量结果 ——
-                你可以逐条质疑，被推翻的依据我们会改。
+                本站目前<strong className="font-medium">不做自建评测</strong>
+                ，采用可核查版本与方法的第三方原榜。 闭源模型也可以通过 API
+                测试，但模型版本、推理档位、提示词和执行环境会影响结果。 这里的 14 维分档是
+                <strong className="font-medium">编辑判断</strong>，公开实测在上方单独说明。
+                你可以逐条质疑，有问题的依据会重新复核。
               </p>
               <p className="mt-3 text-xs leading-6 text-muted-foreground">
                 我们不会编造没核实过的分数与价格。不确定的地方标{' '}

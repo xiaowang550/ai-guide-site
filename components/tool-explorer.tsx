@@ -6,6 +6,7 @@ import type { CapabilityKey, Platform, ToolCategory } from '@/data/types'
 import type { ToolListItem } from '@/lib/tool-list-item'
 import { CAPABILITY_META, capabilityLabel } from '@/lib/score'
 import { sortTools } from '@/lib/recommend'
+import { compareBenchmarks } from '@/lib/tool-benchmarks'
 import { CATEGORY_LABELS, PLATFORM_LABELS } from '@/lib/site'
 import { TOOL_CATEGORIES } from '@/data/types'
 import { cn } from '@/lib/utils'
@@ -96,9 +97,13 @@ function paramsToState(params: URLSearchParams): Partial<FilterState> {
       ALL_PLATFORMS.includes(value as Platform),
     ) as Platform[],
     risks: csv(params.get('risk')).filter((value) => ALL_RISKS.includes(value as Risk)) as Risk[],
-    sort: ['overall', 'updated', 'chinese', ...CAPABILITY_META.map((item) => item.key)].includes(
-      params.get('sort') ?? '',
-    )
+    sort: [
+      'overall',
+      'arena',
+      'updated',
+      'chinese',
+      ...CAPABILITY_META.map((item) => item.key),
+    ].includes(params.get('sort') ?? '')
       ? params.get('sort')!
       : 'overall',
     dir: params.get('dir') === 'asc' ? 'asc' : 'desc',
@@ -178,6 +183,15 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
       if (filters.risks.length && !filters.risks.includes(t.hallucinationRisk)) return false
       return true
     })
+    if (filters.sort === 'overall' || filters.sort === 'arena')
+      return [...filtered].sort((a, b) =>
+        compareBenchmarks(
+          a.benchmark,
+          b.benchmark,
+          filters.sort === 'arena' ? 'arena-text' : 'aa-intelligence',
+          filters.dir,
+        ),
+      )
     return sortTools(filtered, filters.sort as Parameters<typeof sortTools>[1], filters.dir)
   }, [tools, filters])
 
@@ -390,7 +404,8 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
                 className="h-8 rounded-md border bg-background px-2 text-xs text-foreground"
                 aria-label="排序方式"
               >
-                <option value="overall">综合分</option>
+                <option value="overall">AA 智能指数</option>
+                <option value="arena">Arena 文本偏好</option>
                 <option value="updated">最近更新</option>
                 <option value="chinese">中文能力</option>
                 {CAPABILITY_META.map((c) => (

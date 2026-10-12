@@ -1,4 +1,6 @@
 import type { CapabilityKey, Score, Tool, ToolCategory } from '@/data/types'
+import { toolBenchmark } from '@/data/tool-benchmarks'
+import type { ToolBenchmark } from '@/lib/tool-benchmarks'
 
 /**
  * 工具列表用的**最小数据集**。
@@ -18,6 +20,7 @@ import type { CapabilityKey, Score, Tool, ToolCategory } from '@/data/types'
  * 这也是 README「两条必须守住的规则」第 2 条的实际应用。
  */
 export interface ToolListItem {
+  benchmark: ToolBenchmark
   id: string
   name: string
   nameEn: string
@@ -48,6 +51,7 @@ export function toListItem(tool: Tool): ToolListItem {
     scores[key] = tool.capabilities[key]?.score ?? 0
   }
   return {
+    benchmark: toolBenchmark(tool.id),
     id: tool.id,
     name: tool.name,
     nameEn: tool.nameEn,
@@ -81,7 +85,7 @@ export function toListItems(tools: Tool[]): ToolListItem[] {
  * 刻意**不填basis**：这些函数只用 score，不需要依据文本。
  */
 export function scoresToCapabilityMap(
-  scores: Record<CapabilityKey, Score>
+  scores: Record<CapabilityKey, Score>,
 ): Record<CapabilityKey, { score: Score }> {
   const out = {} as Record<CapabilityKey, { score: Score }>
   for (const key of Object.keys(scores) as CapabilityKey[]) {

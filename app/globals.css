@@ -601,9 +601,20 @@
 .assistant-avatar { display:inline-block; position:relative; flex-shrink:0; width:44px; height:44px; pointer-events:none; }
 .assistant-avatar img { user-select:none; -webkit-user-drag:none; }
 .assistant-avatar-portrait { overflow:hidden; border-radius:50%; background:#e5efe6; }
-.assistant-avatar-portrait img { position:absolute; width:200%; max-width:none; height:auto; left:-50%; top:-35%; }
-.assistant-avatar-full { width:100%; height:100%; }
-.assistant-avatar-full img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 3px 3px #21473228); }
+.assistant-avatar-portrait img { position:absolute; width:145%; max-width:none; height:auto; left:-22.5%; top:-13%; }
+.assistant-avatar-full { width:100%; height:100%; overflow:hidden; border-radius:50%; background:#fff; }
+.assistant-avatar-full img { width:100%; height:100%; object-fit:contain; transform:scale(1.16); }
+.assistant-avatar[data-state=working] { animation:pet-working 1.4s ease-in-out infinite; }
+.assistant-avatar[data-state=confused] { animation:pet-wonder 3s ease-in-out infinite; }
+.assistant-avatar[data-state=success] { animation:pet-celebrate .7s ease-in-out 3; }
+.assistant-avatar[data-state=flying] img { animation:pet-flying 1.8s ease-in-out infinite; }
+.assistant-avatar[data-state=guiding] img { animation:pet-tip 2s ease-in-out infinite; }
+@keyframes pet-working { 50% { transform:translateY(-2px); } }
+@keyframes pet-wonder { 50% { transform:rotate(-5deg); } }
+@keyframes pet-celebrate { 50% { transform:translateY(-5px) rotate(3deg); } }
+@keyframes pet-flying { 50% { transform:scale(1.16) translate(2px,-2px); } }
+@keyframes pet-tip { 50% { transform:scale(1.2); } }
+@media(prefers-reduced-motion:reduce) { .assistant-avatar,.assistant-avatar img { animation:none !important; } }
 .assistant-pet-button[aria-expanded=true] .assistant-pet-float,.assistant-launcher[data-dragging] .assistant-pet-float { animation-play-state:paused; }
 .assistant-launcher[data-dragging] .assistant-pet-gaze { transform:none; transition:none; }
 .assistant-discovery { position:fixed; width:min(248px,calc(100vw - 24px)); padding:14px 15px; border:1px solid hsl(var(--primary)/.2); border-radius:18px; background:hsl(var(--card)); box-shadow:0 8px 30px #173a2218; font-size:16px; pointer-events:none; user-select:none; animation:sprout-tip .2s ease-out; }

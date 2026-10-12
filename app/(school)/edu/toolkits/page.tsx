@@ -28,6 +28,7 @@ export default function ToolkitsPage() {
   return (
     <>
       <PageHeader
+        illustrated
         className="school-page-heading"
         title="课程与教案包"
         description="选一个正在教学的场景，准备材料，按流程上课。先从一节课开始。"

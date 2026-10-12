@@ -6,6 +6,7 @@ import { AnalyticsBeacon } from '@/components/analytics-beacon'
 import { SiteModulesProvider } from '@/components/site-modules'
 import { ModuleGate } from '@/components/module-visibility'
 import '@/app/styles/reference-base.css'
+import '@/app/styles/benchmarks.css'
 
 /** 公开站外壳。后台具有独立布局，新增公开页面放在此分组即可。 */
 export default function PublicLayout({ children }: { children: React.ReactNode }) {

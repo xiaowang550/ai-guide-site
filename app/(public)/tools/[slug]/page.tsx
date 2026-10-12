@@ -1,3 +1,5 @@
+import { BenchmarkEvidence, BenchmarkTag } from '@/components/benchmark-evidence'
+import { toolBenchmark } from '@/data/tool-benchmarks'
 import { toTenPointScore } from '@/lib/display-score'
 import { SaveButton } from '@/components/learning/save-button'
 import { ToolNews } from '@/components/news/tool-news'
@@ -65,7 +67,7 @@ export async function generateMetadata({
   if (!tool) return { title: '工具不存在' }
   return {
     title: `${tool.name}（${tool.nameEn}）能力评测与弱点`,
-    description: `${tool.tagline}。14 维能力评分（综合 ${toTenPointScore(tool.overallScore).toFixed(1)}/10）、强项、弱项、别用它做的场景、价格与上手三步，数据更新于 ${tool.updatedAt}。`,
+    description: `${tool.tagline}。公开实测来源、14 维编辑能力参考、强项、弱项、别用它做的场景、价格与上手三步，数据更新于 ${tool.updatedAt}。`,
     alternates: { canonical: `/tools/${tool.id}` },
     openGraph: { title: `${tool.name} 能力评测`, description: tool.tagline },
   }
@@ -419,7 +421,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                             </Link>
                             <p className="mt-0.5 text-xs text-muted-foreground">{alt.tagline}</p>
                           </div>
-                          <ScoreBadge score={alt.overallScore} showMax />
+                          <BenchmarkTag evidence={toolBenchmark(alt.id)} />
                         </div>
                         <Link
                           href={`/compare?ids=${tool.id},${alt.id}`}
@@ -570,6 +572,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
 
           {/* 侧栏速览 */}
           <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+            <div id="benchmarks" className="scroll-mt-24">
+              <BenchmarkEvidence evidence={toolBenchmark(tool.id)} />
+            </div>
             <div className="border-b border-hairline pb-5">
               <div className="flex items-center gap-3">
                 <ToolLogo src={tool.logo} alt={`${tool.name} 标志`} size={48} />
@@ -580,15 +585,15 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
               </div>
               <p className="mt-3 text-sm leading-6 text-foreground/80">{tool.description}</p>
               <div className="mt-4 flex items-center justify-between border-t pt-3">
-                <span className="text-xs text-muted-foreground">综合分</span>
-                <ScoreBadge score={tool.overallScore} showMax />
+                <span className="text-xs text-muted-foreground">公开实测</span>
+                <BenchmarkTag evidence={toolBenchmark(tool.id)} />
               </div>
             </div>
 
             <div className="border-b border-hairline pb-5 text-sm">
               <h2 className="mb-3 text-sm font-semibold">速览</h2>
               <dl className="space-y-2.5">
-                <Fact label="中文能力">
+                <Fact label="中文（编辑参考）">
                   <ScoreBadge score={tool.chineseQuality} />
                 </Fact>
                 <Fact label="幻觉风险">
@@ -624,7 +629,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
             <div className="border-b border-hairline pb-5">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
                 <Puzzle className="h-4 w-4" aria-hidden />
-                短板速览（≤2 分维度）
+                能力边界（编辑参考）
               </h2>
               {weak.length > 0 ? (
                 <ul className="space-y-2">

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import type { CompareTool as Tool } from '@/lib/compare-tool'
 import { cn } from '@/lib/utils'
+import { BenchmarkTag } from '@/components/benchmark-evidence'
 import { ToolLogo } from '@/components/tool-logo'
 
 // 常量必须从非 client 模块导入。原先在这里 `export const MAX_COMPARE = 4`，
@@ -102,7 +103,7 @@ export function ComparePicker({
                   <ToolLogo src={t.logo} alt="" size={20} className="border-0 bg-transparent p-0" />
                   <span className="min-w-0 flex-1 truncate">{t.name}</span>
                   <span className="tabular-nums text-muted-foreground">
-                    {t.overallScore.toFixed(1)}
+                    <BenchmarkTag evidence={t.benchmark} />
                   </span>
                 </button>
               </li>
