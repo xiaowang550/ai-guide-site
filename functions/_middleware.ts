@@ -4,6 +4,7 @@ import { moduleForPath, pathEnabled } from '../lib/site-modules'
 import { verifySession, parseCookies, SESSION_COOKIE } from '../lib/admin/auth'
 import type { AdminEnv } from '../lib/admin/api'
 import { deploymentHeaders } from '../lib/deployment-headers'
+import { schoolPageAccess, schoolPath, normalizedSchoolPath } from '../lib/admin/schools'
 interface Context {
   request: Request
   env: AdminEnv
@@ -11,6 +12,29 @@ interface Context {
 }
 async function route(context: Context) {
   const url = new URL(context.request.url)
+  if (schoolPath(url.pathname)) {
+    const db = createD1Db(context.env.DB)
+    const denied = await schoolPageAccess(db, context.request)
+    if (denied) return denied
+    const config = await readSiteConfig(db, true)
+    const token = parseCookies(context.request.headers.get('cookie'))[SESSION_COOKIE]
+    const preview =
+      url.searchParams.get('admin-preview') === '1' &&
+      (await verifySession(db, token))?.role === 'owner'
+    if (!pathEnabled(config, normalizedSchoolPath(url.pathname)) && !preview)
+      return new Response('学校服务暂时关闭', {
+        status: 404,
+        headers: {
+          'content-type': 'text/plain; charset=utf-8',
+          'cache-control': 'private, no-store',
+        },
+      })
+    const response = await context.next()
+    const secured = new Response(response.body, response)
+    secured.headers.set('cache-control', 'private, no-store')
+    secured.headers.set('x-robots-tag', 'noindex, nofollow')
+    return secured
+  }
   if (
     !moduleForPath(url.pathname) ||
     url.pathname.startsWith('/api/') ||

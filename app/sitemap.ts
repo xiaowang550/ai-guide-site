@@ -1,8 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { siteConfig } from '@/lib/site'
 import { cases, concepts, guides, paths, tools } from '@/data'
-import { eduPrograms } from '@/data/edu-programs'
-import { eduToolkits } from '@/data/edu-toolkits'
 
 export const dynamic = 'force-static'
 
@@ -24,11 +22,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/updates',
     '/about',
     '/search',
-    '/edu',
-    '/edu/programs',
-    '/edu/toolkits',
-    '/edu/policy',
-    '/edu/support',
   ]
 
   return [
@@ -37,8 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency:
         route === '' || route === '/updates' ? ('weekly' as const) : ('monthly' as const),
-      priority:
-        route === '' ? 1 : route === '/edu' || route === '/find' || route === '/tools' ? 0.9 : 0.7,
+      priority: route === '' ? 1 : 0.7,
     })),
     ...tools.map((t) => ({
       url: `${base}/tools/${t.id}`,
@@ -69,19 +61,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(p.updatedAt),
       changeFrequency: 'monthly' as const,
       priority: 0.6,
-    })),
-    // ---------- AI 教育供给 ----------
-    ...eduPrograms.map((p) => ({
-      url: `${base}/edu/programs/${p.id}`,
-      lastModified: new Date(p.updatedAt),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
-    ...eduToolkits.map((t) => ({
-      url: `${base}/edu/toolkits/${t.id}`,
-      lastModified: new Date(t.updatedAt),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
     })),
   ]
 }

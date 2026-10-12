@@ -114,6 +114,16 @@ import {
   weakEtag,
 } from './http.ts'
 import { hashPassword } from './crypto.ts'
+import {
+  loginSchool,
+  logoutSchool,
+  schoolIdentity,
+  schoolCookie,
+  listSchoolAccounts,
+  saveSchoolAccount,
+  SchoolInputError,
+  SchoolConflictError,
+} from './schools.ts'
 import { diffContent, summarizeChanges } from './diff.ts'
 
 export interface AdminEnv extends AssistantEnv {
@@ -212,6 +222,105 @@ function matchPath(pattern: string, pathname: string): Record<string, string> | 
 // ── 路由表 ─────────────────────────────────────────────────────────────────
 
 const ROUTES: Route[] = [
+  {
+    method: 'POST',
+    pattern: '/api/school/login',
+    auth: 'public',
+    handler: async ({ db, env, request }) => {
+      const body = await readJson<{ username?: unknown; password?: unknown }>(request)
+      if (
+        typeof body?.username !== 'string' ||
+        typeof body.password !== 'string' ||
+        !body.username.trim() ||
+        !body.password ||
+        body.username.length > 40 ||
+        body.password.length > 128
+      )
+        return fail(400, '请填写学校账号和密码。')
+      const result = await loginSchool(
+        db,
+        body.username.trim(),
+        body.password,
+        requestMeta(request).ip,
+        saltOf(env),
+        env.ADMIN_PEPPER,
+      )
+      if (!result.ok) return fail(result.locked ? 429 : 401, result.error ?? '登录失败。')
+      const response = json({ authenticated: true, ...result.identity })
+      response.headers.set('set-cookie', schoolCookie(result.token!, cookieSecure(request)))
+      return response
+    },
+  },
+  {
+    method: 'GET',
+    pattern: '/api/school/session',
+    auth: 'public',
+    handler: async ({ db, request }) => {
+      const identity = await schoolIdentity(db, request)
+      return json(identity ? { authenticated: true, ...identity } : { authenticated: false })
+    },
+  },
+  {
+    method: 'POST',
+    pattern: '/api/school/logout',
+    auth: 'public',
+    handler: async ({ db, request }) => {
+      await logoutSchool(db, request)
+      const response = json({ ok: true })
+      response.headers.set('set-cookie', schoolCookie('', cookieSecure(request), 0))
+      return response
+    },
+  },
+  {
+    method: 'GET',
+    pattern: '/api/school/config',
+    auth: 'public',
+    handler: async ({ db, request }) => {
+      if (!(await schoolIdentity(db, request))) return unauthorized()
+      return json(await readSiteConfig(db, false, 'school'))
+    },
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/school-accounts',
+    auth: 'required',
+    handler: async ({ db }) => json({ accounts: await listSchoolAccounts(db) }),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/school-accounts',
+    auth: 'required',
+    handler: async ({ db, request, identity, env }) => {
+      return json(
+        {
+          account: await saveSchoolAccount(
+            db,
+            null,
+            await readJson(request),
+            identity!.username,
+            env.ADMIN_PEPPER,
+          ),
+        },
+        201,
+      )
+    },
+  },
+  {
+    method: 'PATCH',
+    pattern: '/api/admin/school-accounts/:id',
+    auth: 'required',
+    handler: async ({ db, request, identity, env }, params) => {
+      return json({
+        account: await saveSchoolAccount(
+          db,
+          params.id,
+          await readJson(request),
+          identity!.username,
+          env.ADMIN_PEPPER,
+        ),
+      })
+    },
+  },
   {
     method: 'POST',
     pattern: '/api/admin/assistant/test',
@@ -599,6 +708,8 @@ export async function handleApi(request: Request, env: AdminEnv): Promise<Respon
   try {
     return await route.handler(ctx, params)
   } catch (e) {
+    if (e instanceof SchoolInputError) return fail(400, e.message)
+    if (e instanceof SchoolConflictError) return fail(409, e.message)
     // 「表不存在」是部署过程中最常见的一种状态（绑定了 D1 但还没执行 schema.sql），
     // 值得单独识别：它需要的是一条明确的操作指令，不是一句「服务端出错」。
     // 不识别的话，用户只能看到一个 500，而真正的原因藏在日志里。

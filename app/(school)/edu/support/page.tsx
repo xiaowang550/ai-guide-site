@@ -37,7 +37,7 @@ export default function SupportPage() {
         title="答疑与反馈回路"
         description="三种问题都能提：不知道怎么做、发现材料有问题、想按本校情况调整。反馈不是客服工单，而是内容迭代的输入。"
         breadcrumbs={[
-          { label: '首页', href: '/' },
+          { label: '学校首页', href: '/edu' },
           { label: 'AI 教育服务', href: '/edu' },
           { label: '答疑与反馈' },
         ]}
@@ -51,8 +51,15 @@ export default function SupportPage() {
           <FaqList items={eduFaq} />
         </Section>
 
-        <Section title="怎么提问 / 反馈" description="按下面的模板填写，我们能少问一轮，你也能更快拿到答案。">
-          <CopyableText text={QUESTION_TEMPLATE} title="提问与反馈模板（可复制）" label="复制模板" />
+        <Section
+          title="怎么提问 / 反馈"
+          description="按下面的模板填写，我们能少问一轮，你也能更快拿到答案。"
+        >
+          <CopyableText
+            text={QUESTION_TEMPLATE}
+            title="提问与反馈模板（可复制）"
+            label="复制模板"
+          />
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <a
               href="mailto:edu@example.com?subject=%E6%95%99%E5%AD%A6%E6%9C%8D%E5%8A%A1%E6%8F%90%E9%97%AE"
@@ -87,7 +94,10 @@ export default function SupportPage() {
           </div>
         </Section>
 
-        <Section title="反馈如何变成下一版内容" description="这是我们对合作学校的承诺，也是内容能保持可用的唯一办法。">
+        <Section
+          title="反馈如何变成下一版内容"
+          description="这是我们对合作学校的承诺，也是内容能保持可用的唯一办法。"
+        >
           <ol className="space-y-2.5">
             {[
               '收到反馈后先归类：是内容错误、案例不适配、还是表述不清',
@@ -118,15 +128,7 @@ export default function SupportPage() {
   )
 }
 
-function Card({
-  icon,
-  title,
-  detail,
-}: {
-  icon: React.ReactNode
-  title: string
-  detail: string
-}) {
+function Card({ icon, title, detail }: { icon: React.ReactNode; title: string; detail: string }) {
   return (
     <div className="border-b border-hairline pb-5">
       <h3 className="flex items-center gap-2 text-sm font-semibold">

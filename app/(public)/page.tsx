@@ -14,12 +14,10 @@ import {
   Compass,
   Feather,
   Layers,
-  School,
   Sparkles,
   Workflow,
 } from 'lucide-react'
 import { cases, concepts, guides, paths, tools } from '@/data'
-import { computeEduMetrics } from '@/lib/edu'
 import { formatDate, latestUpdatedAt } from '@/lib/score'
 import { ToolCard } from '@/components/tool-card'
 import { toListItems } from '@/lib/tool-list-item'
@@ -63,7 +61,6 @@ const tasks = [
 ]
 
 export default function HomePage() {
-  const metrics = computeEduMetrics()
   const featured = tools.filter((t) => t.featured).slice(0, 6)
   const featuredItems = toListItems(featured.length ? featured : tools.slice(0, 6))
   const updated = latestUpdatedAt(tools)
@@ -268,33 +265,6 @@ export default function HomePage() {
                   ))}
                 </div>
               </Section>
-            </ModuleSection>
-          ),
-        },
-        {
-          id: 'school',
-          content: (
-            <ModuleSection id="school">
-              <section className="school-banner">
-                <div>
-                  <p className="hero-eyebrow">
-                    <School className="h-4 w-4" />
-                    让好方法走进课堂
-                  </p>
-                  <h2 className="mt-4 text-2xl">给老师和学生，一套能用起来的材料。</h2>
-                  <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-                    按学段和学科选课程、教案与使用规范。
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-4 text-xs text-muted-foreground">
-                    <span>{metrics.programs} 门课程</span>
-                    <span>{metrics.toolkits} 套教案包</span>
-                  </div>
-                </div>
-                <Link href="/edu" className="home-button shrink-0">
-                  进入教育专区
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </section>
             </ModuleSection>
           ),
         },

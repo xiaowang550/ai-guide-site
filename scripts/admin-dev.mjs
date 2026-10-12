@@ -34,6 +34,7 @@ import { createCodexBridge } from './codex-bridge.mjs'
 import { readSiteConfig } from '../lib/admin/modules.ts'
 import { moduleForPath, pathEnabled } from '../lib/site-modules.ts'
 import { verifySession, parseCookies, SESSION_COOKIE } from '../lib/admin/auth.ts'
+import { schoolPageAccess, schoolPath, normalizedSchoolPath } from '../lib/admin/schools.ts'
 import { handleApi } from '../lib/admin/api.ts'
 import { createSqliteDb } from '../lib/db/sqlite.ts'
 import { createD1Shim } from '../lib/db/d1-shim.ts'
@@ -136,7 +137,7 @@ async function serveStatic(req, res, pathname) {
     const isHtml = extname(filePath) === '.html'
     res.writeHead(200, {
       'content-type': type,
-      'cache-control': isHtml ? 'no-cache' : 'public, max-age=0, must-revalidate',
+      'cache-control': res.getHeader('cache-control') ?? (isHtml ? 'no-cache' : 'public, max-age=0, must-revalidate'),
     })
     res.end(buf)
   } catch {
@@ -206,13 +207,17 @@ const server = createServer(async (req, res) => {
       return
     }
 
+    if (schoolPath(url.pathname)) {
+      const denied = await schoolPageAccess(db,new Request(url,{headers:{cookie:req.headers.cookie??''}}))
+      if (denied) {await writeWebResponse(res,denied);return}
+    }
     if (moduleForPath(url.pathname)) {
-      const config = await readSiteConfig(db)
+      const config = await readSiteConfig(db,schoolPath(url.pathname))
       const token = parseCookies(req.headers.cookie ?? null)[SESSION_COOKIE]
       const ownerPreview =
         url.searchParams.get('admin-preview') === '1' &&
         (await verifySession(db, token))?.role === 'owner'
-      if (!pathEnabled(config, url.pathname) && !ownerPreview) {
+      if (!pathEnabled(config, schoolPath(url.pathname) ? normalizedSchoolPath(url.pathname) : url.pathname) && !ownerPreview) {
         res.writeHead(404, {
           'content-type': 'text/html; charset=utf-8',
           'cache-control': 'no-store',
@@ -221,6 +226,7 @@ const server = createServer(async (req, res) => {
         return
       }
     }
+    if (schoolPath(url.pathname)) {res.setHeader('cache-control','private, no-store');res.setHeader('x-robots-tag','noindex, nofollow')}
     await serveStatic(req, res, url.pathname)
   } catch (e) {
     console.error('[admin-dev] 出错：', e)

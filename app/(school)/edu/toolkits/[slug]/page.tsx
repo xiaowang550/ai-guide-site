@@ -41,7 +41,7 @@ export default async function ToolkitDetailPage({ params }: { params: Promise<{ 
         title={toolkit.title}
         description={`${toolkit.stage} · ${toolkit.subject} · ${toolkit.mode} · ${toolkit.lessons} 课时`}
         breadcrumbs={[
-          { label: '首页', href: '/' },
+          { label: '学校首页', href: '/edu' },
           { label: '学校服务', href: '/edu' },
           { label: '教案包', href: '/edu/toolkits' },
           { label: toolkit.title },

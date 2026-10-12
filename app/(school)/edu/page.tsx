@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, BookOpen, ClipboardList, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
+import { SchoolHomeModules } from '@/components/edu/school-home-modules'
 
 export const metadata: Metadata = {
   title: '学校服务：从一节课开始',
@@ -38,7 +39,7 @@ export default function EduPage() {
         className="school-page-heading"
         title="从一节课开始，让 AI 变得可理解、可使用。"
         description="初中先认识，高中再实践；教师从正在发生的教学任务入手。"
-        breadcrumbs={[{ label: '首页', href: '/' }, { label: '学校服务' }]}
+        breadcrumbs={[{ label: '学校首页', href: '/edu' }, { label: '学校服务' }]}
       />
       <div className="container py-8">
         <figure className="school-illustration">
@@ -75,6 +76,7 @@ export default function EduPage() {
           </Link>
         </p>
       </div>
+      <SchoolHomeModules />
     </>
   )
 }

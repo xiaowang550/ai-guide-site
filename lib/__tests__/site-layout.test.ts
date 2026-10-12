@@ -5,7 +5,7 @@ import { siteNavigation } from '@/lib/site-navigation'
 import { login, makeTestEnv, request } from './helpers/admin-test-env'
 
 describe('DIY 导航与首页布局', () => {
-  it('默认导航符合站主指定顺序，首页可以移动，学校专区仍可另行启用', () => {
+  it('默认导航符合站主指定顺序，首页可移动，学校专区不进入大众端', () => {
     expect(siteNavigation(DEFAULT_SITE_CONFIG).map((item) => item.label)).toEqual([
       '首页',
       '教程',
@@ -27,7 +27,7 @@ describe('DIY 导航与首页布局', () => {
         .map((item) => item.label)
         .slice(0, 3),
     ).toEqual(['工具库', '首页', 'AI 资讯'])
-    expect(siteNavigation(changed).some((item) => item.href === '/edu')).toBe(true)
+    expect(siteNavigation(changed).some((item) => item.href === '/edu')).toBe(false)
   })
   it('旧站点补上布局存储，既有开关、模块与密钥配置不被覆盖', async () => {
     const env = await makeTestEnv()
@@ -43,12 +43,12 @@ describe('DIY 导航与首页布局', () => {
     expect(fresh.status).toBe(200)
     expect(fresh.json.layout.navigation).toEqual(DEFAULT_LAYOUT.navigation)
     expect(fresh.json.features).toEqual({ assistant: false, onboarding: false })
-    expect(
-      fresh.json.modules.find((module: { id: string }) => module.id === 'school').version,
-    ).toBe(99)
-    expect(
-      fresh.json.modules.find((module: { id: string }) => module.id === 'school').enabled,
-    ).toBe(false)
+    expect(fresh.json.modules.some((module: { id: string }) => module.id === 'school')).toBe(false)
+    const preserved = await env.db.first<{ data: string }>(
+      "SELECT data FROM site_modules WHERE id='school'",
+    )
+    expect(JSON.parse(preserved!.data).version).toBe(99)
+    expect(JSON.parse(preserved!.data).enabled).toBe(false)
   })
   it('布局编辑需要管理员与同源请求，不改变栏目是否公开', async () => {
     const env = await makeTestEnv()

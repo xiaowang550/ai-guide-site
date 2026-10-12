@@ -8,7 +8,7 @@ describe('搜索索引', () => {
   it('索引包含全部内容类型', () => {
     // 自定义模块在运行时加入索引，不存在于构建时的静态 DOCS。
     const types = new Set([...DOCS.map((d) => d.type), 'module'])
-    for (const t of ['tool', 'concept', 'guide', 'case', 'path', 'program', 'toolkit', 'news']) {
+    for (const t of ['tool', 'concept', 'guide', 'case', 'path', 'news']) {
       expect(types.has(t as (typeof DOCS)[number]['type']), `缺少类型 ${t}`).toBe(true)
     }
   })
@@ -59,9 +59,9 @@ describe('searchDocs（模糊搜索）', () => {
     expect(byVendor.some((h) => h.doc.id === 'doubao')).toBe(true)
   })
 
-  it('教育模块内容可被搜到（课程 / 教案包；暂停模块不进入结果）', () => {
-    expect(searchDocs(DOCS, '教案包').some((h) => h.doc.type === 'toolkit')).toBe(true)
-    expect(searchDocs(DOCS, '使用规范').some((h) => h.doc.type === 'program')).toBe(true)
+  it('学校私有课程与教案包不进入公共搜索结果', () => {
+    expect(searchDocs(DOCS, '教案包').some((h) => h.doc.type === 'toolkit')).toBe(false)
+    expect(searchDocs(DOCS, '使用规范').some((h) => h.doc.type === 'program')).toBe(false)
     expect(searchDocs(DOCS, '简报').some((hit) => hit.doc.href.startsWith('/edu/briefings'))).toBe(
       false,
     )
@@ -94,6 +94,6 @@ describe('searchDocs（模糊搜索）', () => {
 describe('SEARCH_TYPE_LABELS', () => {
   it('覆盖全部搜索类型且无多余项', () => {
     const types = new Set([...DOCS.map((d) => d.type), 'module'])
-    expect(Object.keys(SEARCH_TYPE_LABELS).sort()).toEqual([...types].sort())
+    expect(Object.keys(SEARCH_TYPE_LABELS).sort()).toEqual([...types, 'program', 'toolkit'].sort())
   })
 })

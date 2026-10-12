@@ -199,32 +199,4 @@ export const searchDocs: SearchDoc[] = [
     tags: [],
   })),
   // ---------- 当前公开的课程与教案包 ----------
-  ...eduPrograms.map<SearchDoc>((p) => ({
-    id: p.id,
-    type: 'program',
-    title: p.title,
-    subtitle: `${p.tier} · ${p.stage} · ${p.subject}`,
-    summary: p.outcome,
-    keywords: [
-      p.tier,
-      p.stage,
-      p.subject,
-      p.format,
-      p.audience,
-      ...p.deliverables,
-      ...(p.tier === 'S3' ? ['使用规范', '核验', '诚信', '安全'] : []),
-    ],
-    href: `/edu/programs/${p.id}`,
-    tags: [p.stage, p.subject, p.format],
-  })),
-  ...eduToolkits.map<SearchDoc>((t) => ({
-    id: t.id,
-    type: 'toolkit',
-    title: t.title,
-    subtitle: `教案包 · ${t.stage} · ${t.subject}`,
-    summary: t.lessonPlans[0].goal,
-    keywords: [t.stage, t.subject, '教案包', '课堂活动', '使用规范', ...t.policyNotes],
-    href: `/edu/toolkits/${t.id}`,
-    tags: [t.stage, t.subject, '教案包'],
-  })),
 ]

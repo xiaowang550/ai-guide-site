@@ -14,8 +14,6 @@ const TYPES: (SearchDoc['type'] | 'all')[] = [
   'news',
   'module',
   'tool',
-  'program',
-  'toolkit',
   'concept',
   'guide',
   'case',

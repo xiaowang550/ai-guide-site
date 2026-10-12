@@ -7,6 +7,7 @@ import { LayoutEditor } from './layout-editor'
 import { type SiteLayout } from '@/lib/site-layout'
 import {
   moduleHref,
+  moduleAudience,
   type PublicSiteConfig,
   type SiteModule,
   type ModuleBlock,
@@ -32,13 +33,13 @@ const blank = (): SiteModule => ({
   version: 0,
   updatedAt: '',
 })
-export function ModulesView() {
+export function ModulesView({ audience = 'public' }: { audience?: 'public' | 'school' }) {
   const [config, setConfig] = useState<PublicSiteConfig | null>(null),
     [editing, setEditing] = useState<SiteModule | null>(null),
     [error, setError] = useState(''),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
-    [previewPath, setPreviewPath] = useState('/'),
+    [previewPath, setPreviewPath] = useState(audience === 'school' ? '/edu/' : '/'),
     [frameKey, setFrameKey] = useState(0),
     [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop'),
     [previewScale, setPreviewScale] = useState(1)
@@ -110,9 +111,11 @@ export function ModulesView() {
           ...body,
           ...(id ? { version } : {}),
         }),
-      editing.enabled
-        ? '已公开，访客刷新后即可看到；已打开页面约 5 秒同步。'
-        : '草稿已保存，访客暂时看不到。',
+      editing.enabled && audience === 'school'
+        ? '已发布到学校端，登录后的老师约 5 秒内同步。'
+        : editing.enabled
+          ? '已公开，访客刷新后即可看到；已打开页面约 5 秒同步。'
+          : '草稿已保存，访客暂时看不到。',
     )
     if (ok) setEditing(null)
   }
@@ -131,15 +134,19 @@ export function ModulesView() {
     <div className="space-y-7">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">前台与模块管理</h1>
+          <h1 className="text-2xl font-semibold">
+            {audience === 'school' ? '学校内容与模块' : '大众 / 学生端管理'}
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            开关栏目、添加资料与练习，直接管理访客看到的内容。
+            {audience === 'school'
+              ? '整理教师资源，新增内容可实时同步到学校端。'
+              : '开关栏目、添加资料与练习，直接管理访客看到的内容。'}
           </p>
         </div>
         <button
           className="admin-primary-button"
           onClick={() => {
-            setEditing(blank())
+            setEditing({ ...blank(), audience })
             setError('')
             setMessage('')
           }}
@@ -157,7 +164,7 @@ export function ModulesView() {
           {message}
         </p>
       )}
-      {config && (
+      {config && audience === 'public' && (
         <LayoutEditor
           config={config}
           busy={busy}
@@ -174,58 +181,66 @@ export function ModulesView() {
         <section className="admin-card p-5">
           <h2 className="font-semibold">栏目开关</h2>
           <p className="mt-2 text-xs leading-6 text-muted-foreground">
-            关闭后隐藏入口并停止公开。管理员预览仍能查看；公开站无需登录。
+            {audience === 'school'
+              ? '学校端内容仅供已登录学校查看。关闭后停止提供，管理员仍可预览。'
+              : '关闭后隐藏入口。大众与学生端无需登录；学校服务在独立学校端管理。'}
           </p>
           <div className="mt-4 divide-y">
-            {config?.modules.map((module) => (
-              <div key={module.id} className="flex items-center gap-3 py-4">
-                <button
-                  className="module-switch"
-                  type="button"
-                  role="switch"
-                  aria-checked={module.enabled}
-                  aria-label={`${module.title}公开开关`}
-                  disabled={busy}
-                  onClick={() =>
-                    void act(
-                      () =>
-                        apiSend(`/api/admin/modules/${module.id}`, 'PATCH', {
-                          version: module.version,
-                          enabled: !module.enabled,
-                        }),
-                      module.enabled ? '已关闭栏目。' : '已开放栏目。',
-                    )
-                  }
-                >
-                  <span />
-                </button>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{module.title}</p>
-                  <span className="text-[11px] text-muted-foreground">
-                    {module.kind === 'builtin' ? '内置栏目' : labels[module.kind]} ·{' '}
-                    {module.enabled ? '已公开' : '未公开'}
-                  </span>
-                </div>
-                <button
-                  className="admin-icon-button"
-                  title={`预览${module.title}`}
-                  onClick={() => {
-                    setPreviewPath(moduleHref(module))
-                    setFrameKey((key) => key + 1)
-                  }}
-                >
-                  <Eye className="h-4 w-4" />
-                </button>
-                {module.kind !== 'builtin' && (
+            {config?.modules
+              .filter((module) => moduleAudience(module) === audience)
+              .map((module) => (
+                <div key={module.id} className="flex items-center gap-3 py-4">
                   <button
-                    className="text-xs text-primary"
-                    onClick={() => setEditing(structuredClone(module))}
+                    className="module-switch"
+                    type="button"
+                    role="switch"
+                    aria-checked={module.enabled}
+                    aria-label={`${module.title}${audience === 'school' ? '学校端' : '公开'}开关`}
+                    disabled={busy}
+                    onClick={() =>
+                      void act(
+                        () =>
+                          apiSend(`/api/admin/modules/${module.id}`, 'PATCH', {
+                            version: module.version,
+                            enabled: !module.enabled,
+                          }),
+                        module.enabled ? '已关闭栏目。' : '已开放栏目。',
+                      )
+                    }
                   >
-                    编辑
+                    <span />
                   </button>
-                )}
-              </div>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{module.title}</p>
+                    <span className="text-[11px] text-muted-foreground">
+                      {module.kind === 'builtin' ? '内置栏目' : labels[module.kind]} ·{' '}
+                      {module.enabled
+                        ? audience === 'school'
+                          ? '登录后可见'
+                          : '已公开'
+                        : '未开放'}
+                    </span>
+                  </div>
+                  <button
+                    className="admin-icon-button"
+                    title={`预览${module.title}`}
+                    onClick={() => {
+                      setPreviewPath(moduleHref(module))
+                      setFrameKey((key) => key + 1)
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  {module.kind !== 'builtin' && (
+                    <button
+                      className="text-xs text-primary"
+                      onClick={() => setEditing(structuredClone(module))}
+                    >
+                      编辑
+                    </button>
+                  )}
+                </div>
+              ))}
           </div>
         </section>
         <section className="admin-card overflow-hidden">
@@ -246,11 +261,11 @@ export function ModulesView() {
               <button
                 className="text-xs text-primary"
                 onClick={() => {
-                  setPreviewPath('/')
+                  setPreviewPath(audience === 'school' ? '/edu/' : '/')
                   setFrameKey((key) => key + 1)
                 }}
               >
-                首页
+                {audience === 'school' ? '学校首页' : '首页'}
               </button>
               <button
                 className="text-xs text-primary"
@@ -264,7 +279,8 @@ export function ModulesView() {
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground"
               >
-                访客页面 <ArrowUpRight className="h-3 w-3" />
+                {audience === 'school' ? '学校页面' : '访客页面'}{' '}
+                <ArrowUpRight className="h-3 w-3" />
               </a>
             </div>
           </div>
@@ -302,6 +318,18 @@ export function ModulesView() {
             </button>
           </div>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <label className="module-field">
+              模块所属端
+              <select
+                value={editing.audience ?? 'public'}
+                onChange={(e) =>
+                  setEditing({ ...editing, audience: e.target.value as 'public' | 'school' })
+                }
+              >
+                <option value="public">大众 / 学生端（免登录）</option>
+                <option value="school">学校端（需学校登录）</option>
+              </select>
+            </label>
             <label className="module-field">
               标题
               <input

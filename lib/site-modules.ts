@@ -8,7 +8,7 @@ export interface SiteLayout {
 }
 export const DEFAULT_LAYOUT: SiteLayout = {
   navigation: ['home', 'guides', 'cases', 'tools', 'knowledge', 'news'],
-  home: ['hero', 'metrics', 'start', 'tools', 'guides', 'school', 'news'],
+  home: ['hero', 'metrics', 'start', 'tools', 'guides', 'news'],
   hiddenNavigation: ['school', 'advanced', 'beginner', 'saved', 'finder'],
   hiddenHome: [],
   version: 1,
@@ -23,6 +23,7 @@ export interface ModuleBlock {
   href?: string
 }
 export interface SiteModule {
+  audience?: 'public' | 'school'
   id: string
   title: string
   description: string
@@ -175,9 +176,12 @@ export const builtinModules: SiteModule[] = [
 ]
 export const DEFAULT_SITE_CONFIG: PublicSiteConfig = {
   revision: 'baseline',
-  modules: builtinModules,
+  modules: builtinModules.filter((module) => module.id !== 'school'),
   features: { assistant: true, onboarding: true },
   layout: DEFAULT_LAYOUT,
+}
+export function moduleAudience(module: SiteModule): 'public' | 'school' {
+  return module.id === 'school' ? 'school' : (module.audience ?? 'public')
 }
 export function moduleForPath(path: string): string | null {
   const clean = path.split('?')[0].replace(/\/+$/, '') || '/'
@@ -210,6 +214,8 @@ export function pathEnabled(config: PublicSiteConfig, path: string): boolean {
   )
 }
 export function moduleHref(module: SiteModule): string {
+  if (module.kind !== 'builtin' && moduleAudience(module) === 'school')
+    return `/edu/modules/?id=${encodeURIComponent(module.id)}`
   const routes: Record<string, string> = {
     beginner: '/start',
     saved: '/saved',

@@ -40,7 +40,7 @@ const LEVEL_STYLE = {
 }
 
 export default function FreshnessPage() {
-  const report = buildFreshnessReport()
+  const report = buildFreshnessReport({ includeSchool: false })
   const latest = latestContentUpdate()
   const health = Math.round((report.totals.fresh / report.totals.total) * 100)
 
@@ -139,42 +139,45 @@ export default function FreshnessPage() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(report.byKind).map(([kind, stat]) => {
-                  const thresholds = FRESHNESS_THRESHOLDS[kind as keyof typeof FRESHNESS_THRESHOLDS]
-                  const oldest = report.items.find((i) => i.id === stat.oldestId)
-                  return (
-                    <tr key={kind} className="border-t border-hairline">
-                      <th scope="row" className="px-3 py-3 text-left font-medium">
-                        {KIND_LABEL[kind] ?? kind}
-                      </th>
-                      <td className="px-3 py-3 text-right tabular-nums">{stat.total}</td>
-                      <td className="px-3 py-3 text-right tabular-nums text-score-4">
-                        {stat.fresh}
-                      </td>
-                      <td className="px-3 py-3 text-right tabular-nums text-amber-600 dark:text-amber-400">
-                        {stat.aging}
-                      </td>
-                      <td className="px-3 py-3 text-right tabular-nums text-danger">
-                        {stat.stale}
-                      </td>
-                      <td className="px-3 py-3">
-                        {oldest ? (
-                          <Link href={oldest.href} className="link-animate text-sm">
-                            {oldest.title}
-                            <span className="ml-1.5 text-xs text-muted-foreground">
-                              {stat.oldestDays} 天前
-                            </span>
-                          </Link>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-3 text-xs tabular-nums text-muted-foreground">
-                        {thresholds.fresh} / {thresholds.warn} / {thresholds.stale}
-                      </td>
-                    </tr>
-                  )
-                })}
+                {Object.entries(report.byKind)
+                  .filter(([kind]) => kind !== 'edu')
+                  .map(([kind, stat]) => {
+                    const thresholds =
+                      FRESHNESS_THRESHOLDS[kind as keyof typeof FRESHNESS_THRESHOLDS]
+                    const oldest = report.items.find((i) => i.id === stat.oldestId)
+                    return (
+                      <tr key={kind} className="border-t border-hairline">
+                        <th scope="row" className="px-3 py-3 text-left font-medium">
+                          {KIND_LABEL[kind] ?? kind}
+                        </th>
+                        <td className="px-3 py-3 text-right tabular-nums">{stat.total}</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-score-4">
+                          {stat.fresh}
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-amber-600 dark:text-amber-400">
+                          {stat.aging}
+                        </td>
+                        <td className="px-3 py-3 text-right tabular-nums text-danger">
+                          {stat.stale}
+                        </td>
+                        <td className="px-3 py-3">
+                          {oldest ? (
+                            <Link href={oldest.href} className="link-animate text-sm">
+                              {oldest.title}
+                              <span className="ml-1.5 text-xs text-muted-foreground">
+                                {stat.oldestDays} 天前
+                              </span>
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-xs tabular-nums text-muted-foreground">
+                          {thresholds.fresh} / {thresholds.warn} / {thresholds.stale}
+                        </td>
+                      </tr>
+                    )
+                  })}
               </tbody>
             </table>
           </div>

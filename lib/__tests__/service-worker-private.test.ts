@@ -41,6 +41,10 @@ describe('管理数据不进入离线缓存', () => {
       '/api/content/published',
       '/admin',
       '/admin/',
+      '/edu/',
+      '/edu/toolkits/highschool-ai.txt',
+      '/school/login/',
+      '/api/school/session',
     ])
       expect(intercepts(path), path).toBe(false)
   })

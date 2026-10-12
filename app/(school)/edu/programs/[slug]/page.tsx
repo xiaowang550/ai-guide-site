@@ -51,17 +51,20 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
     const t = getTools([ref.id])[0]
     return t ? { href: `/tools/${t.id}`, label: t.name, kind: '工具' as const } : null
   })
-  const relatedTools = getTools(program.relatedRefs.filter((r) => r.kind === 'tool').map((r) => r.id))
+  const relatedTools = getTools(
+    program.relatedRefs.filter((r) => r.kind === 'tool').map((r) => r.id),
+  )
   const current = isCurrent(program.validFrom, program.validTo)
-  const nextTier = eduTiers
-    .filter((t) => t.audience === tier?.audience && t.order === (tier?.order ?? 0) + 1)[0]
+  const nextTier = eduTiers.filter(
+    (t) => t.audience === tier?.audience && t.order === (tier?.order ?? 0) + 1,
+  )[0]
 
   return (
     <>
       <PageHeader
         className="school-page-heading"
         breadcrumbs={[
-          { label: '首页', href: '/' },
+          { label: '学校首页', href: '/edu' },
           { label: 'AI 教育服务', href: '/edu' },
           { label: '课程体系', href: '/edu/programs' },
           { label: program.title },
@@ -88,17 +91,19 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
         }
       />
 
-      
       {/* 打印：纸面上只保留内容，导航与按钮不输出 */}
       <div className="container print:hidden">
         <div className="flex justify-end pb-2">
           <PrintButton />
         </div>
       </div>
-<div className="container py-8">
+      <div className="container py-8">
         {!current ? (
           <div className="mb-6 flex gap-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-4">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+              aria-hidden
+            />
             <div className="text-sm leading-6">
               <p className="font-semibold">本课程版本已标记为更新，建议改用新版</p>
               <p className="mt-1 text-foreground/85">
@@ -113,7 +118,10 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                       {eduProgramsById[program.supersededBy]?.title ?? program.supersededBy}
                     </Link>
                     或在
-                    <Link href="/edu/support" className="mx-1 text-primary underline underline-offset-4">
+                    <Link
+                      href="/edu/support"
+                      className="mx-1 text-primary underline underline-offset-4"
+                    >
                       答疑与反馈
                     </Link>
                     查看本期变更说明。
@@ -121,7 +129,10 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                 ) : (
                   <>
                     请查看
-                    <Link href="/edu/support" className="mx-1 text-primary underline underline-offset-4">
+                    <Link
+                      href="/edu/support"
+                      className="mx-1 text-primary underline underline-offset-4"
+                    >
                       答疑与反馈
                     </Link>
                     获取最新版本。
@@ -170,15 +181,20 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               </p>
               <ol className="school-lesson-flow mt-5">
                 {program.modules.map((m, i) => (
-                  <li key={m.title} data-step={i+1}>
+                  <li key={m.title} data-step={i + 1}>
                     <div className="flex items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
                           <h3 className="text-base font-semibold">{m.title}</h3>
                           <span className="text-xs text-muted-foreground">{m.minutes} 分钟</span>
                         </div>
-                        <details className="school-details mt-3"><summary>展开教学要点</summary>
-                          <ul className="space-y-2 text-sm leading-6 text-muted-foreground">{m.points.map(point=><li key={point}>{point}</li>)}</ul>
+                        <details className="school-details mt-3">
+                          <summary>展开教学要点</summary>
+                          <ul className="space-y-2 text-sm leading-6 text-muted-foreground">
+                            {m.points.map((point) => (
+                              <li key={point}>{point}</li>
+                            ))}
+                          </ul>
                         </details>
                         {m.activity ? (
                           <p className="mt-3 rounded-lg bg-accent/40 p-3 text-sm leading-6 text-foreground/85">
@@ -198,7 +214,10 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               <h2 className="text-xl">配套交付物</h2>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {program.deliverables.map((d) => (
-                  <li key={d} className="flex items-start gap-2 border-t border-hairline py-3 text-sm">
+                  <li
+                    key={d}
+                    className="flex items-start gap-2 border-t border-hairline py-3 text-sm"
+                  >
                     <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-primary" />
                     {d}
                   </li>
@@ -207,7 +226,8 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
             </section>
 
             {/* 常见错误清单 */}
-            <details className="school-details mt-8"><summary>查看常见错误与课前检查</summary>
+            <details className="school-details mt-8">
+              <summary>查看常见错误与课前检查</summary>
               <h2 className="flex items-center gap-2 text-xl">
                 <AlertTriangle className="h-5 w-5 text-score-2" aria-hidden />
                 常见错误清单
@@ -246,7 +266,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                           <span className="shrink-0 text-xs text-muted-foreground">{r.kind}</span>
                         </Link>
                       </li>
-                    ) : null
+                    ) : null,
                   )}
                   {toolkits.map((t) => (
                     <li key={t.id}>
@@ -268,7 +288,12 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
                         href={`/tools/${t.id}`}
                         className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs hover:border-primary/40"
                       >
-                        <ToolLogo src={t.logo} alt="" size={16} className="border-0 bg-transparent p-0" />
+                        <ToolLogo
+                          src={t.logo}
+                          alt=""
+                          size={16}
+                          className="border-0 bg-transparent p-0"
+                        />
                         {t.name}
                       </Link>
                     ))}
@@ -283,7 +308,9 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               </Button>
               {nextTier ? (
                 <Button asChild variant="ghost" size="sm">
-                  <Link href={`/edu/programs/${eduPrograms.find(p=>p.tier===nextTier.id)?.id ?? program.id}`}>
+                  <Link
+                    href={`/edu/programs/${eduPrograms.find((p) => p.tier === nextTier.id)?.id ?? program.id}`}
+                  >
                     下一层：{nextTier.name}
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>

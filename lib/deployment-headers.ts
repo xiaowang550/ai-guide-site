@@ -15,6 +15,8 @@ export function deploymentHeaders(response: Response, request: Request): Respons
     url.pathname.startsWith('/api/') ||
     url.pathname === '/admin' ||
     url.pathname.startsWith('/admin/') ||
+    /^\/edu(?:\/|\.|$)/.test(url.pathname) ||
+    url.pathname.startsWith('/school/') ||
     url.searchParams.has('admin-preview')
   )
     headers.set('cache-control', 'no-store')
@@ -25,7 +27,7 @@ export function deploymentHeaders(response: Response, request: Request): Respons
     headers.set('cache-control', 'public, max-age=31536000, immutable')
   else if (
     headers.get('content-type')?.includes('text/html') &&
-    headers.get('cache-control') !== 'no-store'
+    !headers.get('cache-control')?.includes('no-store')
   )
     headers.set('cache-control', 'public, max-age=0, must-revalidate')
   return new Response(response.body, {

@@ -4,9 +4,24 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { eduNav } from '@/lib/site'
 import { cn } from '@/lib/utils'
+import { useSiteModules } from '@/components/site-module-context'
+import { moduleAudience, moduleHref } from '@/lib/site-modules'
 
 export function SchoolNav() {
   const pathname = usePathname()
+  const { config, preview } = useSiteModules()
+  const items = [
+    ...eduNav,
+    ...config.modules
+      .filter(
+        (m) =>
+          m.kind !== 'builtin' &&
+          moduleAudience(m) === 'school' &&
+          m.navigation &&
+          (m.enabled || preview),
+      )
+      .map((m) => ({ href: moduleHref(m), label: m.title })),
+  ]
   return (
     <div className="border-b border-hairline bg-background">
       <div className="container flex flex-col sm:flex-row sm:items-center sm:gap-8">
@@ -15,11 +30,11 @@ export function SchoolNav() {
         </Link>
         <nav aria-label="教育服务导航" className="no-scrollbar overflow-x-auto">
           <ul className="flex gap-5">
-            {eduNav.map((item) => {
+            {items.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
               return (
                 <li key={item.href} className="shrink-0">
-                  <Link
+                  <a
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
@@ -30,7 +45,7 @@ export function SchoolNav() {
                     )}
                   >
                     {item.label}
-                  </Link>
+                  </a>
                 </li>
               )
             })}

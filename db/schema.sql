@@ -304,3 +304,16 @@ CREATE TABLE IF NOT EXISTS audit_log (
 
 CREATE INDEX IF NOT EXISTS idx_audit_at     ON audit_log(at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_actor  ON audit_log(actor, at DESC);
+
+-- School accounts are separate from administrator accounts and sessions.
+CREATE TABLE IF NOT EXISTS school_accounts (
+ id TEXT PRIMARY KEY, school_name TEXT NOT NULL, username TEXT NOT NULL UNIQUE,
+ password_hash TEXT NOT NULL, salt TEXT NOT NULL, iterations INTEGER NOT NULL,
+ enabled INTEGER NOT NULL DEFAULT 1, version INTEGER NOT NULL DEFAULT 1,
+ created_at TEXT NOT NULL, updated_at TEXT NOT NULL, last_login_at TEXT
+);
+CREATE TABLE IF NOT EXISTS school_sessions (
+ token_hash TEXT PRIMARY KEY, account_id TEXT NOT NULL REFERENCES school_accounts(id) ON DELETE CASCADE,
+ expires_at TEXT NOT NULL, created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS school_session_account ON school_sessions(account_id);

@@ -16,6 +16,7 @@ import { ReviewView } from './review-view'
 import { AuditView } from './audit-view'
 import { AccountView } from './account-view'
 import { SchoolModulesView } from './school-modules-view'
+import { SchoolAccountsView } from './school-accounts-view'
 import Link from 'next/link'
 import {
   Activity,
@@ -31,6 +32,7 @@ import {
 
 type TabKey =
   | 'modules'
+  | 'school-accounts'
   | 'settings'
   | 'builds'
   | 'dashboard'
@@ -51,7 +53,13 @@ const TABS: { key: TabKey; label: string; hint: string; icon: typeof Activity }[
     label: '网站总览',
     hint: '内容状态、反馈、待办、访问统计',
   },
-  { key: 'modules', icon: Compass, label: '前台与模块', hint: '创建模块、开关栏目与前台预览' },
+  { key: 'modules', icon: Compass, label: '大众 / 学生端', hint: '免登录前台、模块与 DIY 布局' },
+  {
+    key: 'school-accounts',
+    icon: BookOpen,
+    label: '学校端与账号',
+    hint: '分配学校账号、重置密码与学校资源管理',
+  },
   { key: 'settings', icon: ShieldCheck, label: '站点设置', hint: '全站功能与管理员偏好' },
   {
     key: 'builds',
@@ -226,6 +234,7 @@ export function AdminShell() {
         <div className="admin-content-area">
           {tab === 'dashboard' && <DashboardView onNavigate={setTab} />}
           {tab === 'modules' && <ModulesView />}
+          {tab === 'school-accounts' && <SchoolAccountsView />}
           {tab === 'settings' && <SiteSettingsView />}
           {tab === 'builds' && <BuildsView />}
           {tab === 'news' && <NewsView />}

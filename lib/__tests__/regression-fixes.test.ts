@@ -5,11 +5,7 @@ import { recommend, filterByFlags, isLocalOnly, countLocalOnly, FLAG_KIND } from
 import { scenarios } from '@/data/scenarios'
 import { promptTemplates } from '@/data/prompts'
 import { generatePolicy, buildDeclaration, declarationTitle } from '@/lib/edu-shared'
-import {
-  MAX_COMPARE,
-  compareRangeText,
-  compareWithAlternatives,
-} from '@/lib/compare-constants'
+import { MAX_COMPARE, compareRangeText, compareWithAlternatives } from '@/lib/compare-constants'
 import { SCORING_SOURCE_SUMMARY } from '@/lib/scoring-statement'
 
 /**
@@ -56,7 +52,7 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
     const code = stripComments(readFileSync('components/compare-picker.tsx', 'utf8'))
     expect(
       code,
-      "compare-picker.tsx 是 'use client' 模块，不能在里面定义需要被服务端取值的常量"
+      "compare-picker.tsx 是 'use client' 模块，不能在里面定义需要被服务端取值的常量",
     ).not.toMatch(/export const MAX_COMPARE/)
     expect(code).toMatch(/import \{ MAX_COMPARE \} from '@\/lib\/compare-constants'/)
 
@@ -66,10 +62,9 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
 
   it('对比页从非 client 模块取常量', () => {
     const page = readFileSync('app/(public)/compare/page.tsx', 'utf8')
-    expect(
-      page,
-      '对比页不能再从 components/compare-picker 导入常量'
-    ).not.toMatch(/from '@\/components\/compare-picker'/)
+    expect(page, '对比页不能再从 components/compare-picker 导入常量').not.toMatch(
+      /from '@\/components\/compare-picker'/,
+    )
     expect(page).toMatch(/from '@\/lib\/compare-constants'/)
   })
 
@@ -100,7 +95,13 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
       for (const m of src.matchAll(/import\s*\{([^}]+)\}\s*from\s*'(@\/components\/[^']+)'/g)) {
         const names = m[1]
           .split(',')
-          .map((s) => s.trim().split(/\s+as\s+/).pop()!.trim())
+          .map((s) =>
+            s
+              .trim()
+              .split(/\s+as\s+/)
+              .pop()!
+              .trim(),
+          )
           .filter(Boolean)
         const target = `components/${m[2].replace('@/components/', '')}.tsx`
         let targetSrc = ''
@@ -122,7 +123,7 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
     expect(
       offenders,
       '从 client 模块导入的常量被插值进模板字符串，构建时会被替换成 client 引用桩，' +
-        '桩的函数源码会被写进 HTML 正文与 meta 标签。常量要放 lib/。'
+        '桩的函数源码会被写进 HTML 正文与 meta 标签。常量要放 lib/。',
     ).toEqual([])
   })
 
@@ -131,7 +132,7 @@ describe('1. MAX_COMPARE 不再泄漏 client 边界错误码', () => {
     if (!html) return // 还没 build，跳过而不是给假绿
     expect(
       html.includes('MAX_COMPARE') || html.includes('Attempted to call'),
-      '对比页仍包含 client 边界错误码'
+      '对比页仍包含 client 边界错误码',
     ).toBe(false)
     expect(html).toContain(compareRangeText())
   })
@@ -155,12 +156,10 @@ describe('2. 隐私条件是硬门槛而非加减分', () => {
   })
 
   it('确实会剔除工具（不是标了硬门槛但没生效）', () => {
-    expect(filterByFlags(tools, { privacySensitive: true }).length).toBeLessThan(
-      tools.length
-    )
+    expect(filterByFlags(tools, { privacySensitive: true }).length).toBeLessThan(tools.length)
     expect(countLocalOnly(tools)).toBeGreaterThan(0)
     expect(countLocalOnly(tools), '一个可本地部署的工具都没有，这条条件就没有意义').toBeLessThan(
-      tools.length
+      tools.length,
     )
   })
 
@@ -180,7 +179,7 @@ describe('2. 隐私条件是硬门槛而非加减分', () => {
       if (!rec.primary) continue
       expect(
         isLocalOnly(rec.primary.tool),
-        `${s.id} 在隐私硬门槛下推荐了 ${rec.primary.tool.name}`
+        `${s.id} 在隐私硬门槛下推荐了 ${rec.primary.tool.name}`,
       ).toBe(true)
     }
   })
@@ -216,8 +215,9 @@ describe('3. 示例数据标识在所有出现指标的地方一致', () => {
     const page = readFileSync('app/(public)/page.tsx', 'utf8')
     expect(page).not.toContain('metrics.schools')
     expect(page).not.toContain('metrics.teachersReached')
-    expect(page).toContain('metrics.programs')
-    expect(page).toContain('metrics.toolkits')
+    expect(page).not.toContain('metrics.programs')
+    expect(page).not.toContain('metrics.toolkits')
+    expect(page).not.toContain('href="/edu"')
   })
 
   it('保留的学校记录在后台明确标记示例数据', () => {
@@ -225,7 +225,6 @@ describe('3. 示例数据标识在所有出现指标的地方一致', () => {
     expect(view).toContain('school.isSample')
     expect(view).toContain('不代表实际覆盖成果')
   })
-
 })
 
 describe('4. 评分来源说明口径统一', () => {
@@ -236,13 +235,10 @@ describe('4. 评分来源说明口径统一', () => {
   })
 
   it('四处页面都引用统一组件，不各写一遍', () => {
-    for (const p of [
-      'app/(public)/compare/page.tsx',
-      'app/(public)/tools/[slug]/page.tsx',
-    ]) {
+    for (const p of ['app/(public)/compare/page.tsx', 'app/(public)/tools/[slug]/page.tsx']) {
       expect(
         readFileSync(p, 'utf8'),
-        `${p} 应引用 ScoringSourceNote，而不是自己写一遍口径`
+        `${p} 应引用 ScoringSourceNote，而不是自己写一遍口径`,
       ).toContain('ScoringSourceNote')
     }
   })
@@ -286,7 +282,7 @@ describe('5. 禁止学生使用时生成观察记录', () => {
     expect(doc, '禁止使用时仍让学生填写使用了什么工具').not.toContain('我使用的工具')
     expect(doc).not.toContain('我的核对方式')
     expect(doc, '禁止使用时仍让学生承诺「没有直接复制工具输出」').not.toContain(
-      '没有直接复制工具输出'
+      '没有直接复制工具输出',
     )
     expect(declarationTitle({ ...base, intensity: '明确禁止' })).toBe('AI 使用观察记录')
   })
@@ -336,10 +332,9 @@ describe('6. 本地工具不被套用 SaaS 上手模板', () => {
     expect(localBranch, '本地分支出现了联网要求').not.toContain('网络环境')
     // 本地分支必须说清「数据不外传」。用语义等价的两种说法做匹配，
     // 而不是锁死某一句文案 —— 改措辞不该让这个断言变红。
-    expect(
-      localBranch,
-      '本地分支没有说明数据不会离开本机'
-    ).toMatch(/留在你自己机器上|不出本机|不经过任何第三方/)
+    expect(localBranch, '本地分支没有说明数据不会离开本机').toMatch(
+      /留在你自己机器上|不出本机|不经过任何第三方/,
+    )
   })
 
   it('SaaS 工具仍走注册分支', () => {
@@ -390,7 +385,7 @@ describe('7. 替代品对比默认包含当前工具', () => {
       // 允许的两种：显式带上 tool.id 的两两对比，或走 compareWithAlternatives
       expect(
         expr.includes('compareWithAlternatives') || expr.includes('tool.id'),
-        `对比链接没有包含当前工具或没走统一函数：${expr}`
+        `对比链接没有包含当前工具或没走统一函数：${expr}`,
       ).toBe(true)
     }
   })

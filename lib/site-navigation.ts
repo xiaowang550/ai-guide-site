@@ -1,5 +1,11 @@
 import { megaNav, schoolNavigation, type NavItem } from './site'
-import { moduleHref, moduleForPath, pathEnabled, type PublicSiteConfig } from './site-modules'
+import {
+  moduleHref,
+  moduleForPath,
+  pathEnabled,
+  moduleAudience,
+  type PublicSiteConfig,
+} from './site-modules'
 import { layoutOf, orderedIds } from './site-modules'
 export function siteNavigation(config: PublicSiteConfig): NavItem[] {
   const layout = layoutOf(config)
@@ -12,7 +18,7 @@ export function siteNavigation(config: PublicSiteConfig): NavItem[] {
     .flatMap((id) => {
       if (id === 'home') return [megaNav.find((item) => item.href === '/')!]
       const entry = config.modules.find((item) => item.id === id)
-      if (!entry?.enabled) return []
+      if (!entry?.enabled || moduleAudience(entry) === 'school') return []
       const href = moduleHref(entry)
       if (!pathEnabled(config, href)) return []
       return [

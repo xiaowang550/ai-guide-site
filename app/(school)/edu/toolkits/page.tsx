@@ -32,7 +32,7 @@ export default function ToolkitsPage() {
         title="课程与教案包"
         description="选一个正在教学的场景，准备材料，按流程上课。先从一节课开始。"
         breadcrumbs={[
-          { label: '首页', href: '/' },
+          { label: '学校首页', href: '/edu' },
           { label: '学校服务', href: '/edu' },
           { label: '课程与教案包' },
         ]}

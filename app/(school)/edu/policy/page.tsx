@@ -18,19 +18,19 @@ export default function PolicyPage() {
         title="AI 使用规范"
         description="选使用范围，看课堂场景，带走一份规范草案和记录模板。"
         breadcrumbs={[
-          { label: '首页', href: '/' },
+          { label: '学校首页', href: '/edu' },
           { label: 'AI 教育服务', href: '/edu' },
           { label: 'AI 使用规范' },
         ]}
       />
-      
+
       {/* 打印：纸面上只保留内容，导航与按钮不输出 */}
       <div className="container print:hidden">
         <div className="flex justify-end pb-2">
           <PrintButton />
         </div>
       </div>
-<div className="container py-8">
+      <div className="container py-8">
         <PolicyGenerator />
       </div>
     </>

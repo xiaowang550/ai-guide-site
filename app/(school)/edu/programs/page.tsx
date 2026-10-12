@@ -27,7 +27,7 @@ export default function ProgramsPage() {
         title="课程体系"
         description="先选学习对象，再走第一步。每门课都留下一份能检查、能继续使用的材料。"
         breadcrumbs={[
-          { label: '首页', href: '/' },
+          { label: '学校首页', href: '/edu' },
           { label: '学校服务', href: '/edu' },
           { label: '课程体系' },
         ]}

@@ -97,7 +97,10 @@ export function ModulesExplorer() {
     <div className="container py-12">
       {selected ? (
         <>
-          <a className="mb-8 inline-block text-sm text-muted-foreground" href="/modules/">
+          <a
+            className="mb-8 inline-block text-sm text-muted-foreground"
+            href={selected.audience === 'school' ? '/edu/modules/' : '/modules/'}
+          >
             ← 全部模块
           </a>
           <CustomModuleContent module={selected} />

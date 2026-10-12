@@ -2,6 +2,7 @@ import type { Db } from '../db/types.ts'
 
 import {
   builtinModules,
+  moduleAudience,
   DEFAULT_LAYOUT,
   type SiteLayout,
   safeModuleLink,
@@ -42,7 +43,11 @@ export async function ensureModules(db: Db) {
     },
   ])
 }
-export async function readSiteConfig(db: Db, privateView = false): Promise<PublicSiteConfig> {
+export async function readSiteConfig(
+  db: Db,
+  privateView = false,
+  audience: 'public' | 'school' = 'public',
+): Promise<PublicSiteConfig> {
   await ensureModules(db)
   const [rows, features, layoutRow] = await Promise.all([
     db.all<{ data: string }>('SELECT data FROM site_modules WHERE archived=0'),
@@ -53,7 +58,13 @@ export async function readSiteConfig(db: Db, privateView = false): Promise<Publi
   ])
   const modules = rows
     .map((row) => JSON.parse(row.data) as SiteModule)
-    .filter((module) => privateView || module.kind === 'builtin' || module.enabled)
+    .filter(
+      (module) =>
+        privateView ||
+        (module.kind === 'builtin'
+          ? audience === 'school' || moduleAudience(module) === 'public'
+          : module.enabled && moduleAudience(module) === audience),
+    )
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
   const layout = JSON.parse(layoutRow?.data ?? JSON.stringify(DEFAULT_LAYOUT)) as SiteLayout
   // 草稿模块的布局 ID 与内容一样仅供管理员读取。
@@ -160,6 +171,7 @@ export async function saveSiteModule(
       (key) =>
         ![
           'title',
+          'audience',
           'description',
           'kind',
           'enabled',
@@ -198,6 +210,8 @@ export async function saveSiteModule(
     }),
     ...input,
   } as SiteModule
+  if (next.audience !== undefined && next.audience !== 'public' && next.audience !== 'school')
+    throw new ModuleInputError('请选择大众端或学校端。')
   if (
     previous?.kind === 'builtin' &&
     Object.keys(input).some((key) => !['enabled', 'version', 'order'].includes(key))

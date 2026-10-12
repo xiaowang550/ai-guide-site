@@ -109,7 +109,7 @@ function makeItem(
   href: string,
   kind: FreshnessKind,
   updatedAt: string,
-  now: Date
+  now: Date,
 ): FreshnessItem {
   const ageDays = daysSince(updatedAt, now)
   return {
@@ -126,6 +126,7 @@ function makeItem(
 
 export interface BuildReportOptions {
   now?: Date
+  includeSchool?: boolean
 }
 
 /** 汇总全站数据的新鲜度（纯函数，便于单测与构建期复用） */
@@ -137,18 +138,22 @@ export function buildFreshnessReport(options: BuildReportOptions = {}): Freshnes
     ...guides.map((g) => makeItem(g.id, g.title, `/guides/${g.id}`, 'guide', g.updatedAt, now)),
     ...scenarios.map((s) => makeItem(s.id, s.label, '/find', 'scenario', '2026-09-01', now)),
     ...promptTemplates.map((p) => makeItem(p.id, p.title, '/search', 'guide', '2026-09-20', now)),
-    ...eduPrograms.map((p) => makeItem(p.id, p.title, `/edu/programs/${p.id}`, 'edu', p.updatedAt, now)),
-    ...eduToolkits.map((t) => makeItem(t.id, t.title, `/edu/toolkits/${t.id}`, 'edu', t.updatedAt, now)),
+    ...eduPrograms.map((p) =>
+      makeItem(p.id, p.title, `/edu/programs/${p.id}`, 'edu', p.updatedAt, now),
+    ),
+    ...eduToolkits.map((t) =>
+      makeItem(t.id, t.title, `/edu/toolkits/${t.id}`, 'edu', t.updatedAt, now),
+    ),
     ...eduFaq.map((f) => makeItem(f.id, f.question, '/edu/support', 'edu', f.updatedAt, now)),
     ...cases.map((c) => makeItem(c.id, c.title, `/cases/${c.id}`, 'case', c.updatedAt, now)),
-  ]
+  ].filter((item) => options.includeSchool !== false || item.kind !== 'edu')
 
   const byKind = {} as FreshnessReport['byKind']
   for (const kind of Object.keys(FRESHNESS_THRESHOLDS) as FreshnessKind[]) {
     const group = items.filter((i) => i.kind === kind)
     const oldest = group.reduce<FreshnessItem | null>(
       (acc, cur) => (acc === null || cur.ageDays > acc.ageDays ? cur : acc),
-      null
+      null,
     )
     byKind[kind] = {
       total: group.length,
@@ -198,7 +203,7 @@ export function toolFreshness(id: string, now: Date = new Date()) {
 /** 决策器权重里最吃重的维度（给助手回答「为什么推荐它」用） */
 export function topWeightedCapabilities(
   weights: Partial<Record<CapabilityKey, number>>,
-  count = 3
+  count = 3,
 ): { key: CapabilityKey; weight: number }[] {
   return Object.entries(weights)
     .filter(([, w]) => typeof w === 'number' && w > 0)
@@ -209,8 +214,8 @@ export function topWeightedCapabilities(
 
 /** 是否所有内容都在有效期内（用于页面上的健康度提示） */
 export function allContentCurrent(now: Date = new Date()): boolean {
-  return [...eduPrograms, ...eduToolkits].every(
-    (item) => isCurrent(item.validFrom, item.validTo, now)
+  return [...eduPrograms, ...eduToolkits].every((item) =>
+    isCurrent(item.validFrom, item.validTo, now),
   )
 }
 
