@@ -53,7 +53,7 @@ export async function localizeNews(db: Db, translate: NewsTranslator, now = new 
           !newsTitleEdits[row.url] &&
           !/[\u3400-\u9fff]/.test(row.source_title),
       )
-      .slice(0, 12)
+      .slice(0, 6)
     if (!selected.length) return 0
     await db.exec(
       'CREATE TABLE IF NOT EXISTS news_language_budget(day TEXT PRIMARY KEY,count INTEGER NOT NULL)',
