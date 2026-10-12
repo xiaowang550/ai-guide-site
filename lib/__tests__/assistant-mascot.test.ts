@@ -9,6 +9,7 @@ describe('XiaoYa contextual appearances', () => {
     expect(mascotState({ reading: true, resting: true })).toBe('resting')
   })
   it('maps user actions to distinct supplied poses', () => {
+    expect(mascotState({})).toBe('resting')
     for (const [context, state] of [
       [{ greeting: true }, 'welcome'],
       [{ dragging: true }, 'flying'],

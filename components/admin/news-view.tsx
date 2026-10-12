@@ -48,7 +48,7 @@ export function NewsView() {
           {busy ? '正在同步…' : '立即同步官方消息'}
         </button>
         <span className="text-xs text-muted-foreground">
-          每 30 分钟检查 · 最近获取 {formatDateTime(feed?.lastFetchedAt)}
+          每 {feed?.intervalMinutes ?? 10} 分钟检查 · 最近获取 {formatDateTime(feed?.lastFetchedAt)}
         </span>
       </div>
       {error && (

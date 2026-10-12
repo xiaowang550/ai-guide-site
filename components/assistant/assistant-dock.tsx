@@ -30,7 +30,7 @@ export function AssistantDock() {
   const [ready, setReady] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
-  const [panelState, setPanelState] = useState<MascotState>('welcome')
+  const [panelState, setPanelState] = useState<MascotState>('resting')
   const path = usePathname()
   const inAdmin = path?.startsWith('/admin') ?? false
   const activity = useMascotContext(ready && enabled && !inAdmin)
@@ -119,7 +119,6 @@ export function AssistantDock() {
         dragging: isDragging,
         greeting: hint?.hello,
         hint: !!hint,
-        reading: /^\/(learn|guides|paths|start|edu)(\/|$)/.test(path),
       })
 
   const position = computeDockPosition(dock, viewport(), false, {

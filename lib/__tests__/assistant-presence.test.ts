@@ -30,22 +30,22 @@ describe('助手提醒的打扰控制', () => {
     expect(canShowAssistantHint({ ...quietPage, quietUntil: 1000001 })).toBe(false)
     expect(canShowAssistantHint({ ...quietPage, quietUntil: 1000000 })).toBe(true)
   })
-  it('四分钟间隔并且闲置十五秒后才显示，短提示不会过早反复出现', () => {
+  it('三分钟间隔并且停顿三秒后才显示，短提示不会过早反复出现', () => {
     expect(
       canShowAssistantHint({ ...quietPage, lastShown: quietPage.now - ASSISTANT_REMINDER_MS + 1 }),
     ).toBe(false)
-    expect(canShowAssistantHint({ ...quietPage, lastInteraction: quietPage.now - 14999 })).toBe(
+    expect(canShowAssistantHint({ ...quietPage, lastInteraction: quietPage.now - 2999 })).toBe(
       false,
     )
     expect(
       canShowAssistantHint({
         ...quietPage,
         lastShown: quietPage.now - ASSISTANT_REMINDER_MS,
-        lastInteraction: quietPage.now - 15000,
+        lastInteraction: quietPage.now - 3000,
       }),
     ).toBe(true)
   })
-  it('首次介绍不需要等四分钟，但避开刚开始操作的瞬间', () => {
+  it('首次介绍不需要等三分钟，但避开刚开始操作的瞬间', () => {
     expect(
       canShowAssistantHint({
         ...quietPage,
@@ -92,11 +92,13 @@ describe('气泡边界及情境文案', () => {
     expect(p.left + 248).toBeLessThanOrEqual(328)
     expect(p.top + 140).toBeLessThanOrEqual(368)
   })
-  it('跟随当前内容给出不同帮助，轮换到第五次回到第一句', () => {
+  it('跟随当前内容给出不同帮助，一个轮换周期内不重复', () => {
     expect(assistantHint('/cases/', 0)).toContain('案例')
     expect(assistantHint('/compare/', 0)).toContain('选工具')
     expect(assistantHint('/learn/', 0)).toContain('概念')
     expect(assistantHint('/edu/programs/', 0)).toContain('课程')
-    expect(assistantHint('/cases/', 4)).toBe(assistantHint('/cases/', 0))
+    expect(assistantHint('/updates/', 0)).toContain('消息')
+    expect(new Set(Array.from({ length: 8 }, (_, i) => assistantHint('/cases/', i))).size).toBe(8)
+    expect(assistantHint('/cases/', 8)).toBe(assistantHint('/cases/', 0))
   })
 })

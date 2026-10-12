@@ -12,6 +12,7 @@ import {
 } from './modules.ts'
 import { checkToolSources, readToolSourceStates } from '../news/tool-watch.ts'
 import { readNews, refreshNews, editNews } from '../news/service.ts'
+import { assistantNewsTranslations } from '../assistant-service.ts'
 import { updates } from '../../data/updates.ts'
 import { schoolArchiveNames } from './school-archive-names.ts'
 import { eduSchools } from '../../data/edu-schools.ts'
@@ -1352,11 +1353,10 @@ async function handlePublicNews(ctx: RouteCtx): Promise<Response> {
   const feed = await readNews(ctx.db, { tool, limit })
   if (ctx.env.NEWS_BACKGROUND)
     ctx.env.NEWS_BACKGROUND(
-      refreshNews(ctx.db)
-        .then(() => checkToolSources(ctx.db))
-        .catch((error) =>
-          console.error('[news] 同步失败', error instanceof Error ? error.message : '未知错误'),
-        ),
+      Promise.allSettled([
+        refreshNews(ctx.db).then(() => checkToolSources(ctx.db)),
+        assistantNewsTranslations(ctx.db, ctx.env),
+      ]),
     )
   return json(feed)
 }
@@ -1368,7 +1368,8 @@ async function handleAdminNews(ctx: RouteCtx): Promise<Response> {
 }
 async function handleNewsRefresh(ctx: RouteCtx): Promise<Response> {
   const news = await refreshNews(ctx.db, { force: true })
-  return json({ ...news, tools: await checkToolSources(ctx.db) })
+  const translated = await assistantNewsTranslations(ctx.db, ctx.env)
+  return json({ ...news, translated, tools: await checkToolSources(ctx.db) })
 }
 async function handleNewsEdit(ctx: RouteCtx, params: Record<string, string>): Promise<Response> {
   const body = await readJson<Record<string, unknown>>(ctx.request)

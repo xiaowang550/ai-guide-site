@@ -1,4 +1,15 @@
-export const NEWS_SCHEMA = `
+export const NEWS_LANGUAGE_SCHEMA = `
+CREATE TABLE IF NOT EXISTS news_localizations (
+ id TEXT PRIMARY KEY, source_title TEXT NOT NULL, excerpt TEXT NOT NULL DEFAULT '',
+ title_zh TEXT, summary_zh TEXT, translated_at TEXT, attempted_at TEXT
+);
+CREATE TABLE IF NOT EXISTS news_language_lock (
+ id INTEGER PRIMARY KEY CHECK(id=1), token TEXT NOT NULL, until_ms INTEGER NOT NULL
+);
+`
+export const NEWS_SCHEMA =
+  NEWS_LANGUAGE_SCHEMA +
+  `
 CREATE TABLE IF NOT EXISTS news_items (
  id TEXT PRIMARY KEY, url TEXT NOT NULL UNIQUE, source_id TEXT NOT NULL,
  source_title TEXT NOT NULL, published_at TEXT NOT NULL, fetched_at TEXT NOT NULL,

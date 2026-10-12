@@ -1,14 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { NEWS_CLIENT_POLL_MS, type NewsFeed, type NewsItem } from '@/lib/news/types'
+import {
+  NEWS_CLIENT_POLL_MS,
+  NEWS_REFRESH_MS,
+  type NewsFeed,
+  type NewsItem,
+} from '@/lib/news/types'
 
 export function useNews(initial: NewsItem[] = [], tool?: string, limit = 60) {
   const [feed, setFeed] = useState<NewsFeed>({
     items: initial,
     lastFetchedAt: null,
     stale: true,
-    intervalMinutes: 30,
+    intervalMinutes: NEWS_REFRESH_MS / 60000,
     sources: [],
   })
   const [error, setError] = useState('')

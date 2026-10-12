@@ -1,20 +1,27 @@
 'use client'
-
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
+  ArrowRight,
   ArrowUpRight,
-  Bell,
+  BadgeCheck,
   Code2,
+  FileText,
+  Filter,
+  Flame,
   FlaskConical,
   Layers,
+  Lightbulb,
+  Radio,
   Search,
   Sparkles,
+  UserRound,
   Wallet,
 } from 'lucide-react'
 import type { NewsCategory, NewsItem } from '@/lib/news/types'
+import { newsDisplay } from '@/lib/news/display'
+import { ToolLogo } from '@/components/tool-logo'
 import { useNews } from './use-news'
-
 const categories: NewsCategory[] = ['模型发布', '功能更新', '编程工具', '使用变化', '研究与行业']
 const icons = {
   模型发布: Layers,
@@ -23,6 +30,30 @@ const icons = {
   使用变化: Wallet,
   研究与行业: FlaskConical,
 }
+// 小型展示映射，不把完整工具库带进资讯客户端。
+const brands: Record<string, { tool: string; name: string }> = {
+  openai: { tool: 'chatgpt', name: 'OpenAI' },
+  anthropic: { tool: 'claude', name: 'Anthropic' },
+  google: { tool: 'gemini', name: 'Google' },
+  copilot: { tool: 'copilot', name: 'GitHub' },
+  cursor: { tool: 'cursor', name: 'Cursor' },
+  deepseek: { tool: 'deepseek', name: 'DeepSeek' },
+  qwen: { tool: 'qwen', name: 'Qwen' },
+  kimi: { tool: 'kimi', name: 'Kimi' },
+  ollama: { tool: 'ollama', name: 'Ollama' },
+}
+const toolNames: Record<string, string> = {
+  chatgpt: 'ChatGPT',
+  claude: 'Claude',
+  gemini: 'Gemini',
+  copilot: 'GitHub Copilot',
+  cursor: 'Cursor',
+  deepseek: 'DeepSeek',
+  qwen: '通义千问',
+  kimi: 'Kimi',
+  ollama: 'Ollama',
+  notebooklm: 'NotebookLM',
+}
 const date = (value: string) =>
   new Date(value).toLocaleDateString('zh-CN', {
     timeZone: 'Asia/Shanghai',
@@ -30,256 +61,287 @@ const date = (value: string) =>
     month: '2-digit',
     day: '2-digit',
   })
+function BrandIcon({ item, size = 54 }: { item: NewsItem; size?: number }) {
+  const tool = item.toolIds[0] || brands[item.sourceId]?.tool
+  return tool ? (
+    <ToolLogo
+      src={`/logos/${tool}.svg`}
+      alt={`${item.sourceName} 官方标识`}
+      size={size}
+      rounded="rounded-2xl"
+    />
+  ) : (
+    <Radio size={size} aria-hidden />
+  )
+}
 export function NewsBoard({
   initial,
   compact = false,
   tool,
+  hero,
 }: {
   initial: NewsItem[]
   compact?: boolean
   tool?: string
+  hero?: ReactNode
 }) {
   const { feed, error, loading } = useNews(initial, tool, compact ? 4 : 100)
-  const [category, setCategory] = useState('全部')
-  const [query, setQuery] = useState('')
-  const [source, setSource] = useState('全部来源')
-  const [visibleCount, setVisibleCount] = useState(12)
-  const sources = [...new Set(feed.items.map((item) => item.sourceName))]
+  const [category, setCategory] = useState('全部'),
+    [query, setQuery] = useState(''),
+    [source, setSource] = useState('全部来源'),
+    [visibleCount, setVisibleCount] = useState(12)
+  const sources = [...new Map(feed.items.map((item) => [item.sourceId, item])).values()]
   const items = useMemo(
     () =>
       feed.items.filter(
         (item) =>
           (category === '全部' || item.category === category) &&
-          (source === '全部来源' || item.sourceName === source) &&
-          `${item.title} ${item.originalTitle} ${item.summary ?? ''} ${item.sourceName}`
+          (source === '全部来源' || item.sourceId === source) &&
+          `${newsDisplay(item).title} ${item.originalTitle} ${item.summary ?? ''} ${item.sourceName}`
             .toLowerCase()
             .includes(query.toLowerCase()),
       ),
     [feed.items, category, source, query],
   )
-  const others = items
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const timer = setInterval(() => setNow(Date.now()), 60000)
+    return () => clearInterval(timer)
+  }, [])
+  const highlights = feed.items
+    .filter((item) => now !== null && Date.parse(item.publishedAt) >= now - 7 * 86400000)
+    .slice(0, 5)
+  const sourceCount = feed.sources.filter((item) => item.status === 'ok').length
+  const reset = () => {
+    setCategory('全部')
+    setQuery('')
+    setSource('全部来源')
+    setVisibleCount(12)
+  }
   return (
-    <div className="news-board">
-      {!compact && (
-        <>
-          <div className="news-topline">
-            <span className="inline-flex items-center gap-2">
-              <Bell className="h-4 w-4" aria-hidden />
-              关注新模型、新功能与使用变化
-            </span>
-            <span>
-              {feed.lastFetchedAt
-                ? `最近获取 ${new Date(feed.lastFetchedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}`
-                : loading
-                  ? '正在连接资讯源…'
-                  : '当前为已核对的消息快照'}
-            </span>
-          </div>
+    <div className={['news-board', !compact && 'news-page-grid'].filter(Boolean).join(' ')}>
+      <div className="news-main">
+        {!compact && hero}
+        {!compact && (
           <div className="news-filters">
             <div className="news-tabs" role="group" aria-label="资讯主题">
-              {['全部', ...categories].map((item) => (
-                <button
-                  type="button"
-                  key={item}
-                  onClick={() => {
-                    setCategory(item)
-                    setVisibleCount(12)
-                  }}
-                  aria-pressed={category === item}
-                >
-                  {item}
-                </button>
-              ))}
+              {['全部', ...categories].map((name) => {
+                const Icon = icons[name as NewsCategory]
+                return (
+                  <button
+                    type="button"
+                    key={name}
+                    onClick={() => {
+                      setCategory(name)
+                      setVisibleCount(12)
+                    }}
+                    aria-pressed={category === name}
+                  >
+                    {Icon && <Icon size={16} aria-hidden />}
+                    {name}
+                  </button>
+                )
+              })}
             </div>
             <label className="news-search">
-              <Search className="h-4 w-4" aria-hidden />
+              <Search size={18} aria-hidden />
               <input
                 aria-label="搜索 AI 资讯"
                 value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value)
+                onChange={(e) => {
+                  setQuery(e.target.value)
                   setVisibleCount(12)
                 }}
-                placeholder="找工具、版本或关键词"
+                placeholder="搜索资讯、产品或关键词…"
               />
             </label>
-            <label className="sr-only" htmlFor="news-source">
-              按来源筛选
-            </label>
-            <select
-              id="news-source"
-              className="news-source-select"
-              value={source}
-              onChange={(event) => {
-                setSource(event.target.value)
-                setVisibleCount(12)
-              }}
-            >
-              <option>全部来源</option>
-              {sources.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-        </>
-      )}
-      {(error || (feed.stale && !loading)) && (
-        <p className="news-status" role="status">
-          {error || '部分消息获取较早，请留意官方发布时间。'}
-          {!compact && ' 每 30 分钟检查官方来源，页面每分钟自动刷新。'}
-        </p>
-      )}
-      {!compact && feed.sources.some((item) => item.status === 'error') && !error && (
-        <p className="news-status">部分来源暂时不可达，仍保留已获取的消息。</p>
-      )}
-      <div className="news-content-layout">
-        <div className={`news-grid ${compact ? 'news-grid-compact' : ''}`}>
-          {others.slice(0, compact ? 4 : visibleCount).map((item) => {
-            if (!compact) return <NewsRow item={item} key={item.id} />
-            const Icon = icons[item.category] ?? Sparkles
-            return (
-              <article className="news-card" key={item.id}>
-                <div className="news-card-head">
-                  <span className="news-category">
-                    <Icon className="h-4 w-4" aria-hidden />
-                    {item.category}
-                  </span>
-                  <time dateTime={item.publishedAt}>{date(item.publishedAt)}</time>
-                </div>
-                <h2 className="mt-4 text-base leading-7">
-                  <a href={item.url} target="_blank" rel="noreferrer">
-                    {item.title}
-                  </a>
-                </h2>
-                {item.summary && (
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.summary}</p>
-                )}
-                {item.takeaway && !compact && (
-                  <details className="news-detail">
-                    <summary>这条消息适合谁看</summary>
-                    <p>{item.takeaway}</p>
-                  </details>
-                )}
-                <div className="news-card-bottom">
-                  <span>
+            <label className="news-source-filter">
+              <Filter size={16} aria-hidden />
+              <select
+                aria-label="按来源筛选"
+                value={source}
+                onChange={(e) => {
+                  setSource(e.target.value)
+                  setVisibleCount(12)
+                }}
+              >
+                <option value="全部来源">全部来源</option>
+                {sources.map((item) => (
+                  <option value={item.sourceId} key={item.sourceId}>
                     {item.sourceName}
-                    {!item.reviewed ? ' · 官方标题' : ''}
-                  </span>
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`阅读官方消息：${item.title}`}
-                  >
-                    <ArrowUpRight className="h-4 w-4" aria-hidden />
-                  </a>
-                </div>
-                {!compact && item.toolIds.length > 0 && (
-                  <div className="news-tool-links">
-                    {item.toolIds.map((id) => (
-                      <Link href={`/tools/${id}`} key={id}>
-                        查看工具档案 →
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </article>
-            )
-          })}
-        </div>
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+        {(error || (feed.stale && !loading)) && (
+          <p className="news-status" role="status">
+            {error || '当前显示已保存消息，正在检查官方来源。'}
+          </p>
+        )}
         {!compact && (
-          <aside className="news-reference-aside">
-            <section className="reference-panel">
-              <h2>
-                <Sparkles size={23} />
-                一眼看懂
-              </h2>
-              {feed.items.slice(0, 5).map((item) => (
+          <div className="news-topline">
+            <span>
+              <span className="news-live-dot" aria-hidden />
+              {loading
+                ? '正在检查来源…'
+                : `${items.length} 条消息 · 每 ${feed.intervalMinutes} 分钟检查官方来源`}
+            </span>
+            <span>
+              {feed.lastFetchedAt
+                ? `最近检查 ${new Date(feed.lastFetchedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}`
+                : '已核对的消息快照'}
+            </span>
+          </div>
+        )}
+        <div className={['news-grid', compact && 'news-grid-compact'].filter(Boolean).join(' ')}>
+          {items
+            .slice(0, compact ? 4 : visibleCount)
+            .map((item) =>
+              compact ? (
+                <CompactNews item={item} key={item.id} />
+              ) : (
+                <NewsRow item={item} key={item.id} />
+              ),
+            )}
+        </div>
+        {!items.length && (
+          <div className="news-empty" role="status">
+            <Search size={28} aria-hidden />
+            <p>{loading ? '正在读取消息…' : '暂时没有匹配的消息，试试其他主题或关键词。'}</p>
+            {!compact && (
+              <button type="button" onClick={reset}>
+                清除筛选
+              </button>
+            )}
+          </div>
+        )}
+        {!compact && items.length > visibleCount && (
+          <button
+            type="button"
+            className="news-more"
+            onClick={() => setVisibleCount((count) => count + 12)}
+          >
+            查看更多消息 <ArrowRight size={17} aria-hidden />
+          </button>
+        )}
+        {!compact && (
+          <p className="news-explanation">
+            发布时间按北京时间显示，原始标题与链接保留。自动中文整理仅帮助阅读，具体开放范围、费用与功能以官方原文为准。页面每分钟检查新内容。
+          </p>
+        )}
+      </div>
+      {!compact && (
+        <aside className="news-reference-aside">
+          <section className="reference-panel news-overview">
+            <h2>
+              <BadgeCheck size={23} aria-hidden />
+              一眼看懂
+            </h2>
+            {feed.items.slice(0, 5).map((item) => {
+              const view = newsDisplay(item)
+              return (
                 <a
+                  className="news-side-item"
                   href={item.url}
                   key={item.id}
                   target="_blank"
                   rel="noreferrer"
-                  className="news-side-item"
                 >
-                  <strong>{item.title}</strong>
-                  <small>
-                    {item.sourceName} · {date(item.publishedAt)}
-                  </small>
+                  <BrandIcon item={item} />
+                  <span>
+                    <strong>{view.title}</strong>
+                    <small>{view.summary}</small>
+                  </span>
                 </a>
-              ))}
-            </section>
-            <section className="reference-panel">
-              <h2>
-                <Bell size={23} />
-                近期重点
-              </h2>
+              )
+            })}
+          </section>
+          <section className="reference-panel">
+            <h2>
+              <Flame className="news-flame" size={23} aria-hidden />
+              本周重点
+            </h2>
+            <p className="news-side-caption">近 7 天发布 · 按发布时间整理</p>
+            {highlights.length ? (
               <ol>
-                {feed.items
-                  .filter((item) => item.reviewed)
-                  .slice(0, 5)
-                  .map((item, i) => (
-                    <li key={item.id} className="news-ranked">
-                      <span>{i + 1}</span>
-                      <a href={item.url} target="_blank" rel="noreferrer">
-                        {item.title}
-                      </a>
-                    </li>
-                  ))}
-              </ol>
-            </section>
-            <section className="reference-panel">
-              <h2>关注来源</h2>
-              <div className="news-source-buttons">
-                {sources.map((name) => (
-                  <button
-                    type="button"
-                    key={name}
-                    aria-pressed={source === name}
-                    onClick={() => {
-                      setSource(source === name ? '全部来源' : name)
-                      setVisibleCount(12)
-                    }}
-                  >
-                    {name}
-                  </button>
+                {highlights.map((item, i) => (
+                  <li className="news-ranked" key={item.id}>
+                    <span>{i + 1}</span>
+                    <a href={item.url} target="_blank" rel="noreferrer">
+                      {newsDisplay(item).title}
+                    </a>
+                  </li>
                 ))}
-              </div>
-            </section>
-          </aside>
-        )}
-      </div>
-      {!compact && others.length > visibleCount && (
-        <button
-          type="button"
-          className="section-link mt-6"
-          onClick={() => setVisibleCount((count) => count + 12)}
-        >
-          再看 12 条消息（还有 {others.length - visibleCount} 条） →
-        </button>
-      )}
-      {!items.length && (
-        <p role="status" className="rounded-xl bg-muted/50 p-7 text-sm text-muted-foreground">
-          {loading ? '正在读取消息…' : '这个筛选暂时没有消息，试试其他主题或关键词。'}
-        </p>
-      )}
-      {!compact && (
-        <p className="mt-7 text-xs leading-6 text-muted-foreground">
-          日期为官方发布时间。整理后的短摘要附官方原文；未经整理的消息保留官方标题。功能开放范围和费用以当前官方说明为准。
-        </p>
+              </ol>
+            ) : (
+              <p className="news-side-caption">近 7 天暂无新消息，可以查看上方的近期更新。</p>
+            )}
+          </section>
+          <section className="reference-panel">
+            <h2>
+              <Radio size={23} aria-hidden />
+              关注来源
+            </h2>
+            <div className="news-source-buttons">
+              {sources.map((item) => (
+                <button
+                  type="button"
+                  key={item.sourceId}
+                  aria-pressed={source === item.sourceId}
+                  onClick={() => {
+                    setSource(source === item.sourceId ? '全部来源' : item.sourceId)
+                    setVisibleCount(12)
+                  }}
+                  title={`筛选 ${item.sourceName} 的消息`}
+                >
+                  <BrandIcon item={item} size={43} />
+                  <span>{brands[item.sourceId]?.name ?? item.sourceName}</span>
+                </button>
+              ))}
+            </div>
+            <details className="news-source-health">
+              <summary>
+                来源检查{' '}
+                {feed.sources.length ? `${sourceCount}/${feed.sources.length}` : '等待同步'}
+              </summary>
+              {feed.sources.map((item) => (
+                <p key={item.id}>
+                  <span>{item.name}</span>
+                  <span>
+                    {item.status === 'ok'
+                      ? '已检查'
+                      : item.status === 'error'
+                        ? '暂不可达'
+                        : '待检查'}
+                  </span>
+                </p>
+              ))}
+              <small>来源暂不可达时保留历史消息，不把获取时间当作发布时间。</small>
+            </details>
+          </section>
+        </aside>
       )}
     </div>
   )
 }
-
+function OriginalTitle({ item }: { item: NewsItem }) {
+  if (item.originalTitle === item.title || !item.originalTitle) return null
+  return (
+    <details className="news-original">
+      <summary>原始标题</summary>
+      <p lang="en">{item.originalTitle}</p>
+    </details>
+  )
+}
 function NewsRow({ item }: { item: NewsItem }) {
-  const Icon = icons[item.category] ?? Sparkles
+  const view = newsDisplay(item)
   return (
     <article className="news-brief">
       <div className="news-brief-intro">
-        <span className="news-brief-icon">
-          <Icon size={28} />
-        </span>
+        <BrandIcon item={item} size={60} />
         <div>
           <div className="news-card-head">
             <span className="news-category">{item.category}</span>
@@ -287,31 +349,77 @@ function NewsRow({ item }: { item: NewsItem }) {
           </div>
           <h2>
             <a href={item.url} target="_blank" rel="noreferrer">
-              {item.title}
+              {view.title}
             </a>
           </h2>
-          <p className="text-xs text-muted-foreground">
-            {item.sourceName}
-            {!item.reviewed ? ' · 官方标题' : ''}
-          </p>
+          <p className="news-summary">{view.summary}</p>
+          <div className="news-attribution">
+            {item.sourceName} 官方 · {view.languageLabel}
+          </div>
+          <OriginalTitle item={item} />
         </div>
       </div>
       <div className="news-brief-note">
-        <h3>这次变化</h3>
-        <p>{item.summary ?? '未经编辑整理，点击官方原文查看完整发布说明。'}</p>
+        <h3>
+          <Lightbulb size={19} aria-hidden />
+          这次变化
+        </h3>
+        <p>{view.summary}</p>
       </div>
       <div className="news-brief-note">
-        <h3>与你的关系</h3>
-        <p>{item.takeaway ?? '使用前，确认官方说明中的开放范围、费用和使用条件。'}</p>
+        <h3>
+          <UserRound size={19} aria-hidden />
+          与你的关系
+        </h3>
+        <p>{view.takeaway}</p>
       </div>
-      <div className="news-brief-links">
+      <div className="news-brief-note news-brief-links">
+        <h3>
+          <FileText size={19} aria-hidden />
+          查看工具档案
+        </h3>
         {item.toolIds.slice(0, 2).map((id) => (
-          <Link href={`/tools/${id}`} key={id}>
-            查看工具档案 →
+          <Link href={`/tools/${id}/`} key={id}>
+            {toolNames[id] ?? id}
+            <ArrowRight size={15} aria-hidden />
           </Link>
         ))}
+        {!item.toolIds.length && <p>这条消息来自官方行业或应用动态。</p>}
+        <a className="news-official-link" href={item.url} target="_blank" rel="noreferrer">
+          官方原文
+          <ArrowUpRight size={15} aria-hidden />
+        </a>
+      </div>
+    </article>
+  )
+}
+function CompactNews({ item }: { item: NewsItem }) {
+  const view = newsDisplay(item)
+  return (
+    <article className="news-card">
+      <div className="news-card-head">
+        <BrandIcon item={item} size={40} />
+        <span className="news-category">{item.category}</span>
+        <time dateTime={item.publishedAt}>{date(item.publishedAt)}</time>
+      </div>
+      <h2>
         <a href={item.url} target="_blank" rel="noreferrer">
-          看官方原文 <ArrowUpRight size={15} />
+          {view.title}
+        </a>
+      </h2>
+      <p>{view.summary}</p>
+      <OriginalTitle item={item} />
+      <div className="news-card-bottom">
+        <span>
+          {item.sourceName} · {view.languageLabel}
+        </span>
+        <a
+          href={item.url}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`阅读官方消息：${view.title}`}
+        >
+          <ArrowUpRight size={18} />
         </a>
       </div>
     </article>

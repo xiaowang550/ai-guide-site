@@ -1,6 +1,6 @@
 import '@/app/styles/reference-hero.css'
 import type { Metadata } from 'next'
-import { PageHeader } from '@/components/page-header'
+import { ReferenceArt } from '@/components/reference-art'
 import { NewsBoard } from '@/components/news/news-board'
 import { seedNewsItems } from '@/lib/news/seed-view'
 import '@/app/styles/news.css'
@@ -13,16 +13,19 @@ export const metadata: Metadata = {
 }
 export default function NewsPage() {
   return (
-    <>
-      <PageHeader
-        illustrated
-        title="AI 实时资讯"
-        description="最新消息，简短看懂。找到与你的学习、教学和工作有关的变化。"
-        breadcrumbs={[{ label: '首页', href: '/' }, { label: 'AI 实时资讯' }]}
+    <div className="news-page container">
+      <NewsBoard
+        initial={seedNewsItems()}
+        hero={
+          <div className="news-hero">
+            <div>
+              <h1>AI 实时资讯</h1>
+              <p>最新消息，简短看懂。找到与你的学习、教学和工作有关的变化。</p>
+            </div>
+            <ReferenceArt />
+          </div>
+        }
       />
-      <div className="container py-8">
-        <NewsBoard initial={seedNewsItems()} />
-      </div>
-    </>
+    </div>
   )
 }

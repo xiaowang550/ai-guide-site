@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import type { NewsItem } from '@/lib/news/types'
 import { useNews } from './use-news'
+import { newsDisplay } from '@/lib/news/display'
 
 /** 首页只加载短消息卡片，完整资讯筛选在资讯页加载。两处沿用同一个实时数据源。 */
 export function NewsPreview({ initial }: { initial: NewsItem[] }) {
@@ -27,7 +28,7 @@ export function NewsPreview({ initial }: { initial: NewsItem[] }) {
             </div>
             <h3 className="mt-3 text-base font-semibold leading-7">
               <a href={item.url} target="_blank" rel="noreferrer">
-                {item.title}
+                {newsDisplay(item).title}
               </a>
             </h3>
             {item.summary && (
@@ -38,7 +39,7 @@ export function NewsPreview({ initial }: { initial: NewsItem[] }) {
             <footer className="mt-auto flex items-center justify-between gap-3 pt-5 text-xs text-muted-foreground">
               <span>
                 {item.sourceName}
-                {!item.reviewed ? ' · 官方标题' : ''}
+                {' · ' + newsDisplay(item).languageLabel}
               </span>
               <a
                 href={item.url}

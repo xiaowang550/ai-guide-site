@@ -1,7 +1,7 @@
 import type { Db, DbRow } from '../db/types.ts'
 import { toText, toInt } from '../db/types.ts'
 import { newsSeed } from '../../data/news-seed.ts'
-import { newsTitleEdits } from '../../data/news-title-edits.ts'
+import { newsTitleEdits, newsBriefEdits } from '../../data/news-title-edits.ts'
 import { NEWS_SOURCES, NEWS_TOOL_NAMES } from './sources.ts'
 import {
   NEWS_REFRESH_MS,
@@ -10,7 +10,7 @@ import {
   type NewsSource,
   type SourceState,
 } from './types.ts'
-import { NEWS_SCHEMA } from './schema.ts'
+import { NEWS_SCHEMA, NEWS_LANGUAGE_SCHEMA } from './schema.ts'
 import { parseNews, trustedUrl, type ParsedNews } from './parse.ts'
 
 export async function newsId(url: string): Promise<string> {
@@ -25,7 +25,10 @@ export async function ensureNews(db: Db, now = new Date()): Promise<void> {
     const ready = await db.first('SELECT id FROM news_source_state WHERE id=?', [
       NEWS_SOURCES.at(-1)?.id ?? '',
     ])
-    if (ready) return
+    if (ready) {
+      await db.exec(NEWS_LANGUAGE_SCHEMA)
+      return
+    }
   } catch {
     /* 首次运行时创建资讯专用表，不修改其他业务表。 */
   }
@@ -61,6 +64,8 @@ export async function ensureNews(db: Db, now = new Date()): Promise<void> {
   if (statements.length) await db.batch(statements)
 }
 function itemOf(row: DbRow): NewsItem {
+  const curated = !row.edited_at ? newsBriefEdits[toText(row.url)] : undefined
+  const localized = row.localized_source_title === row.source_title && !!row.title_zh
   let toolIds: string[] = []
   try {
     const value: unknown = JSON.parse(toText(row.tool_ids))
@@ -69,10 +74,19 @@ function itemOf(row: DbRow): NewsItem {
   } catch {}
   return {
     id: toText(row.id),
-    title: toText(row.manual_title) || toText(row.source_title),
+    title:
+      toText(row.manual_title) ||
+      curated?.title ||
+      newsTitleEdits[toText(row.url)] ||
+      (localized ? toText(row.title_zh) : '') ||
+      toText(row.source_title),
     originalTitle: toText(row.source_title),
-    summary: toText(row.summary) || null,
-    takeaway: toText(row.takeaway) || null,
+    summary:
+      toText(row.summary) ||
+      curated?.summary ||
+      (!row.edited_at && localized ? toText(row.summary_zh) : '') ||
+      null,
+    takeaway: toText(row.takeaway) || curated?.takeaway || null,
     category: toText(row.category) as NewsItem['category'],
     sourceId: toText(row.source_id),
     sourceName: NEWS_SOURCES.find((item) => item.id === row.source_id)?.name ?? '官方来源',
@@ -80,7 +94,10 @@ function itemOf(row: DbRow): NewsItem {
     publishedAt: toText(row.published_at),
     fetchedAt: toText(row.fetched_at),
     toolIds,
-    reviewed: toInt(row.reviewed) === 1,
+    reviewed: toInt(row.reviewed) === 1 || !!curated || !!newsTitleEdits[toText(row.url)],
+    ...(localized && !row.manual_title && !curated && !newsTitleEdits[toText(row.url)]
+      ? { translation: 'automatic' as const }
+      : {}),
     hidden: toInt(row.hidden) === 1,
   }
 }
@@ -91,7 +108,7 @@ export async function readNews(
   await ensureNews(db, options.now)
   const [rows, states] = await Promise.all([
     db.all(
-      `SELECT * FROM news_items ${options.includeHidden ? '' : 'WHERE hidden=0'} ORDER BY published_at DESC LIMIT 250`,
+      `SELECT n.*, l.source_title AS localized_source_title,l.title_zh,l.summary_zh FROM news_items n LEFT JOIN news_localizations l ON n.id=l.id ${options.includeHidden ? '' : 'WHERE n.hidden=0'} ORDER BY n.published_at DESC LIMIT 250`,
     ),
     db.all('SELECT * FROM news_source_state'),
   ])
@@ -293,6 +310,10 @@ export async function refreshNews(
       for (const item of result.items) {
         const id = await newsId(item.url),
           isNew = !known.has(item.url)
+        await db.run(
+          `INSERT INTO news_localizations(id,source_title,excerpt) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET source_title=excluded.source_title,excerpt=excluded.excerpt,title_zh=CASE WHEN source_title=excluded.source_title THEN title_zh ELSE NULL END,summary_zh=CASE WHEN source_title=excluded.source_title THEN summary_zh ELSE NULL END,attempted_at=CASE WHEN source_title=excluded.source_title THEN attempted_at ELSE NULL END`,
+          [id, item.title, item.excerpt ?? ''],
+        )
         await db.run(
           'INSERT INTO news_items (id,url,source_id,source_title,published_at,fetched_at,category,tool_ids) VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(url) DO UPDATE SET source_title=excluded.source_title,published_at=excluded.published_at,fetched_at=excluded.fetched_at,category=excluded.category,tool_ids=excluded.tool_ids',
           [

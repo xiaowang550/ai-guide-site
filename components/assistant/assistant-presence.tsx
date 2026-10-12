@@ -6,10 +6,13 @@ import {
   canShowAssistantHint,
   ASSISTANT_HELLO_MS,
   ASSISTANT_QUIET_MS,
+  ASSISTANT_HINT_DURATION_MS,
 } from '@/lib/assistant-presence'
 
 const SEEN = 'ai-map:assistant-hello:v2',
-  QUIET = 'ai-map:assistant-quiet:v2'
+  QUIET = 'ai-map:assistant-quiet:v2',
+  LAST_SHOWN = 'ai-map:assistant-last-hint:v3',
+  SEQUENCE = 'ai-map:assistant-hint-sequence:v3'
 function sessionValue(key: string) {
   try {
     return Number(sessionStorage.getItem(key)) || 0
@@ -54,11 +57,15 @@ export function useAssistantPresence({
     if (!active) return
     const previouslySeen = sessionValue(SEEN)
     helloShown.current = helloShown.current || !!previouslySeen
-    if (previouslySeen) lastShown.current = Math.max(lastShown.current, previouslySeen)
+    // 完整页面导航也保留计时，避免每到一个页面都重新等待三分钟。
+    const remembered = sessionValue(LAST_SHOWN) || previouslySeen
+    if (remembered && remembered <= Date.now()) lastShown.current = remembered
+    sequence.current = sessionValue(SEQUENCE)
     quietUntil.current = sessionValue(QUIET)
     if (open) {
       setHint(null)
       lastShown.current = Date.now()
+      remember(LAST_SHOWN, lastShown.current)
       return
     }
     let hide: ReturnType<typeof setTimeout> | undefined
@@ -104,6 +111,7 @@ export function useAssistantPresence({
       )
         return
       lastShown.current = Date.now()
+      remember(LAST_SHOWN, lastShown.current)
       helloShown.current = true
       if (hello) remember(SEEN, lastShown.current)
       setHint({
@@ -112,8 +120,9 @@ export function useAssistantPresence({
           ? '找工具、学提示词、起草材料，点我就能聊。'
           : assistantHint(path, sequence.current++),
       })
+      remember(SEQUENCE, sequence.current)
       if (hide) clearTimeout(hide)
-      hide = setTimeout(close, hello ? 12000 : 6500)
+      hide = setTimeout(close, hello ? 12000 : ASSISTANT_HINT_DURATION_MS)
     }
     const initial = setTimeout(tick, ASSISTANT_HELLO_MS),
       periodic = setInterval(tick, 10000)
@@ -208,6 +217,7 @@ export function useAssistantPresence({
     pause: () => {
       clearHint()
       lastShown.current = Date.now()
+      remember(LAST_SHOWN, lastShown.current)
     },
   }
 }

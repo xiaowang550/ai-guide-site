@@ -28,5 +28,5 @@ export function mascotState(context: {
   if (context.greeting) return 'welcome'
   if (context.hint) return 'guiding'
   if (context.resting) return 'resting'
-  return context.reading ? 'reading' : 'welcome'
+  return context.reading ? 'reading' : 'resting'
 }

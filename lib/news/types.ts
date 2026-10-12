@@ -1,4 +1,4 @@
-export const NEWS_REFRESH_MS = 30 * 60 * 1000
+export const NEWS_REFRESH_MS = 10 * 60 * 1000
 export const NEWS_CLIENT_POLL_MS = 60 * 1000
 export type NewsCategory = '模型发布' | '功能更新' | '编程工具' | '使用变化' | '研究与行业'
 
@@ -16,6 +16,7 @@ export interface NewsItem {
   fetchedAt: string
   toolIds: string[]
   reviewed: boolean
+  translation?: 'automatic'
   hidden?: boolean
 }
 export interface NewsSource {

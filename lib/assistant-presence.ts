@@ -1,6 +1,7 @@
 /** 小助手提示策略：不调用模型、不打开面板，仅在安静的页面显示短提示。 */
 export const ASSISTANT_HELLO_MS = 1800
-export const ASSISTANT_REMINDER_MS = 4 * 60 * 1000
+export const ASSISTANT_REMINDER_MS = 3 * 60 * 1000
+export const ASSISTANT_HINT_DURATION_MS = 8000
 export const ASSISTANT_QUIET_MS = 30 * 60 * 1000
 export interface HintContext {
   now: number
@@ -17,7 +18,7 @@ export interface HintContext {
 export function canShowAssistantHint(c: HintContext): boolean {
   if (c.hidden || c.panelOpen || c.typing || c.modal || c.dragging || c.now < c.quietUntil)
     return false
-  if (c.now - c.lastInteraction < (c.hello ? 1200 : 15000)) return false
+  if (c.now - c.lastInteraction < (c.hello ? 1200 : 3000)) return false
   return c.hello || c.now - c.lastShown >= ASSISTANT_REMINDER_MS
 }
 export function assistantHint(path: string, index: number) {
@@ -27,15 +28,21 @@ export function assistantHint(path: string, index: number) {
       ? '选工具拿不准？告诉我你想完成什么。'
       : path.startsWith('/learn')
         ? '概念有点难懂？我可以举个日常例子。'
-        : path.startsWith('/edu')
-          ? '在准备课程吗？我可以陪你整理思路和材料。'
-          : '需要帮忙吗？告诉我你现在想完成什么。'
+        : path.startsWith('/updates')
+          ? '看到新消息了？我可以帮你找相关工具和学习资料。'
+          : path.startsWith('/edu')
+            ? '在准备课程吗？我可以陪你整理思路和材料。'
+            : '需要帮忙吗？告诉我你现在想完成什么。'
   return [
     context,
     '一句想法也可以。我能陪你把提示词写得更清楚。',
     '想练一下？我们可以比较简单提问和详细要求的效果。',
     '我可以帮你起草材料，再一起核对重点。',
-  ][index % 4]
+    '不确定从哪里开始？说说你的目标，我们选一个小任务。',
+    '想找学习资料？点我，试试站内查找。',
+    '问题不必一次说完整，我们可以边聊边整理。',
+    '有一段长材料？先告诉我你最想弄清什么。',
+  ][index % 8]
 }
 export function assistantBubblePosition(
   anchor: { left: number; top: number; width: number; height: number },

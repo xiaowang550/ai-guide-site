@@ -6,6 +6,7 @@ export interface ParsedNews {
   publishedAt: string
   category: NewsCategory
   toolIds: string[]
+  excerpt?: string
 }
 
 export function plainText(value: string): string {
@@ -80,12 +81,12 @@ function validDate(raw: string, now: Date): string | null {
 function xmlField(body: string, field: string): string {
   return body.match(new RegExp(`<${field}\\b[^>]*>([\\s\\S]*?)<\\/${field}>`, 'i'))?.[1] ?? ''
 }
-/** 只读取标题、时间和一手链接，不存储全文或执行远端代码。 */
+/** 读取标题、时间、一手链接及短摘录，不存储全文或执行远端代码。 */
 export function parseNews(body: string, source: NewsSource, now = new Date()): ParsedNews[] {
   const maxBytes = source.format === 'qwen' ? 8_000_000 : 2_000_000
   if (body.length > maxBytes || /<!DOCTYPE[^>]*\[|<!ENTITY/i.test(body))
     throw new Error('来源内容超出限制或包含外部实体声明')
-  const rows: { title: string; url: string; date: string }[] = []
+  const rows: { title: string; url: string; date: string; excerpt?: string }[] = []
   if (source.format === 'qwen') {
     const data: unknown = JSON.parse(body)
     if (!data || typeof data !== 'object') throw new Error('文章接口格式异常')
@@ -112,6 +113,7 @@ export function parseNews(body: string, source: NewsSource, now = new Date()): P
         title: `Ollama ${String(row.name || row.tag_name || '')}`,
         url: String(row.html_url || ''),
         date: String(row.published_at || ''),
+        excerpt: typeof row.body === 'string' ? row.body : '',
       })
     }
   } else if (source.format === 'rss') {
@@ -121,6 +123,10 @@ export function parseNews(body: string, source: NewsSource, now = new Date()): P
         xmlField(text, 'link') || text.match(/<link\b[^>]*href=["']([^"']+)["']/i)?.[1] || ''
       rows.push({
         title: xmlField(text, 'title'),
+        excerpt:
+          xmlField(text, 'description') ||
+          xmlField(text, 'summary') ||
+          xmlField(text, 'content:encoded'),
         url: link,
         date: plainText(
           xmlField(text, 'pubDate') ||
@@ -185,6 +191,7 @@ export function parseNews(body: string, source: NewsSource, now = new Date()): P
         publishedAt,
         category: newsCategory(title, source),
         toolIds: toolIds(title, source),
+        ...(row.excerpt ? { excerpt: plainText(row.excerpt).slice(0, 800) } : {}),
       })
   }
   return [...unique.values()]
