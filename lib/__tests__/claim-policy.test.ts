@@ -57,7 +57,7 @@ const files = SCAN_DIRS.flatMap((d) => walk(d)).filter((f) => /\.(ts|tsx|md|mdx)
  * 匹配「不…实测」「没有…实测」时不算违规。
  */
 const NEGATION =
-  /(不做|不做自建|不来自|未经|不做任何|不来自本地|不会|未能|无法|不涉及|不靠|不以|而非|不是|没有|尚未)/
+  /(不做|不做自建|不来自|未经|不做任何|不来自本地|不会|未能|无法|不涉及|不靠|不以|而非|不是)/
 
 // The user now requests sourced, third-party benchmark results. Reviewed evidence
 // components may describe those results positively; claims of our own tests are
@@ -156,6 +156,11 @@ describe('评分口径：不得声称做过自建实测', () => {
         if (!line.includes('实测')) return
         if (NEGATION.test(line)) return
         if (ALLOW.some((a) => a.match(line))) return
+        if (
+          /(没有统一维护的实测环境|尚未建立统一实测环境)/.test(line) &&
+          EXTERNAL_BENCHMARK_FILES.has(file.replace(/\\/g, '/'))
+        )
+          return
         if (!OWN_TEST_CLAIM.test(line) && EXTERNAL_BENCHMARK_FILES.has(file.replace(/\\/g, '/')))
           return
         offenders.push(`${file}:${i + 1}  ${line.trim().slice(0, 90)}`)

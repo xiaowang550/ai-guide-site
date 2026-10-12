@@ -41,10 +41,7 @@ describe('能力维度：后台与主站必须一致', () => {
 
   it('中文标签齐全，且与主站一致', () => {
     for (const meta of CAPABILITY_META) {
-      expect(
-        ADMIN_CAPABILITY_LABELS[meta.key],
-        `维度 ${meta.key} 缺少中文标签`
-      ).toBe(meta.label)
+      expect(ADMIN_CAPABILITY_LABELS[meta.key], `维度 ${meta.key} 缺少中文标签`).toBe(meta.label)
     }
     expect(Object.keys(ADMIN_CAPABILITY_LABELS).length).toBe(ADMIN_CAPABILITY_KEYS.length)
   })
@@ -77,7 +74,7 @@ describe('新鲜度阈值：后台与 lib/freshness.ts 必须一致', () => {
 describe('「实测」口径：后台校验与 claim-policy 门禁一致', () => {
   it('否定词表与 claim-policy.test.ts 的 NEGATION 相同', () => {
     const testSrc = readFileSync('lib/__tests__/claim-policy.test.ts', 'utf8')
-    const m = testSrc.match(/const NEGATION = \/([^\n]+)\//)
+    const m = testSrc.match(/const NEGATION =\s*\/([^\n]+)\//)
     expect(m, 'claim-policy 测试里的 NEGATION 正则找不到 —— 门禁可能被改过').toBeTruthy()
 
     const fromTest = new RegExp(m![1])
@@ -85,7 +82,22 @@ describe('「实测」口径：后台校验与 claim-policy 门禁一致', () =>
     const fromAdmin = new RegExp(NEGATION_WORDS.source, flags)
 
     // 逐个否定词验证两边行为一致
-    const words = ['不做', '不做自建', '不来自', '未经', '不做任何', '不来自本地', '不会', '未能', '无法', '不涉及', '不靠', '不以', '而非', '不是']
+    const words = [
+      '不做',
+      '不做自建',
+      '不来自',
+      '未经',
+      '不做任何',
+      '不来自本地',
+      '不会',
+      '未能',
+      '无法',
+      '不涉及',
+      '不靠',
+      '不以',
+      '而非',
+      '不是',
+    ]
     for (const w of words) {
       const sample = `我们${w}做过自建评测`
       expect(fromTest.test(sample), `claim-policy 不认「${w}」，两边不一致`).toBe(true)
@@ -102,17 +114,29 @@ describe('「实测」口径：后台校验与 claim-policy 门禁一致', () =>
     const cases: [string, unknown][] = [
       ['evidence 字段', { ...validTool(), evidence: '我们自己的实测跑了 200 道题' }],
       ['强项条目', { ...validTool(), strengths: ['我们自己的实测第一名', '第二点', '第三点'] }],
-      ['描述', { ...validTool(), description: '这是一段足够长的介绍文字。我们自己的实测显示它很强，够长了吧。' }],
-      ['维度依据', (() => {
-        const t = validTool()
-        const caps = { ...(t.capabilities as object) }
-        ;(caps as any).coding = { score: 5, basis: '我们自己的实测' }
-        return { ...t, capabilities: caps }
-      })()],
-      ['嵌套的 access.note', {
-        ...validTool(),
-        access: { note: '我们自己的实测证明可以用' },
-      }],
+      [
+        '描述',
+        {
+          ...validTool(),
+          description: '这是一段足够长的介绍文字。我们自己的实测显示它很强，够长了吧。',
+        },
+      ],
+      [
+        '维度依据',
+        (() => {
+          const t = validTool()
+          const caps = { ...(t.capabilities as object) }
+          ;(caps as any).coding = { score: 5, basis: '我们自己的实测' }
+          return { ...t, capabilities: caps }
+        })(),
+      ],
+      [
+        '嵌套的 access.note',
+        {
+          ...validTool(),
+          access: { note: '我们自己的实测证明可以用' },
+        },
+      ],
     ]
 
     for (const [label, data] of cases) {
@@ -120,7 +144,7 @@ describe('「实测」口径：后台校验与 claim-policy 门禁一致', () =>
       expect(res.ok, `${label} 里的违规表述竟然通过了后台校验`).toBe(false)
       expect(
         res.issues.some((i) => i.message.includes('实测')),
-        `${label} 没有给出针对「实测」的提示`
+        `${label} 没有给出针对「实测」的提示`,
       ).toBe(true)
     }
   })
@@ -264,10 +288,12 @@ describe('版本差异对比', () => {
     const paths = (b: Record<string, unknown>, a: Record<string, unknown>) =>
       diffContent(b, a).map((c) => c.path)
 
-    expect(paths({ name: 'A', updatedAt: '2026-01-01' }, { name: 'A', updatedAt: '2026-06-01' })).toEqual([])
     expect(
-      paths({ name: 'A', overallScore: 0 }, { name: 'A', overallScore: undefined })
+      paths({ name: 'A', updatedAt: '2026-01-01' }, { name: 'A', updatedAt: '2026-06-01' }),
     ).toEqual([])
+    expect(paths({ name: 'A', overallScore: 0 }, { name: 'A', overallScore: undefined })).toEqual(
+      [],
+    )
     expect(paths({ name: 'A' }, { name: 'B' })).toEqual(['name'])
   })
 
@@ -283,8 +309,8 @@ describe('版本差异对比', () => {
     const summary = summarizeChanges(
       diffContent(
         { name: 'A', capabilities: { coding: { score: 3, basis: 'x' } }, strengths: ['a'] },
-        { name: 'B', capabilities: { coding: { score: 5, basis: 'x' } }, strengths: ['a', 'b'] }
-      )
+        { name: 'B', capabilities: { coding: { score: 5, basis: 'x' } }, strengths: ['a', 'b'] },
+      ),
     )
     expect(summary).not.toContain('object Object')
     expect(summary).toContain('改了')
@@ -294,7 +320,7 @@ describe('版本差异对比', () => {
   it('版本摘要不含派生字段', () => {
     const paths = diffContent(
       { name: 'A', overallScore: 4.2, updatedAt: '2026-01-01' },
-      { name: 'B', overallScore: 4.8, updatedAt: '2026-07-01' }
+      { name: 'B', overallScore: 4.8, updatedAt: '2026-07-01' },
     ).map((c) => c.path)
     expect(paths).toEqual(['name'])
   })
