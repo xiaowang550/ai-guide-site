@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bookmark, Compass, Menu, MessageSquareMore, X } from 'lucide-react'
+import { Bookmark, Compass, Menu, X } from 'lucide-react'
 import { secondaryNav, siteConfig } from '@/lib/site'
 import { siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
@@ -47,7 +47,7 @@ export function SiteHeader() {
 
   return (
     <header className="site-header sticky top-0 z-40 border-b border-border/60 bg-background">
-      <div className="container flex h-[72px] items-center gap-4">
+      <div className="container flex h-[72px] items-center gap-3 xl:gap-4">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 font-semibold"
@@ -76,35 +76,23 @@ export function SiteHeader() {
         </Link>
 
         <MegaNav />
+        <Link
+          href={`/feedback/?from=${encodeURIComponent(pathname)}`}
+          prefetch={false}
+          aria-current={pathname.startsWith('/feedback') ? 'page' : undefined}
+          className={cn(
+            'hidden h-9 shrink-0 items-center whitespace-nowrap rounded-xl px-2.5 text-sm lg:inline-flex',
+            pathname.startsWith('/feedback')
+              ? 'bg-accent font-medium text-accent-foreground'
+              : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+          )}
+        >
+          问题反馈
+        </Link>
 
-        {/*
-          三段式：品牌 + 分区 | 搜索 | 行动。
-          搜索放在中间并且 flex-1，让它吃掉导航与右侧之间的空白 ——
-          之前右侧簇带 ml-auto，空白全被 margin 吃掉，宽屏上中间留一个大洞，
-          看起来像「左边挤成一团、右边空一块」。搜索撑开后这条横线才是完整的。
-
-          宽屏下搜索随导航剩余空间伸展，保持整条顶栏连贯。
-        */}
-        {/*
-          justify-end 在 lg 以下、lg:justify-start 在 lg 以上。
-          桌面导航要到 lg 才出现，所以 lg 以下右侧本来就空着一大块
-          —— 这时候让搜索框贴右（挨着 CTA），别贴左，否则 logo 与搜索之间
-          会多出一个 400 多像素的洞。
-          lg 起导航出现，搜索才回到它右侧、紧跟导航并向右伸展。
-        */}
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:justify-start">
-          {/*
-            宽度必须跟着占位文字的出现时机走，否则会出现「文字被截成『搜...』」：
-            文字在 md 段出现、lg 段藏起来、xl 段再出现，所以宽度也是三段。
-              - sm-md   7rem   文字不显示，只要图标 + 快捷键
-              - md-lg  16rem   文字显示，且这一段导航还隐藏着、右侧空得多
-              - lg-xl   7rem   文字藏起来（横向最挤的一段）
-              - xl+     自适应 文字回来，向右伸展到 max-w-md 为止
-
-            16rem 是按「11 个汉字 + 图标 + / 快捷键」实算出来的，
-            比它窄占位文字就会被截成「搜索工具、概念、…」。
-          */}
-          <CommandSearch className="w-9 shrink-0 sm:w-[7rem] md:w-[16rem] lg:w-[7rem] xl:w-auto xl:flex-1" />
+        {/* 搜索靠右并限制宽度，为导航末尾的文字反馈入口留出空间。 */}
+        <div className="flex min-w-0 flex-1 items-center justify-end">
+          <CommandSearch className="w-9 shrink-0 sm:w-[7rem] md:w-[16rem] lg:w-[5rem] xl:w-full xl:max-w-[22rem]" />
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -113,9 +101,9 @@ export function SiteHeader() {
             prefetch={false}
             title="问题反馈"
             aria-label="问题反馈"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border text-muted-foreground hover:bg-accent hover:text-primary"
+            className="inline-flex h-9 items-center justify-center rounded-xl border px-2 text-sm text-muted-foreground hover:bg-accent hover:text-primary lg:hidden"
           >
-            <MessageSquareMore className="h-4 w-4" />
+            反馈
           </Link>
           {pathEnabled(config, '/saved') && (
             <Link

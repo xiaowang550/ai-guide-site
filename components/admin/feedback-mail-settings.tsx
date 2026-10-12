@@ -92,6 +92,25 @@ export function FeedbackMailSettings({ onChange }: { onChange: () => Promise<voi
         收件邮箱：<strong className="text-foreground">1987215931@qq.com</strong>
         。新反馈含文字、相关页面和截图附件；发信失败也不会丢失后台记录。
       </p>
+      <div className="mt-4 rounded-xl bg-accent/50 p-4 text-sm leading-7">
+        <p className="font-semibold">第一次配置？先获取邮件发送 Key</p>
+        <p className="mt-2">
+          用 <strong>1987215931@qq.com</strong> 注册 Resend，然后打开 API Keys，点击{' '}
+          <strong>Create API Key</strong>。名称可填“网站反馈”，权限选{' '}
+          <strong>Sending access</strong>，创建后复制 <strong>re_</strong> 开头的完整 Key。
+        </p>
+        <a
+          href="https://resend.com/api-keys"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex min-h-11 items-center rounded-lg border bg-background px-4 font-medium text-primary"
+        >
+          打开 Resend API Keys ↗
+        </a>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Key 只在创建时显示一次，复制后直接粘贴到下方的“Resend API Key”。
+        </p>
+      </div>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <label className="text-sm">
           <span className="mb-2 block font-medium">Resend 发件邮箱</span>
@@ -121,23 +140,16 @@ export function FeedbackMailSettings({ onChange }: { onChange: () => Promise<voi
         {status && !status.encryptedStorageReady && '当前服务端密钥加密未就绪，暂不能保存 Key。'}
       </p>
       <ol className="mt-3 list-inside list-decimal space-y-1 text-sm leading-7 text-muted-foreground">
+        <li>把复制的完整 Key 填进“Resend API Key”，不是填邮箱或邮箱密码。</li>
         <li>
-          在{' '}
-          <a
-            href="https://resend.com/"
-            target="_blank"
-            rel="noreferrer"
-            className="text-primary underline"
-          >
-            Resend
-          </a>{' '}
-          注册并创建仅发送权限的 Key。
+          无自有域名时，“Resend 发件邮箱”保留 <code>onboarding@resend.dev</code>，收件人固定为上方的
+          QQ 邮箱。该测试发件地址只能发给 Resend
+          账号自己的邮箱。已有域名则填写已验证域名下的发件邮箱。
         </li>
         <li>
-          无自有域名时，用收件邮箱注册账号，保留
-          onboarding@resend.dev；该测试发件地址只能发给账号邮箱。已有域名则填写已验证域名下的发件邮箱。
+          点击“保存配置” → “发送测试邮件”，在 QQ
+          邮箱检查收件箱和垃圾邮件。收到后配置就可使用；需要时点击“补发待发送通知”。
         </li>
-        <li>保存并发送测试邮件，检查收件箱和垃圾邮件；通过后补发待发送反馈。</li>
       </ol>
       <div className="mt-4 flex flex-wrap gap-3">
         {[
