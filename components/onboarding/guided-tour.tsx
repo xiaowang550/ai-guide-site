@@ -8,7 +8,12 @@ export function GuidedTour() {
     [active, setActive] = useState(false),
     initialized = useRef(false)
   useEffect(() => {
-    if (initialized.current || pathname.startsWith('/admin') || pathname.startsWith('/start'))
+    if (
+      initialized.current ||
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/start') ||
+      pathname.startsWith('/feedback')
+    )
       return
     initialized.current = true
     const force = new URLSearchParams(location.search).get('tour') === '1'
@@ -22,7 +27,12 @@ export function GuidedTour() {
     }
   }, [pathname])
   useEffect(() => {
-    if (pathname.startsWith('/admin') || pathname.startsWith('/start')) setActive(false)
+    if (
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/start') ||
+      pathname.startsWith('/feedback')
+    )
+      setActive(false)
   }, [pathname])
   if (!active) return null
   return (

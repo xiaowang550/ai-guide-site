@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/cases',
     '/updates',
     '/about',
+    '/feedback',
     '/search',
   ]
 

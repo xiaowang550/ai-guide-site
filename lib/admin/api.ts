@@ -125,8 +125,19 @@ import {
   SchoolConflictError,
 } from './schools.ts'
 import { diffContent, summarizeChanges } from './diff.ts'
+import {
+  readFeedbackBody,
+  deliverFeedback,
+  retryFeedbackMail,
+  feedbackExtras,
+  feedbackAsset,
+  feedbackMailStatus,
+  saveFeedbackMail,
+  testFeedbackMail,
+  type FeedbackMailEnv,
+} from './feedback-delivery.ts'
 
-export interface AdminEnv extends AssistantEnv {
+export interface AdminEnv extends AssistantEnv, FeedbackMailEnv {
   /** D1 绑定 */
   DB: D1Database
   /** 站点盐。用于限流键的哈希，换站点就该换盐 */
@@ -222,6 +233,85 @@ function matchPath(pattern: string, pathname: string): Record<string, string> | 
 // ── 路由表 ─────────────────────────────────────────────────────────────────
 
 const ROUTES: Route[] = [
+  {
+    method: 'GET',
+    pattern: '/api/admin/feedback-mail',
+    auth: 'required',
+    handler: async ({ db, env }) => json(await feedbackMailStatus(db, env)),
+  },
+  {
+    method: 'PUT',
+    pattern: '/api/admin/feedback-mail',
+    auth: 'required',
+    handler: async ({ db, env, request, identity }) => {
+      try {
+        return json(
+          await saveFeedbackMail(
+            db,
+            env,
+            (await readJson<Record<string, unknown>>(request)) ?? {},
+            identity!.username,
+          ),
+        )
+      } catch (error) {
+        return fail(400, error instanceof Error ? error.message : '配置保存失败。')
+      }
+    },
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/feedback-mail/test',
+    auth: 'required',
+    handler: async ({ db, env }) => {
+      try {
+        return json(await testFeedbackMail(db, env))
+      } catch (error) {
+        return fail(
+          400,
+          error instanceof Error && /^(尚未|发信|邮件|服务端)/.test(error.message)
+            ? error.message
+            : '测试发送失败，请稍后重试。',
+        )
+      }
+    },
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/feedback-mail/retry',
+    auth: 'required',
+    handler: async ({ db, env }) => json(await retryFeedbackMail(db, env, true)),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/feedback/:id/retry',
+    auth: 'required',
+    handler: async ({ db, env }, params) => {
+      await deliverFeedback(db, env, params.id, true)
+      return json({ ok: true })
+    },
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/feedback-assets/:id',
+    auth: 'required',
+    handler: async ({ db }, params) => {
+      const asset = await feedbackAsset(db, params.id)
+      if (!asset) return notFound('截图不存在。')
+      const binary = atob(asset.content),
+        bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0))
+      return new Response(bytes, {
+        headers: {
+          'content-type': asset.mime,
+          'cache-control': 'no-store',
+          'x-content-type-options': 'nosniff',
+          'content-disposition':
+            'inline; filename="screenshot.' +
+            (asset.mime === 'image/jpeg' ? 'jpg' : asset.mime.slice(6)) +
+            '"',
+        },
+      })
+    },
+  },
   {
     method: 'POST',
     pattern: '/api/school/login',
@@ -1013,7 +1103,21 @@ async function handleListFeedback(ctx: RouteCtx): Promise<Response> {
     status: status || undefined,
     limit: intParam(ctx.url.searchParams.get('limit'), 100),
   })
-  return json({ items, counts: await feedbackCounts(ctx.db), labels: FEEDBACK_STATUS_LABELS })
+  const extra = await feedbackExtras(
+    ctx.db,
+    items.map((item) => item.id),
+  )
+  return json({
+    items: items.map((item) => ({
+      ...item,
+      screenshots: extra.assets
+        .filter((asset) => asset.feedback_id === item.id)
+        .map((asset) => ({ id: asset.id, name: asset.name, bytes: asset.bytes })),
+      notification: extra.notifications.find((note) => note.feedback_id === item.id) ?? null,
+    })),
+    counts: await feedbackCounts(ctx.db),
+    labels: FEEDBACK_STATUS_LABELS,
+  })
 }
 
 async function handleUpdateFeedback(
@@ -1133,23 +1237,30 @@ async function handleImportBackup(ctx: RouteCtx): Promise<Response> {
 // ── 处理器：公开接口 ───────────────────────────────────────────────────────
 
 async function handlePublicFeedback(ctx: RouteCtx): Promise<Response> {
-  const body = await readJson<{
-    kind?: unknown
-    message?: unknown
-    contact?: unknown
-    pageUrl?: unknown
-  }>(ctx.request)
+  let body: Record<string, unknown>
+  try {
+    body = await readFeedbackBody(ctx.request)
+  } catch (error) {
+    return fail(400, error instanceof Error ? error.message : '提交格式不正确。')
+  }
   const meta = requestMeta(ctx.request)
   const result = await submitFeedback(ctx.db, {
     kind: str(body?.kind, 20),
     message: body?.message,
     contact: body?.contact,
     pageUrl: body?.pageUrl,
+    screenshots: body?.screenshots,
+    requestId: body?.requestId,
     ip: meta.ip,
     siteSalt: saltOf(ctx.env),
   })
   if (!result.ok) return fail(400, result.error ?? '提交失败。')
   await pruneRateLimits(ctx.db)
+  const task = deliverFeedback(ctx.db, ctx.env, result.id!)
+    .then(() => retryFeedbackMail(ctx.db, ctx.env))
+    .catch(() => undefined)
+  if (ctx.env.NEWS_BACKGROUND) ctx.env.NEWS_BACKGROUND(task)
+  else await task
   return json({ ok: true, id: result.id })
 }
 

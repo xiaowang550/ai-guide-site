@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bookmark, Compass, Menu, X } from 'lucide-react'
+import { Bookmark, Compass, Menu, MessageSquareMore, X } from 'lucide-react'
 import { secondaryNav, siteConfig } from '@/lib/site'
 import { siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
@@ -108,6 +108,15 @@ export function SiteHeader() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href={`/feedback/?from=${encodeURIComponent(pathname)}`}
+            prefetch={false}
+            title="问题反馈"
+            aria-label="问题反馈"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border text-muted-foreground hover:bg-accent hover:text-primary"
+          >
+            <MessageSquareMore className="h-4 w-4" />
+          </Link>
           {pathEnabled(config, '/saved') && (
             <Link
               href="/saved"

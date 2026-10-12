@@ -196,6 +196,27 @@ CREATE TABLE IF NOT EXISTS feedback (
 CREATE INDEX IF NOT EXISTS idx_feedback_status ON feedback(status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at DESC);
 
+-- 私有反馈截图与可重试的邮件通知；发信 Key 加密保存，绝不进公开配置。
+CREATE TABLE IF NOT EXISTS feedback_assets (
+  id TEXT PRIMARY KEY,
+  feedback_id TEXT NOT NULL REFERENCES feedback(id) ON DELETE CASCADE,
+  name TEXT NOT NULL, mime TEXT NOT NULL, content TEXT NOT NULL, bytes INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_feedback_assets_parent ON feedback_assets(feedback_id);
+CREATE TABLE IF NOT EXISTS feedback_notifications (
+  feedback_id TEXT PRIMARY KEY REFERENCES feedback(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending', attempts INTEGER NOT NULL DEFAULT 0,
+  lease_until INTEGER NOT NULL DEFAULT 0, next_attempt INTEGER NOT NULL DEFAULT 0,
+  provider_id TEXT, last_error TEXT, sent_at TEXT
+);
+CREATE TABLE IF NOT EXISTS feedback_mail_settings (
+  id INTEGER PRIMARY KEY CHECK(id=1), sender TEXT NOT NULL, credential TEXT, updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS feedback_submissions (
+  request_id TEXT PRIMARY KEY,
+  feedback_id TEXT NOT NULL REFERENCES feedback(id) ON DELETE CASCADE, payload_hash TEXT NOT NULL
+);
+
 -- ── 访问统计与关键事件 ───────────────────────────────────────────────────────
 
 -- 访问量：按天 × 路径聚合。

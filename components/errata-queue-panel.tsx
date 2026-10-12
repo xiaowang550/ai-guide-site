@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { AlertTriangle, Copy, Mail, Trash2 } from 'lucide-react'
-import { buildErrataBatchText, buildMailto, readQueue, removeFromQueue, type ErrataSubmission } from '@/lib/errata'
+import {
+  buildErrataBatchText,
+  buildMailto,
+  readQueue,
+  removeFromQueue,
+  type ErrataSubmission,
+} from '@/lib/errata'
 import { Button } from '@/components/ui/button'
+import { siteConfig } from '@/lib/site'
 
 /**
  * 设置页里的「待发送反馈」入口。
@@ -23,7 +30,7 @@ export function ErrataQueuePanel() {
 
   if (!mounted || queue.length === 0) return null
 
-  const mailto = buildMailto(queue, '1302582367@qq.com')
+  const mailto = buildMailto(queue, siteConfig.feedbackEmail)
   const text = buildErrataBatchText(queue)
 
   async function copyAll() {
@@ -50,19 +57,19 @@ export function ErrataQueuePanel() {
             你有 {queue.length} 条勘误反馈还没发出去
           </p>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">
-            反馈只存在这台设备上，本站没有后端、收不到自动提交。
-            请复制或用邮件发给我们，附在{' '}
-            <a href="/about#errata" className="link">
-              勘误说明
-            </a>
-            里提到的渠道。
+            这些勘误暂存在本机，尚未发送。可复制、发邮件，或前往
+            <a href="/feedback/" className="link mx-1">问题反馈</a>
+            直接提交。发出后可手动删除本地记录。
           </p>
         </div>
       </div>
 
       <ul className="mt-3 space-y-2">
         {queue.map((item) => (
-          <li key={item.id} className="flex items-start justify-between gap-3 rounded-lg border p-3">
+          <li
+            key={item.id}
+            className="flex items-start justify-between gap-3 rounded-lg border p-3"
+          >
             <div className="min-w-0">
               <p className="truncate font-mono text-xs text-muted-foreground">{item.pageUrl}</p>
               <p className="mt-1 text-sm leading-5">

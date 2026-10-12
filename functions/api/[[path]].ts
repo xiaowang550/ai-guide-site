@@ -28,6 +28,8 @@ interface PagesContext {
     AI_CREDENTIALS_KEY?: string
     OPENROUTER_API_KEY?: string
     OPENCODE_API_KEY?: string
+    RESEND_API_KEY?: string
+    FEEDBACK_FROM?: string
     ADMIN_USERNAME?: string
   }
 }
@@ -59,6 +61,8 @@ export const onRequest = async (
     AI_CREDENTIALS_KEY: env.AI_CREDENTIALS_KEY,
     OPENROUTER_API_KEY: env.OPENROUTER_API_KEY,
     OPENCODE_API_KEY: env.OPENCODE_API_KEY,
+    RESEND_API_KEY: env.RESEND_API_KEY,
+    FEEDBACK_FROM: env.FEEDBACK_FROM,
     ADMIN_USERNAME: env.ADMIN_USERNAME,
     NEWS_BACKGROUND: context.waitUntil ? (work) => context.waitUntil!(work) : undefined,
   }

@@ -154,8 +154,9 @@ describe('主导航结构', () => {
     expect([...new Set(dup)]).toEqual([])
   })
 
-  it('次级导航从主导航和保留的学校专区派生，入口不遗漏', () => {
+  it('次级导航包含问题反馈，并从主导航和保留的学校专区派生，入口不遗漏', () => {
     const flat = [
+      { href: '/feedback/' },
       schoolNavigation,
       ...(schoolNavigation.children ?? []),
       ...megaNav.flatMap((g) => g.children ?? []),

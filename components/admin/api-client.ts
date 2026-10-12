@@ -63,7 +63,7 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
 export async function apiSend<T>(
   path: string,
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-  body?: unknown
+  body?: unknown,
 ): Promise<T> {
   const res = await fetch(path, {
     method,
@@ -143,6 +143,8 @@ export interface FeedbackItem {
   status: string
   handled_note: string | null
   created_at: string
+  screenshots?: { id: string; name: string; bytes: number }[]
+  notification?: { status: string; last_error: string | null; sent_at: string | null } | null
 }
 
 export interface Dashboard {

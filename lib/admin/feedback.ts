@@ -8,6 +8,7 @@ import type { Db } from '../db/types.ts'
 import { toInt, toText } from '../db/types.ts'
 import { maskIp, nowIso } from './auth.ts'
 import { sha256Base64Url } from './crypto.ts'
+import { ensureFeedbackExtras, validateScreenshots } from './feedback-delivery.ts'
 
 export const FEEDBACK_KINDS = ['errata', 'correction', 'question', 'suggestion'] as const
 export type FeedbackKind = (typeof FEEDBACK_KINDS)[number]
@@ -16,7 +17,7 @@ export const FEEDBACK_KIND_LABELS: Record<FeedbackKind, string> = {
   errata: '内容有误',
   correction: '数据要改',
   question: '想问一个问题',
-  suggestion: '建议',
+  suggestion: '建议 / 使用感受',
 }
 
 export const FEEDBACK_STATUSES = ['new', 'triaged', 'resolved', 'dismissed'] as const
@@ -26,7 +27,7 @@ export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
   new: '待处理',
   triaged: '处理中',
   resolved: '已解决',
-  dismissed: '已忽略',
+  dismissed: '暂不采纳',
 }
 
 /** 提交频率：同一 IP 掩码每分钟最多 3 条 */
@@ -49,7 +50,7 @@ export async function isRateLimited(
   purpose: string,
   ipPrefix: string,
   siteSalt: string,
-  limitPerMinute: number
+  limitPerMinute: number,
 ): Promise<boolean> {
   const key = await sha256Base64Url(`${siteSalt}|${purpose}|${ipPrefix}`)
   const windowStart = Math.floor(Date.now() / 60000)
@@ -57,11 +58,11 @@ export async function isRateLimited(
     `INSERT INTO rate_limits (key, purpose, window_start, count) VALUES (?, ?, ?, 1)
      ON CONFLICT(key) DO UPDATE SET count = count + 1
      WHERE window_start = ?`,
-    [key, purpose, windowStart, windowStart]
+    [key, purpose, windowStart, windowStart],
   )
   const row = await db.first<{ count: number }>(
     'SELECT count FROM rate_limits WHERE key = ? AND window_start = ?',
-    [key, windowStart]
+    [key, windowStart],
   )
   return toInt(row?.count) > limitPerMinute
 }
@@ -107,9 +108,11 @@ export async function submitFeedback(
     message: unknown
     contact?: unknown
     pageUrl?: unknown
+    screenshots?: unknown
+    requestId?: unknown
     ip: string
     siteSalt: string
-  }
+  },
 ): Promise<SubmitResult> {
   const message = typeof params.message === 'string' ? params.message.trim() : ''
   if (message.length < 5) return { ok: false, error: '内容太短了，至少 5 个字。' }
@@ -119,6 +122,40 @@ export async function submitFeedback(
     ? (params.kind as FeedbackKind)
     : 'errata'
 
+  let screenshots
+  try {
+    screenshots = validateScreenshots(params.screenshots)
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : '截图格式不正确。' }
+  }
+  const page = sanitizePageUrl(params.pageUrl),
+    contact = sanitizeContact(params.contact)
+  const requestId =
+    typeof params.requestId === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(params.requestId)
+      ? params.requestId
+      : null
+  if (params.requestId !== undefined && !requestId)
+    return { ok: false, error: '提交编号无效，请刷新重试。' }
+  await ensureFeedbackExtras(db)
+  const payloadHash = await sha256Base64Url(
+    JSON.stringify([kind, message, page, contact, screenshots]),
+  )
+  async function existingSubmission() {
+    if (!requestId) return null
+    const old = await db.first<{ feedback_id: string; payload_hash: string }>(
+      'SELECT feedback_id,payload_hash FROM feedback_submissions WHERE request_id=?',
+      [requestId],
+    )
+    return old
+      ? old.payload_hash === payloadHash
+        ? { ok: true, id: old.feedback_id }
+        : { ok: false, error: '内容已变化，请重新提交。' }
+      : null
+  }
+  const existing = await existingSubmission()
+  if (existing) return existing
+
   const ipPrefix = maskIp(params.ip)
   if (await isRateLimited(db, 'feedback', ipPrefix, params.siteSalt, FEEDBACK_MAX_PER_MINUTE)) {
     return { ok: false, error: '提交太频繁了，请一分钟后再试。' }
@@ -126,19 +163,32 @@ export async function submitFeedback(
 
   const id = newId()
   const now = nowIso()
-  await db.run(
-    `INSERT INTO feedback (id, kind, page_url, contact, message, status, source, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'new', 'public', ?, ?)`,
-    [
-      id,
-      kind,
-      sanitizePageUrl(params.pageUrl),
-      sanitizeContact(params.contact),
-      message,
-      now,
-      now,
-    ]
-  )
+  try {
+    await db.batch([
+      {
+        sql: `INSERT INTO feedback (id, kind, page_url, contact, message, status, source, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, 'new', 'public', ?, ?)`,
+        params: [id, kind, page, contact, message, now, now],
+      },
+      ...screenshots.map((image) => ({
+        sql: 'INSERT INTO feedback_assets(id,feedback_id,name,mime,content,bytes) VALUES(?,?,?,?,?,?)',
+        params: [newId(), id, image.name, image.mime, image.content, image.bytes],
+      })),
+      { sql: 'INSERT INTO feedback_notifications(feedback_id) VALUES(?)', params: [id] },
+      ...(requestId
+        ? [
+            {
+              sql: 'INSERT INTO feedback_submissions(request_id,feedback_id,payload_hash) VALUES(?,?,?)',
+              params: [requestId, id, payloadHash],
+            },
+          ]
+        : []),
+    ])
+  } catch (error) {
+    const raced = await existingSubmission()
+    if (raced) return raced
+    throw error
+  }
   return { ok: true, id }
 }
 
@@ -158,7 +208,7 @@ export interface FeedbackRow {
 
 export async function listFeedback(
   db: Db,
-  opts: { status?: string; limit?: number } = {}
+  opts: { status?: string; limit?: number } = {},
 ): Promise<FeedbackRow[]> {
   const limit = Math.min(Math.max(opts.limit ?? 100, 1), 500)
   const sql = opts.status
@@ -179,7 +229,7 @@ export async function updateFeedback(
     status?: string
     note?: string
     actor: string
-  }
+  },
 ): Promise<{ ok: boolean; error?: string }> {
   const existing = await getFeedback(db, params.id)
   if (!existing) return { ok: false, error: '反馈不存在' }
@@ -225,7 +275,7 @@ export interface FeedbackCounts {
  */
 export async function feedbackCounts(db: Db): Promise<FeedbackCounts> {
   const rows = await db.all<{ status: string; n: number }>(
-    'SELECT status, COUNT(*) AS n FROM feedback GROUP BY status'
+    'SELECT status, COUNT(*) AS n FROM feedback GROUP BY status',
   )
   const counts: FeedbackCounts = { total: 0, new: 0, triaged: 0, resolved: 0, dismissed: 0 }
   for (const r of rows) {

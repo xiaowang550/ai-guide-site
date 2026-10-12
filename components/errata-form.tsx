@@ -23,15 +23,13 @@ import { SubmitIssueButton } from '@/components/feedback-stats'
 import { Button } from '@/components/ui/button'
 import { Input, Textarea } from '@/components/ui/input'
 
-const MAILTO = '1302582367@qq.com'
+const MAILTO = siteConfig.feedbackEmail
 
 /**
  * 勘误反馈表单。
  *
- * 为什么是「复制 / 邮件」而不是一个提交按钮：
- * 本站是纯静态站，没有后端，任何「提交」按钮都只能把内容送到用户自己的剪贴板或邮件。
- * 与其做一个点完就没动静的假表单，不如老实做成本地队列 + 一键导出，
- * 让用户填的东西能真的到维护者手里：
+ * 保留原结构化本地队列，兼容以前保存的勘误和离线整理；
+ * 通用问题与截图可前往 /feedback/ 直接提交：
  *   - 结构化字段（页面 / 字段 / 问题 / 建议 / 依据）
  *   - 暂存在本地，填一半关掉不丢
  *   - 一键复制成纯文本，或用 mailto: 带上内容
@@ -159,7 +157,9 @@ export function ErrataForm({ from }: { from?: string }) {
         </div>
 
         {validation.missing.length > 0 ? (
-          <p className="mt-3 text-xs text-muted-foreground">还缺：{validation.missing.join('、')}</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            还缺：{validation.missing.join('、')}
+          </p>
         ) : null}
         {validation.warnings.map((w) => (
           <p key={w} className="mt-2 flex gap-1.5 text-xs text-amber-700 dark:text-amber-400">
@@ -287,12 +287,8 @@ export function ErrataForm({ from }: { from?: string }) {
         )}
 
         <p className="mt-4 border-t border-hairline pt-3 text-xs leading-5 text-muted-foreground">
-          本站没有后端，所以没有「提交」按钮 —— 数据必须由你亲手带走。
-          流程：<span className="text-foreground">加入列表 → 复制或发邮件 → 我们核对 → 更新页面并在
-          <Link href="/updates" className="link mx-1">
-            AI 实时资讯
-          </Link>
-          记录</span>。
+          这份结构化勘误会先保存在本机，可复制或发邮件。想直接提交文字与截图？
+          <Link href="/feedback/" className="link ml-1">前往问题反馈</Link>。
         </p>
       </div>
     </div>

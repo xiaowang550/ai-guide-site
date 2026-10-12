@@ -30,7 +30,7 @@ export const siteConfig = {
    */
   feedbackRepo: process.env.NEXT_PUBLIC_FEEDBACK_REPO ?? 'xiaowang550/ai-guide-site',
   /** 收件邮箱：勘误与反馈的人工兜底通道 */
-  feedbackEmail: '1302582367@qq.com',
+  feedbackEmail: '1987215931@qq.com',
   keywords: ['AI 工具', 'AI 提示词', 'AI 教程', '工具对比', '大模型', '场景选型'],
 } as const
 
@@ -157,6 +157,7 @@ export const primaryNav: readonly NavChild[] = megaNav.map(({ href, label, hint 
 }))
 
 export const secondaryNav: readonly NavChild[] = [
+  { href: '/feedback/', label: '问题反馈', hint: '建议、问题与使用感受' },
   schoolNavigation,
   ...(schoolNavigation.children ?? []),
   ...megaNav.flatMap((g) => g.children ?? []),

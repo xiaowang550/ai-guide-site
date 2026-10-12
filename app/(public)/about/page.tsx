@@ -285,7 +285,7 @@ export default function AboutPage() {
                 <ErrataFormWithParam />
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <a href={`mailto:1302582367@qq.com?subject=${encodeURIComponent('勘误反馈')}`}>
+                    <a href={`mailto:${siteConfig.feedbackEmail}?subject=${encodeURIComponent('勘误反馈')}`}>
                       <Mail className="h-3.5 w-3.5" aria-hidden />
                       发邮件提交勘误
                     </a>

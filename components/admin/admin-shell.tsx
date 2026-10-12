@@ -68,7 +68,12 @@ const TABS: { key: TabKey; label: string; hint: string; icon: typeof Activity }[
     hint: '保存需求并生成可查看的代码草稿',
   },
   { key: 'content', icon: BookOpen, label: '内容管理', hint: '编辑工具资料、预览、发布、回滚' },
-  { key: 'feedback', icon: MessageSquare, label: '访客反馈', hint: '处理访客提交的纠错与提问' },
+  {
+    key: 'feedback',
+    icon: MessageSquare,
+    label: '访客反馈',
+    hint: '查看问题、截图与使用感受，配置邮件通知',
+  },
   { key: 'news', icon: Activity, label: 'AI 实时资讯', hint: '查看同步、整理摘要与管理公开消息' },
   {
     key: 'update-radar',
