@@ -1,6 +1,6 @@
+import '@/app/styles/tool-signals.css'
 import '@/app/styles/reference-hero.css'
 import '@/app/styles/reference-home.css'
-import '@/app/styles/reference-tools.css'
 import { moduleForPath } from '@/lib/site-modules'
 import { ModuleSection } from '@/components/module-visibility'
 import { HomeLayout } from '@/components/home-layout'
@@ -20,9 +20,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { cases, concepts, guides, paths, tools } from '@/data'
-import { formatDate, latestUpdatedAt } from '@/lib/score'
-import { ToolCard } from '@/components/tool-card'
-import { toListItems } from '@/lib/tool-list-item'
+import { WeeklyRecommendations, type WeeklyEntry } from '@/components/weekly-recommendations'
 import { Section } from '@/components/page-header'
 import { ReferenceArt } from '@/components/reference-art'
 
@@ -64,9 +62,41 @@ const tasks = [
 ]
 
 export default function HomePage() {
-  const featured = tools.filter((t) => t.featured).slice(0, 3)
-  const featuredItems = toListItems(featured.length ? featured : tools.slice(0, 3))
-  const updated = latestUpdatedAt(tools)
+  const recommendedTools = ['chatgpt', 'deepseek', 'claude']
+    .map((id) => tools.find((tool) => tool.id === id))
+    .filter((tool) => !!tool)
+  const weekly: WeeklyEntry[] = recommendedTools.flatMap((tool, index) => {
+    const guide = guides[index],
+      example = cases[index]
+    return [
+      {
+        id: tool.id,
+        kind: '工具' as const,
+        href: `/tools/${tool.id}`,
+        title: tool.name,
+        description: tool.tagline,
+        logo: tool.logo,
+        score: tool.overallScore,
+        tags: tool.tags,
+      },
+      {
+        id: guide.id,
+        kind: '教程' as const,
+        href: `/guides/${guide.id}`,
+        title: guide.title,
+        description: guide.summary ?? guide.outcome,
+        tags: ['可跟着练', `${guide.durationMin} 分钟`],
+      },
+      {
+        id: example.id,
+        kind: '案例' as const,
+        href: `/cases/${example.id}`,
+        title: example.title,
+        description: example.summary ?? example.scenario,
+        tags: ['提示词可复制', '真实任务练习'],
+      },
+    ]
+  })
   const counts = [
     { value: tools.length, label: '个工具，清楚比较' },
     { value: concepts.length, label: '个概念，轻松理解' },
@@ -109,10 +139,12 @@ export default function HomePage() {
                       </Link>
                     </ModuleSection>
                   </div>
-                  <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                  <div className="hero-promises mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
                     {['评分有依据', '把强项与弱项说清楚', '无需注册，直接探索'].map((t) => (
                       <span key={t} className="flex items-center gap-1.5">
-                        <Check className="h-3.5 w-3.5 text-primary" />
+                        <span className="hero-promise-check">
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                        </span>
                         {t}
                       </span>
                     ))}
@@ -211,26 +243,7 @@ export default function HomePage() {
           id: 'tools',
           content: (
             <ModuleSection id="tools">
-              <Section
-                title="值得先认识的工具"
-                description="比较能力、限制和适用任务。"
-                eyebrow="工具发现"
-                action={
-                  <Link href="/tools" className="section-link">
-                    查看全部工具
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                }
-              >
-                <div className="grid gap-x-7 gap-y-9 sm:grid-cols-2 lg:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
-                  {featuredItems.map((tool, i) => (
-                    <ToolCard key={tool.id} tool={tool} index={i} />
-                  ))}
-                </div>
-                <p className="mt-4 text-xs text-muted-foreground">
-                  资料最后复核于 {formatDate(updated)} · 评分用于辅助选择，不做自建评测。
-                </p>
-              </Section>
+              <WeeklyRecommendations entries={weekly} />
             </ModuleSection>
           ),
         },

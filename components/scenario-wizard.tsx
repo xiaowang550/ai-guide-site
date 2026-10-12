@@ -1,4 +1,6 @@
-﻿'use client'
+'use client'
+
+import { toTenPointScore } from '@/lib/display-score'
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -12,12 +14,7 @@ import {
   Scale,
   Sparkles,
 } from 'lucide-react'
-import type {
-  CapabilityKey,
-  RequirementFlags,
-  ScenarioRule,
-  Tool,
-} from '@/data/types'
+import type { CapabilityKey, RequirementFlags, ScenarioRule, Tool } from '@/data/types'
 import {
   ADJUST_CAP,
   FLAG_KIND,
@@ -92,7 +89,7 @@ const FLAG_PARAM: Record<FlagKey, string> = {
 }
 
 const PARAM_FLAG: Record<string, FlagKey> = Object.fromEntries(
-  Object.entries(FLAG_PARAM).map(([k, v]) => [v, k as FlagKey])
+  Object.entries(FLAG_PARAM).map(([k, v]) => [v, k as FlagKey]),
 )
 
 export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
@@ -134,10 +131,7 @@ export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
     window.history.replaceState(null, '', qs ? `/find?${qs}` : '/find')
   }, [scenarioId, variantId, flags, hydrated])
 
-  const scenario = useMemo(
-    () => scenarios.find((s) => s.id === scenarioId) ?? null,
-    [scenarioId]
-  )
+  const scenario = useMemo(() => scenarios.find((s) => s.id === scenarioId) ?? null, [scenarioId])
 
   /**
    * 子情境解析后的场景：权重与硬要求都按子情境覆盖过。
@@ -146,15 +140,12 @@ export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
    */
   const resolved = useMemo(
     () => (scenario ? resolveScenario(scenario, variantId) : null),
-    [scenario, variantId]
+    [scenario, variantId],
   )
 
   const recommendation = useMemo(
-    () =>
-      resolved
-        ? recommend(resolved.rule, flags, tools, { promptTemplates })
-        : null,
-    [resolved, flags]
+    () => (resolved ? recommend(resolved.rule, flags, tools, { promptTemplates }) : null),
+    [resolved, flags],
   )
 
   const stepLabels = ['你要做什么', '具体是哪种', '补充条件', '推荐结果']
@@ -212,7 +203,7 @@ export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
                   : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                 (i > 0 && !scenarioId) || (i === 1 && !hasVariants)
                   ? 'cursor-not-allowed opacity-40'
-                  : ''
+                  : '',
               )}
             >
               <span className="tabular-nums">{i + 1}</span>
@@ -271,9 +262,7 @@ export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
              声明式埋点，不改动任何流程逻辑。 */
           data-track="wizard_complete"
           rule={resolved.rule}
-          variantLabel={
-            resolved.variant ? resolved.variant.label : null
-          }
+          variantLabel={resolved.variant ? resolved.variant.label : null}
           recommendation={recommendation}
           caseItems={caseItems}
           onBack={() => setStep(2)}
@@ -295,22 +284,18 @@ export function ScenarioWizard({ caseItems }: { caseItems: CaseListItem[] }) {
 function countHardFiltersByScenario(
   flags: RequirementFlags,
   rule: ScenarioRule,
-  allTools: Tool[]
+  allTools: Tool[],
 ): number {
   let pool = allTools
   if (flags.chinaDirect) pool = pool.filter((t) => t.chinaAccessible)
   if (flags.privacySensitive) pool = pool.filter(isLocalOnly)
   if (flags.mustBeFree) {
-    pool = pool.filter(
-      (t) => t.pricing.model === 'free' || t.pricing.model === 'open-source'
-    )
+    pool = pool.filter((t) => t.pricing.model === 'free' || t.pricing.model === 'open-source')
   }
   const required = rule.requiredCapabilities ?? []
   if (required.length === 0) return pool.length
   return pool.filter((t) =>
-    required.every(
-      (r) => (t.capabilities[r.key]?.score ?? 0) >= (r.minRequiredScore ?? 3)
-    )
+    required.every((r) => (t.capabilities[r.key]?.score ?? 0) >= (r.minRequiredScore ?? 3)),
   ).length
 }
 
@@ -325,11 +310,7 @@ function StepOne({
   scenarios: ScenarioRule[]
   onSelect: (id: string) => void
   flags: RequirementFlags
-  flagsByScenario: (
-    flags: RequirementFlags,
-    rule: ScenarioRule,
-    tools: Tool[]
-  ) => number
+  flagsByScenario: (flags: RequirementFlags, rule: ScenarioRule, tools: Tool[]) => number
 }) {
   const hasHardFlag = FLAG_ORDER.some((k) => FLAG_KIND[k] === 'hard' && flags[k])
 
@@ -365,7 +346,7 @@ function StepOne({
                         'group flex items-start gap-3 rounded-xl border p-3.5 text-left transition-colors',
                         blocked
                           ? 'border-dashed opacity-70 hover:opacity-100'
-                          : 'hover:border-primary/50 hover:bg-accent/30'
+                          : 'hover:border-primary/50 hover:bg-accent/30',
                       )}
                     >
                       <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -389,7 +370,7 @@ function StepOne({
                               'mt-1.5 inline-block rounded px-1.5 py-0.5 text-xs',
                               blocked
                                 ? 'bg-danger/10 text-danger'
-                                : 'bg-muted text-muted-foreground'
+                                : 'bg-muted text-muted-foreground',
                             )}
                           >
                             按你已勾的条件，仅 {left} 个工具符合
@@ -444,15 +425,13 @@ function StepVariant({
                 'flex h-full w-full flex-col rounded-xl border p-3.5 text-left transition-colors',
                 selected === v.id
                   ? 'border-primary bg-primary/5'
-                  : 'hover:border-primary/40 hover:bg-accent/30'
+                  : 'hover:border-primary/40 hover:bg-accent/30',
               )}
             >
               <span className="flex items-baseline gap-2">
                 <span className="text-sm font-semibold">{v.label}</span>
               </span>
-              <span className="mt-1.5 block text-xs leading-5 text-muted-foreground">
-                {v.hint}
-              </span>
+              <span className="mt-1.5 block text-xs leading-5 text-muted-foreground">{v.hint}</span>
               <WeightDelta rule={rule} weights={v.weights} />
             </button>
           </li>
@@ -507,7 +486,7 @@ function WeightDelta({
               'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs',
               d.delta > 0
                 ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300'
-                : 'bg-muted text-muted-foreground'
+                : 'bg-muted text-muted-foreground',
             )}
             title={`权重 ${d.value}`}
           >
@@ -613,7 +592,7 @@ function ConditionGroup({
               key={key}
               className={cn(
                 'flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors',
-                checked ? 'border-primary bg-primary/5' : 'hover:border-primary/40'
+                checked ? 'border-primary bg-primary/5' : 'hover:border-primary/40',
               )}
             >
               <input
@@ -669,9 +648,7 @@ function StepThree({
           <Button variant="outline" onClick={onBack}>
             调整条件
           </Button>
-          <Button onClick={onChangeScenario}>
-            换个任务
-          </Button>
+          <Button onClick={onChangeScenario}>换个任务</Button>
         </div>
       </div>
     )
@@ -685,9 +662,7 @@ function StepThree({
   // 「这个工具在真实场景里怎么用」：按工具 id 关联案例库。
   // 这里不做更聪明的匹配 —— 案例只记了用了哪些工具，没记属于哪个场景，
   // 硬凑场景相关度会给出误导性的关联。界面上也照实写明是按工具关联。
-  const relatedCases = caseItems
-    .filter((c) => c.tools.includes(primary.tool.id))
-    .slice(0, 3)
+  const relatedCases = caseItems.filter((c) => c.tools.includes(primary.tool.id)).slice(0, 3)
 
   return (
     <div className="space-y-8">
@@ -859,13 +834,7 @@ function StepThree({
   )
 }
 
-function SectionLabel({
-  children,
-  icon,
-}: {
-  children: React.ReactNode
-  icon?: React.ReactNode
-}) {
+function SectionLabel({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
   return (
     <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
       {icon}
@@ -897,7 +866,7 @@ function RecommendationCard({
       className={cn(
         'media-card spotlight h-full',
         // 首选不用填充色，改用高亮描边 —— 避免"推荐位 = 一块彩色"的廉价感
-        highlight && 'border-primary/45 shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]'
+        highlight && 'border-primary/45 shadow-[0_0_0_1px_hsl(var(--primary)/0.18)]',
       )}
     >
       <CoverArt
@@ -1006,7 +975,7 @@ function RecommendationCard({
             能力详情
           </Link>
           <span className="ml-auto text-xs text-muted-foreground">
-            适配分 {explanation.score}/5
+            适配分 {toTenPointScore(explanation.score)}/10
           </span>
         </div>
       </div>
@@ -1045,9 +1014,7 @@ function TradeoffBlock({
                 {g.theirs} → {g.winner}
               </span>
               <span className="tabular-nums text-danger">-{g.costPoints}</span>
-              <span className="ml-auto shrink-0 text-xs">
-                权重 {Math.round(g.weight * 100)}%
-              </span>
+              <span className="ml-auto shrink-0 text-xs">权重 {Math.round(g.weight * 100)}%</span>
             </li>
           ))}
         </ul>
@@ -1058,7 +1025,7 @@ function TradeoffBlock({
           它在这些方面更强：
           {tradeoff.advantages
             .slice(0, 3)
-            .map((a) => `${a.label} ${a.theirs}/5`)
+            .map((a) => `${a.label} ${toTenPointScore(a.theirs)}/10`)
             .join('、')}
           —— 这个场景不太吃这些维度，换个场景它可能反而更合适。
         </p>
@@ -1071,9 +1038,7 @@ function TradeoffBlock({
 
 /** 供页面说明用的权重表（静态渲染，避免把权重藏成黑盒） */
 export function ScenarioWeightTable({ rules }: { rules: ScenarioRule[] }) {
-  const keys = Array.from(
-    new Set(rules.flatMap((r) => Object.keys(r.weights)))
-  ) as CapabilityKey[]
+  const keys = Array.from(new Set(rules.flatMap((r) => Object.keys(r.weights)))) as CapabilityKey[]
   return (
     <div className="overflow-x-auto rounded-xl border">
       <table className="w-full min-w-[56rem] border-collapse text-sm">

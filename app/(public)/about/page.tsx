@@ -19,11 +19,11 @@ export const metadata: Metadata = {
 }
 
 const SCORE_RUBRIC = [
-  { score: '5 分', meaning: '当前该领域的第一梯队，可直接用于生产场景' },
-  { score: '4 分', meaning: '明显强于平均水平，有明确优势场景' },
-  { score: '3 分', meaning: '够用，不出错但没有优势' },
-  { score: '2 分', meaning: '能力弱或经常出错，需要人工兜底' },
-  { score: '1 分', meaning: '基本不具备该能力' },
+  { score: '10 分', meaning: '当前该领域的第一梯队，可直接用于生产场景' },
+  { score: '8 分', meaning: '明显强于平均水平，有明确优势场景' },
+  { score: '6 分', meaning: '够用，不出错但没有优势' },
+  { score: '4 分', meaning: '能力弱或经常出错，需要人工兜底' },
+  { score: '2 分', meaning: '基本不具备该能力' },
   { score: '0 分', meaning: '完全不提供该能力' },
 ]
 
@@ -102,7 +102,7 @@ export default function AboutPage() {
                 我们怎么打分
               </h2>
               <p className="mt-2 text-sm leading-7 text-foreground/85">
-                全站统一 14 个能力维度，每个维度 0-5 分。每个 ≥4 分或 ≤2
+                全站统一 14 个能力维度，每个维度以 0–10 分展示。每个 ≥8 分或 ≤4
                 分的维度都必须写「打分依据」， 写不出来的分数我们不给。
               </p>
 
@@ -210,8 +210,8 @@ export default function AboutPage() {
                   0.20……）， 归一化到总和为 1。
                 </li>
                 <li>
-                  2. 每个工具在这个场景下的基础分 = Σ(该维度得分 / 5 × 权重) × 5，结果落在 0-5
-                  之间。
+                  2. 每个工具在这个场景下的基础分 = Σ(该维度得分 / 10 × 权重) × 10，结果落在 0–10
+                  分之间。
                 </li>
                 <li>
                   3. 硬性条件直接剔除工具：「必须免费」「大陆可直连」不满足的出局；场景的硬门槛维度
@@ -285,7 +285,9 @@ export default function AboutPage() {
                 <ErrataFormWithParam />
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button asChild size="sm" variant="outline">
-                    <a href={`mailto:${siteConfig.feedbackEmail}?subject=${encodeURIComponent('勘误反馈')}`}>
+                    <a
+                      href={`mailto:${siteConfig.feedbackEmail}?subject=${encodeURIComponent('勘误反馈')}`}
+                    >
                       <Mail className="h-3.5 w-3.5" aria-hidden />
                       发邮件提交勘误
                     </a>

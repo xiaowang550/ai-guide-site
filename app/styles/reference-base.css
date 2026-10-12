@@ -18,6 +18,8 @@
   padding: 3px;
 }
 .public-site {
+  position: relative;
+  isolation: isolate;
   --background: 145 35% 98%;
   --card: 0 0% 100%;
   --foreground: 165 21% 12%;
@@ -29,6 +31,18 @@
   background:
     radial-gradient(ellipse at 90% 5%, hsl(var(--accent) / 0.65), transparent 35%),
     hsl(var(--background));
+}
+.public-site::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url('/brand/botanical-surface.svg') top center / 100% 1100px repeat-y;
+  opacity: 0.65;
+}
+.dark .public-site::before {
+  opacity: 0.13;
 }
 .dark .public-site {
   --background: 158 12% 11%;

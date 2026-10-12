@@ -10,6 +10,8 @@ import { CATEGORY_LABELS, PLATFORM_LABELS } from '@/lib/site'
 import { TOOL_CATEGORIES } from '@/data/types'
 import { cn } from '@/lib/utils'
 import { ToolCard, ToolTable } from '@/components/tool-card'
+import { toTenPointScore } from '@/lib/display-score'
+import { useToolTrends, ToolTrendSource } from './tool-trends'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/page-header'
@@ -105,6 +107,7 @@ function paramsToState(params: URLSearchParams): Partial<FilterState> {
 }
 
 export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
+  const trends = useToolTrends()
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
@@ -204,7 +207,7 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
     ...(filters.capability !== 'any'
       ? [
           {
-            label: `${capabilityLabel(filters.capability)} ≥ ${filters.minScore} 分`,
+            label: `${capabilityLabel(filters.capability)} ≥ ${toTenPointScore(filters.minScore)} 分`,
             onClear: () => setFilters((f) => ({ ...f, capability: 'any' })),
           },
         ]
@@ -273,7 +276,7 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
           >
             {[3, 4, 5].map((n) => (
               <option key={n} value={n}>
-                ≥ {n} 分
+                ≥ {toTenPointScore(n)} 分
               </option>
             ))}
           </select>
@@ -528,12 +531,13 @@ export function ToolExplorer({ tools }: { tools: ToolListItem[] }) {
         ) : filters.view === 'grid' ? (
           <div className="tool-results-grid">
             {result.map((tool, i) => (
-              <ToolCard key={tool.id} tool={tool} index={i} />
+              <ToolCard key={tool.id} tool={tool} index={i} trends={trends} />
             ))}
           </div>
         ) : (
-          <ToolTable tools={result} />
+          <ToolTable tools={result} trends={trends} />
         )}
+        <ToolTrendSource trends={trends} />
       </div>
     </div>
   )

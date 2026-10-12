@@ -1,4 +1,5 @@
-﻿import Link from 'next/link'
+import { toTenPointScore } from '@/lib/display-score'
+import Link from 'next/link'
 import { ExternalLink, FileSearch } from 'lucide-react'
 import type { CompareTool as Tool } from '@/lib/compare-tool'
 import {
@@ -228,10 +229,10 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                                 : ''
                             }`}
                             style={{
-                              backgroundColor: `hsl(var(--score-${score}))`,
+                              backgroundColor: `hsl(var(--score-${toTenPointScore(score)}))`,
                             }}
                           >
-                            {score}
+                            {toTenPointScore(score)}
                           </span>
                         </td>
                       )
@@ -285,7 +286,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                               <span className="ml-1 text-xs text-highlight">最高</span>
                             ) : null}
                           </dt>
-                          <dd className="text-sm tabular-nums">{score}/5</dd>
+                          <dd className="text-sm tabular-nums">{toTenPointScore(score)}/10</dd>
                           <dd className="text-xs leading-5 text-muted-foreground">
                             {cap?.basis?.trim() || '（未写依据）'}
                           </dd>

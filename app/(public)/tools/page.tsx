@@ -1,6 +1,7 @@
+import '@/app/styles/tool-signals.css'
 import '@/app/styles/reference-hero.css'
 import '@/app/styles/reference-tools.css'
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Compass } from 'lucide-react'
 import { tools } from '@/data'

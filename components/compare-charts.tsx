@@ -1,5 +1,7 @@
 'use client'
 
+import { toTenPointScore } from '@/lib/display-score'
+
 import { useEffect, useRef, useState } from 'react'
 import type { CapabilityKey } from '@/data/types'
 import type { CompareTool } from '@/lib/compare-tool'
@@ -114,7 +116,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <h2 className="text-xl font-semibold">先看你要做的事</h2>
-          <p className="mt-2 text-sm text-muted-foreground">0–5 分，看清各自强项。</p>
+          <p className="mt-2 text-sm text-muted-foreground">0–10 分，看清各自强项。</p>
         </div>
         <div
           className="grid w-full grid-cols-4 gap-1 rounded-xl bg-muted/60 p-1 sm:w-auto"
@@ -187,7 +189,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
               role="group"
             >
               {[1, 2, 3, 4, 5].map((level) => (
-                <g key={level}>
+                <g key={toTenPointScore(level)}>
                   <polygon
                     points={polygon(keys.map(() => level))}
                     fill="none"
@@ -199,7 +201,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                     fontSize={12}
                     fill="hsl(var(--muted-foreground))"
                   >
-                    {level}
+                    {toTenPointScore(level)}
                   </text>
                 </g>
               ))}
@@ -237,7 +239,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                         strokeWidth={1}
                         {...interactive(
                           key,
-                          `${tool.name}，${capabilityLabel(key)}，${tool.capabilities[key].score} / 5`,
+                          `${tool.name}，${capabilityLabel(key)}，${toTenPointScore(tool.capabilities[key].score)} / 10`,
                         )}
                       >
                         <circle cx={p.x} cy={p.y} r={10} fill="transparent" stroke="none" />
@@ -299,7 +301,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                           />
                         </div>
                         <span className="text-right tabular-nums">
-                          {tool.capabilities[key].score}/5
+                          {toTenPointScore(tool.capabilities[key].score)}/10
                         </span>
                       </div>
                     ))}
@@ -322,10 +324,10 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                   width={Math.max(520, keys.length * 64 + 64)}
                   height={340}
                   role="group"
-                  aria-label="各能力分数折线图，固定 0 到 5 分刻度"
+                  aria-label="各能力分数折线图，固定 0 到 10 分刻度"
                 >
                   {[0, 1, 2, 3, 4, 5].map((n) => (
-                    <g key={n}>
+                    <g key={toTenPointScore(n)}>
                       <line
                         x1={38}
                         y1={280 - n * 48}
@@ -339,7 +341,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                         fontSize={14}
                         fill="hsl(var(--muted-foreground))"
                       >
-                        {n}
+                        {toTenPointScore(n)}
                       </text>
                     </g>
                   ))}
@@ -370,7 +372,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                             strokeWidth={1}
                             {...interactive(
                               key,
-                              `${tool.name}，${capabilityLabel(key)}，${tool.capabilities[key].score} / 5`,
+                              `${tool.name}，${capabilityLabel(key)}，${toTenPointScore(tool.capabilities[key].score)} / 10`,
                             )}
                           >
                             <circle cx={x} cy={y} r={10} fill="transparent" stroke="none" />
@@ -407,7 +409,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
               aria-label="能力数值表，可左右滑动"
             >
               <table data-chart="table" className="w-full text-sm">
-                <caption className="sr-only">所选任务的能力分数，满分 5 分</caption>
+                <caption className="sr-only">所选任务的能力分数，满分 10 分</caption>
                 <thead>
                   <tr>
                     <th scope="col" className="sticky left-0 bg-card p-3 text-left">
@@ -436,7 +438,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                       </th>
                       {visible.map((t) => (
                         <td key={t.id} className="p-3 text-center tabular-nums">
-                          {t.capabilities[key].score}/5
+                          {toTenPointScore(t.capabilities[key].score)}/10
                         </td>
                       ))}
                     </tr>
@@ -473,12 +475,12 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
             <p className="mt-2 text-sm text-muted-foreground">{meta.description}</p>
             <p className="mt-4 text-sm font-medium">
               {visible.length === 1
-                ? `当前显示 ${visible[0].name}：${top}/5。`
+                ? `当前显示 ${visible[0].name}：${toTenPointScore(top)}/10。`
                 : top === 0
                   ? '所选工具都不提供这项能力。'
                   : winners.length === visible.length
                     ? '这一项评分相同，再看费用和使用条件。'
-                    : `${winners.map((t) => t.name).join('、')}${winners.length > 1 ? '并列' : ''}分数较高：${top}/5。`}
+                    : `${winners.map((t) => t.name).join('、')}${winners.length > 1 ? '并列' : ''}分数较高：${toTenPointScore(top)}/10。`}
             </p>
             <ul className="mt-5 space-y-5">
               {visible.map((tool) => (
@@ -493,7 +495,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                       {tool.name}
                     </span>
                     <span>
-                      {tool.capabilities[dimension].score}/5 ·{' '}
+                      {toTenPointScore(tool.capabilities[dimension].score)}/10 ·{' '}
                       {SCORE_MEANINGS[tool.capabilities[dimension].score]}
                     </span>
                   </p>
@@ -511,7 +513,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
         </aside>
       </div>
       <div className="mt-6 border-t pt-4 text-xs leading-7 text-muted-foreground">
-        <p>0 不提供 · 1 基本不具备 · 2 偏弱 · 3 够用 · 4 较强 · 5 第一梯队</p>
+        <p>0 不提供 · 2 基本不具备 · 4 偏弱 · 6 够用 · 8 较强 · 10 第一梯队</p>
         <p>
           按具体任务看单项分数；图形面积不代表更适合你。评分为公开资料整理，
           <a href="/about" className="text-primary underline underline-offset-4">

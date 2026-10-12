@@ -1,3 +1,4 @@
+import { toTenPointScore } from '@/lib/display-score'
 import type { CapabilityKey, CapabilityScore, Score } from '@/data/types'
 import { capabilityLabel, scoreBarWidth, scoreColorVar } from '@/lib/score'
 import { cn } from '@/lib/utils'
@@ -30,18 +31,18 @@ export function CapabilityBar({
             </span>
           ) : null}
           <span className="font-semibold tabular-nums" style={{ color: scoreColorVar(score) }}>
-            {score}
+            {toTenPointScore(score)}
           </span>
-          <span className="text-xs">/5</span>
+          <span className="text-xs">/10</span>
         </span>
       </div>
       <div
         className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted"
         role="meter"
-        aria-valuenow={score}
+        aria-valuenow={toTenPointScore(score)}
         aria-valuemin={0}
-        aria-valuemax={5}
-        aria-label={`${label} 能力评分 ${score} 分，满分 5 分`}
+        aria-valuemax={10}
+        aria-label={`${label} 能力评分 ${toTenPointScore(score)} 分，满分 10 分`}
       >
         <div
           className="h-full rounded-full transition-[width] duration-500"

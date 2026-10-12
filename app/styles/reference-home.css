@@ -18,6 +18,240 @@
   right: -200px;
   bottom: -20px;
 }
+.home-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url('/brand/botanical-surface.svg') center bottom / cover no-repeat;
+  opacity: 0.85;
+}
+.dark .home-hero::after {
+  opacity: 0.15;
+}
+.hero-promises {
+  gap: 16px 24px;
+  line-height: 1.7;
+}
+.hero-promise-check {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: hsl(var(--accent));
+}
+.home-layout > [data-home-section='hero'] + [data-home-section='start'] .home-growth {
+  position: relative;
+  z-index: 1;
+  margin-top: -12px;
+}
+.weekly-recommendations {
+  position: relative;
+  padding-block: 34px;
+}
+.weekly-heading {
+  padding-right: 95px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+.weekly-heading > div {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.weekly-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 24px;
+  font-weight: 650;
+}
+.weekly-heading h2 svg {
+  color: hsl(var(--primary));
+}
+.weekly-heading p {
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+}
+.weekly-change {
+  position: absolute;
+  right: 0;
+  top: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  background: hsl(var(--card));
+  color: hsl(var(--primary));
+  font-size: 14px;
+  white-space: nowrap;
+}
+.weekly-change:disabled {
+  opacity: 0.45;
+}
+.weekly-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.weekly-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  background: hsl(var(--card) / 0.95);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.weekly-card:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  box-shadow: 0 12px 28px -20px hsl(var(--primary) / 0.25);
+}
+.weekly-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: hsl(var(--accent) / 0.65);
+  color: hsl(var(--primary));
+}
+.weekly-copy {
+  flex: 1;
+  min-width: 0;
+  padding-right: 6px;
+}
+.weekly-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 24px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: hsl(var(--primary));
+}
+.weekly-meta > span:first-child {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: hsl(var(--accent));
+}
+.weekly-meta .tool-hot-badge {
+  margin-top: 0;
+  z-index: 2;
+}
+.weekly-copy h3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.6;
+  padding-right: 10px;
+}
+.weekly-copy > p {
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.weekly-copy ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-right: 15px;
+}
+.weekly-copy li {
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--accent) / 0.4);
+}
+.weekly-score {
+  position: absolute;
+  right: 18px;
+  top: 24px;
+}
+.weekly-card:has(.weekly-score) .weekly-meta {
+  padding-right: 46px;
+}
+.weekly-arrow {
+  position: absolute;
+  right: 18px;
+  bottom: 21px;
+  color: hsl(var(--primary));
+}
+.weekly-footnote {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.weekly-footnote a {
+  color: hsl(var(--primary));
+}
+@media (max-width: 1099px) {
+  .weekly-grid {
+    grid-template-columns: 1fr;
+  }
+  .weekly-card {
+    padding: 20px;
+  }
+}
+@media (max-width: 639px) {
+  .weekly-heading > div {
+    gap: 5px;
+  }
+  .weekly-heading h2 {
+    font-size: 22px;
+  }
+  .weekly-card {
+    gap: 12px;
+    padding: 18px;
+  }
+  .weekly-icon {
+    width: 46px;
+    height: 46px;
+  }
+  .weekly-icon > span {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .weekly-copy h3 {
+    font-size: 16px;
+  }
+  .weekly-copy li {
+    font-size: 12px;
+  }
+}
 .home-cover-grid {
   display: grid;
   align-items: center;
@@ -139,8 +373,14 @@
 .public-site .entry-sand {
   background: hsl(42 90% 96%);
 }
-.home-growth .entry-sand .entry-icon { color: hsl(42 72% 47%); background: hsl(44 85% 94%); }
-.home-growth .entry-lavender .entry-icon { color: hsl(199 43% 37%); background: hsl(204 80% 93%); }
+.home-growth .entry-sand .entry-icon {
+  color: hsl(42 72% 47%);
+  background: hsl(44 85% 94%);
+}
+.home-growth .entry-lavender .entry-icon {
+  color: hsl(199 43% 37%);
+  background: hsl(204 80% 93%);
+}
 .public-site .entry-lavender {
   background: hsl(204 85% 96%);
 }

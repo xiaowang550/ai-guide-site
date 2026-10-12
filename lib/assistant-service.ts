@@ -24,6 +24,8 @@ import { sha256Base64Url, toBase64Url, fromBase64Url } from './admin/crypto.ts'
 import { json, fail, readJson } from './admin/http.ts'
 import type { Db } from './db/types.ts'
 import { validAssistantImage } from './assistant-image.ts'
+import { freshTrends, summarizeTrends, type ToolTrends } from './tool-trends.ts'
+import { toolTrendsSeed } from '../data/tool-trends.ts'
 
 export interface AssistantEnv {
   AI_CREDENTIALS_KEY?: string
@@ -99,6 +101,55 @@ async function save(db: Db, id: string, value: unknown) {
     'INSERT INTO assistant_store(id,data,updated_at) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,updated_at=excluded.updated_at',
     [id, JSON.stringify(value), new Date().toISOString()],
   )
+}
+/** 榜单只在服务端读取官方 API；缓存与失败冷却避免访客消耗共用 Key 的配额。 */
+export async function assistantToolTrends(db: Db, env: AssistantEnv) {
+  await ensure(db)
+  const row = await db.first<{ data: string; updated_at: string }>(
+    "SELECT data,updated_at FROM assistant_store WHERE id='tool-trends'",
+  )
+  let trends: ToolTrends = toolTrendsSeed
+  try {
+    if (row) trends = JSON.parse(row.data)
+  } catch {
+    /* 保留已核对快照 */
+  }
+  if (!row || Date.now() - Date.parse(row.updated_at) > 6 * 3600000) {
+    const now = new Date().toISOString()
+    const lock = await db.run(
+      "INSERT INTO assistant_store(id,data,updated_at) VALUES('tool-trends-lock','{}',?) ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at WHERE assistant_store.updated_at<?",
+      [new Date(Date.now() + 15 * 60000).toISOString(), now],
+    )
+    if (lock.changes) {
+      try {
+        const key = await credential(db, env, 'openrouter')
+        if (key) {
+          const end = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+          const start = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+          const response = await (env.ASSISTANT_FETCH ?? fetch)(
+            `https://openrouter.ai/api/v1/datasets/rankings-daily?start_date=${start}&end_date=${end}`,
+            {
+              headers: { Authorization: `Bearer ${key}` },
+              signal: AbortSignal.timeout(8000),
+              redirect: 'manual',
+            },
+          )
+          if (response.ok) {
+            const next = summarizeTrends(await response.json())
+            if (next) {
+              trends = next
+              await save(db, 'tool-trends', trends)
+            }
+          }
+        }
+      } catch {
+        /* 上游暂不可用时，使用仍在有效期内的快照。 */
+      }
+    }
+  }
+  return json(freshTrends(trends), 200, {
+    'cache-control': 'public, max-age=600, stale-while-revalidate=600',
+  })
 }
 async function readConnection(db: Db, provider: string): Promise<ConnectionReport | null> {
   const row = await db.first<{ data: string }>('SELECT data FROM assistant_store WHERE id=?', [

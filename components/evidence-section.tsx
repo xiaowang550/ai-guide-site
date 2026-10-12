@@ -1,3 +1,4 @@
+import { toTenPointScore } from '@/lib/display-score'
 // 组件：可核查性（评分依据区块 + 覆盖度徽章）
 import { AlertTriangle, CheckCircle2, ExternalLink, FileSearch } from 'lucide-react'
 import type { CapabilityKey, Tool } from '@/data/types'
@@ -17,11 +18,15 @@ export function EvidenceCoverageBadge({ tool, className }: { tool: Tool; classNa
           : cov.ratio >= 0.7
             ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
             : 'bg-danger/10 text-danger',
-        className
+        className,
       )}
       title={`${cov.total} 个维度中有 ${cov.covered} 个写明了打分依据`}
     >
-      {strong ? <CheckCircle2 className="h-3 w-3" aria-hidden /> : <AlertTriangle className="h-3 w-3" aria-hidden />}
+      {strong ? (
+        <CheckCircle2 className="h-3 w-3" aria-hidden />
+      ) : (
+        <AlertTriangle className="h-3 w-3" aria-hidden />
+      )}
       依据覆盖 {cov.covered}/{cov.total}
     </span>
   )
@@ -56,7 +61,10 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
 
       {cov.thinButHigh.length > 0 ? (
         <p className="mt-4 flex gap-2 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm leading-6">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden />
+          <AlertTriangle
+            className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+            aria-hidden
+          />
           <span>
             以下维度分数较高但依据写得较薄，使用时请自行核对：
             {cov.thinButHigh.map((k) => capabilityLabel(k as CapabilityKey)).join('、')}
@@ -76,7 +84,7 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
               <div key={meta.key} className="grid gap-1 py-3 sm:grid-cols-[7rem_3rem_1fr] sm:gap-3">
                 <dt className="text-sm font-medium">{meta.label}</dt>
                 <dd className="text-sm tabular-nums text-muted-foreground">
-                  {cap?.score ?? 0} / 5
+                  {toTenPointScore(cap?.score ?? 0)} / 10
                 </dd>
                 <dd className="text-sm leading-6 text-muted-foreground">
                   {cap?.basis?.trim() ? cap.basis : '（未写依据）'}
@@ -110,8 +118,8 @@ export function EvidenceSection({ tool }: { tool: Tool }) {
       ) : null}
 
       <p className="mt-4 text-xs text-muted-foreground">
-        本页数据复核于 {formatDate(tool.updatedAt)}。如果你认为某条依据不成立或有更新，
-        请在 <Linkish /> 提交勘误 —— 依据被推翻比分数算错更需要纠正。
+        本页数据复核于 {formatDate(tool.updatedAt)}。如果你认为某条依据不成立或有更新， 请在{' '}
+        <Linkish /> 提交勘误 —— 依据被推翻比分数算错更需要纠正。
       </p>
     </section>
   )

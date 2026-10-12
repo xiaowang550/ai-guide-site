@@ -1,0 +1,60 @@
+.tool-score-star {
+  color: #c5682c;
+  font-size: 15px;
+}
+.dark .tool-score-star {
+  color: #f1b17f;
+}
+.tool-hot-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 5px;
+  border-radius: 999px;
+  padding: 2px 7px;
+  color: #a85722;
+  background: #fff3e6;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.dark .tool-hot-badge {
+  color: #f2ba8c;
+  background: #513726;
+}
+.tool-hot-tooltip {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 7px);
+  left: 0;
+  display: none;
+  width: min(270px, 65vw);
+  padding: 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.8;
+  box-shadow: 0 10px 30px hsl(var(--foreground) / 0.1);
+  pointer-events: none;
+}
+.tool-hot-badge:hover .tool-hot-tooltip,
+.tool-hot-badge:focus .tool-hot-tooltip {
+  display: block;
+}
+.tool-hot-badge:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+.tool-trend-source {
+  margin-top: 18px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.tool-trend-source a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}

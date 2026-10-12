@@ -87,6 +87,22 @@
   gap: 14px;
   align-items: flex-start;
 }
+.compact-tool-title h3 {
+  align-items: center;
+}
+.compact-tool-card {
+  padding: 20px 22px;
+}
+.compact-tool-card .tool-strengths {
+  gap: 9px;
+  margin-block: 15px;
+}
+.compact-tool-card .tool-strengths strong {
+  font-size: 17px;
+}
+.compact-tool-card .tool-strengths li {
+  padding: 10px 5px;
+}
 .compact-tool-title > div {
   flex: 1;
   min-width: 0;

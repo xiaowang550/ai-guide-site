@@ -1,0 +1,220 @@
+[
+  {
+    "id": "chatgpt",
+    "page": "https://chatgpt.com",
+    "source": "https://cdn.oaistatic.com/assets/favicon-eex17e9e.ico",
+    "sha256": "def0730c050afcd86acd21bd1edf54f0ee3638c9e642f0e4107f7d666bc292a9",
+    "dimensions": [48, 48],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "claude",
+    "page": "https://claude.com",
+    "source": "https://assets.claude.com/95a868946ac8a31e5ff832e2899f294aa368b836.png?w=128&h=128",
+    "sha256": "4004381309500f25e49a1ae639912ce307ea81da74cc383954a1ac8b9d343fe6",
+    "dimensions": [32, 32],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "gemini",
+    "page": "https://gemini.google.com",
+    "source": "https://www.gstatic.com/lamda/images/gemini_sparkle_4g_512_lt_f94943af3be039176192d.png",
+    "sha256": "5e7cfecaa53f4f65a313fe89b0f389548126544a78fad8489510c70ae641a4a1",
+    "dimensions": [512, 512],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "doubao",
+    "page": "https://www.doubao.com",
+    "source": "https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/favicon/new-doubao/180x180.png",
+    "sha256": "34ea5d184dedfd0b6e2ee10c06adbcdd9997627c55a58c3e15af53ef78a6be12",
+    "dimensions": [180, 180],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "kimi",
+    "page": "https://www.kimi.com",
+    "source": "https://www.kimi.com/pwa-192.png",
+    "sha256": "6c14f9c3062e953b3ed57ae3e19db931c1c1bba38d4d8d55550544f31d55e469",
+    "dimensions": [192, 192],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "qwen",
+    "page": "https://qwenlm.github.io",
+    "source": "https://qwenlm.github.io/favicon.png",
+    "sha256": "a98b91d365fba5f08370d8d8755aa60692be0e6c64124cc33bb282c9fb2432cb",
+    "dimensions": [512, 512],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "deepseek",
+    "page": "https://www.deepseek.com",
+    "source": "https://www.deepseek.com/favicon.ico",
+    "sha256": "30a4420e6e4dcb17fd7de560c5004346c2bc8cd971d2d5f5ee15326603e51321",
+    "dimensions": [225, 225],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "glm",
+    "page": "https://chatglm.cn",
+    "source": "https://chatglm.cn/favicon.ico",
+    "sha256": "94e48956654f0b02d7a113628cdea50819579c6bccecec8888928f321c0f997d",
+    "dimensions": [64, 64],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "yuanbao",
+    "page": "https://yuanbao.tencent.com",
+    "source": "https://static.yuanbao.tencent.com/m/yuanbao-web/favicon_new@32.png",
+    "sha256": "43bdb989125d45e484520a98a50c6def611a0242d0f381c2ec6a9092c7b264d8",
+    "dimensions": [40, 40],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "cursor",
+    "page": "https://cursor.com",
+    "source": "https://cursor.com/marketing-static/apple-touch-icon-light.png",
+    "sha256": "a57fcff6994c83bd2acc0ea84d8b950b0ace6e00c1bf25d9abc7d15704de73db",
+    "dimensions": [180, 180],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "copilot",
+    "page": "https://github.com/features/copilot",
+    "source": "https://github.githubassets.com/favicons/favicon.svg",
+    "sha256": "6a9577cd4f7fa6b75bde1025af85b944e9dd1388373b55ccba6e9f80ac2eae60",
+    "dimensions": [null, null],
+    "checkedAt": "2026-10-12",
+    "note": "GitHub Copilot 官方网站使用的 GitHub 品牌标识；旧独立图标已弃用。"
+  },
+  {
+    "id": "midjourney",
+    "page": "https://docs.midjourney.com/hc/en-us",
+    "source": "https://docs.midjourney.com/hc/theming_assets/01JMMWQ0W4N5SFX7GFX86WYYG2",
+    "sha256": "2c6c33aab6108882feecddc4a2b2012501dfedecd96fd4dfd3eb4d87ff20850f",
+    "dimensions": [192, 192],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "runway",
+    "page": "https://runwayml.com",
+    "source": "https://runway.com/icon.png?icon.35ps9bmugbe1e.png",
+    "sha256": "f545e0e706d0c6be0e8602a8e8d685d4f43ab72880bd5e6a234916e765ff2b70",
+    "dimensions": [320, 320],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "suno",
+    "page": "https://suno.com",
+    "source": "https://cdn-o.suno.com/favicon-512x512.png",
+    "sha256": "8c7be49db4624961bbf8ca829511925ebb38ea62d2f0685977ee3419e9cd6590",
+    "dimensions": [512, 512],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "gamma",
+    "page": "https://help.gamma.app",
+    "source": "https://help.gamma.app/assets/favicon",
+    "sha256": "daa12cc9e7446ad36e7f143f59e01beff6c6595b98326355b95e761c6b2b88f7",
+    "dimensions": [588, 588],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "notebooklm",
+    "page": "https://notebooklm.google.com",
+    "source": "https://www.gstatic.com/tailwind/_/static/branding/v6/light_mode/favicon/apple-touch-icon.png",
+    "sha256": "104fc04acd259b3e55dcfadfae7ac0c64b4171410cfc510798a03d1223913437",
+    "dimensions": [180, 180],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "perplexity",
+    "page": "https://www.perplexity.ai",
+    "source": "https://www.perplexity.ai/apple-touch-icon.png",
+    "sha256": "52ec4e92be76dca926f4b3a08babf537f9130edbf58d142fc16aebd3d7fbe6f3",
+    "dimensions": [180, 180],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "ollama",
+    "page": "https://ollama.com",
+    "source": "https://ollama.com/public/apple-touch-icon.png",
+    "sha256": "8a5d4f0444d756d1d64c6615eb163ecd71fba180bd07c4199e88461c921778d1",
+    "dimensions": [180, 180],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "wps-ai",
+    "page": "https://ai.wps.cn",
+    "source": "https://personal-act.wpscdn.cn/operations-fe/wps-ai/favicon.ico",
+    "sha256": "56f1c672d0845f7a244dc3e4273d060accb6737b5866e96e1046249315952131",
+    "dimensions": [32, 32],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "tongyi-tingwu",
+    "page": "https://tingwu.aliyun.com",
+    "source": "https://g.alicdn.com/idst-fe/mind-meeting-assistant2/0.0.189/favicon.png",
+    "sha256": "440cdb6a6e5b40f1d9ff3ef393c6be0d48c241701f18eed5d7165784c79dd653",
+    "dimensions": [128, 128],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "jimeng",
+    "page": "https://jimeng.jianying.com",
+    "source": "https://lf3-lv-buz.vlabstatic.com/obj/image-lvweb-buz/common/images/dreamina-v1.ico",
+    "sha256": "1526054322006955f0bb748c45af230c57bff29a188c463169ee0ac0b2406203",
+    "dimensions": [64, 64],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "ima-copilot",
+    "page": "https://ima.qq.com",
+    "source": "https://fe-static.ima.myqcloud.com/ima/assets/chat/favicon.svg",
+    "sha256": "79f5f565ad0d31c2b3a0f61f3647756abe43bb6a264c7b229f212734662bc1f8",
+    "dimensions": [null, null],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "gemma",
+    "page": "https://deepmind.google/models/gemma/",
+    "source": "https://storage.googleapis.com/gdm-deepmind-com-prod-public/icons/google_deepmind_2x_96dp.png",
+    "sha256": "f6afca9f404ddc85771925805944ce37c31e2429f2cb0f2aafd41d52ad0be357",
+    "dimensions": [192, 192],
+    "checkedAt": "2026-10-12",
+    "note": "Gemma 官方模型页使用的 Google DeepMind 品牌标识。"
+  },
+  {
+    "id": "mistral",
+    "page": "https://mistral.ai",
+    "source": "https://mistral.ai/favicon.svg",
+    "sha256": "66ceaf186f2075da38e5a3c2e46fc0015936e0cb57692d1f8ae0ba565354874d",
+    "dimensions": [null, null],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "dify",
+    "page": "https://dify.ai",
+    "source": "https://dify.ai/favicon.svg",
+    "sha256": "72348ce12b2fe799a1787df6cf837d4c202389640bab83eadd5cbcc0ac253799",
+    "dimensions": [null, null],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "n8n",
+    "page": "https://n8n.io",
+    "source": "https://n8n.io/apple-touch-icon.png",
+    "sha256": "14867498cad6f247b9ebd0bb18446e7e2769aa399750ab1f80061d4ae6fb475b",
+    "dimensions": [180, 180],
+    "checkedAt": "2026-10-12"
+  },
+  {
+    "id": "langgraph",
+    "page": "https://www.langchain.com/langgraph",
+    "source": "https://cdn.prod.website-files.com/65b8cd72835ceeacd4449a53/69a17e4f0c916c644f4de1cd_webclip%20lg.png",
+    "sha256": "0c60295f8003df255890bff79d9b006d5b3459f90e02c31c850e05b4365c9029",
+    "dimensions": [256, 256],
+    "checkedAt": "2026-10-12"
+  }
+]

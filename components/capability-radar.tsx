@@ -1,3 +1,4 @@
+import { toTenPointScore } from '@/lib/display-score'
 import type { CapabilityKey, CapabilityScore } from '@/data/types'
 import { CAPABILITY_META, MAX_SCORE, scoreColorVar } from '@/lib/score'
 import { cn } from '@/lib/utils'
@@ -35,7 +36,9 @@ export function CapabilityRadar({
     CAPABILITY_META.map((meta, i) => point(i, getScore(meta.key) / MAX_SCORE).join(',')).join(' ')
 
   const mainPoints = polygon((k) => capabilities[k]?.score ?? 0)
-  const comparePoints = compareCapabilities ? polygon((k) => compareCapabilities[k]?.score ?? 0) : null
+  const comparePoints = compareCapabilities
+    ? polygon((k) => compareCapabilities[k]?.score ?? 0)
+    : null
 
   return (
     <div className={cn('w-full', className)}>
@@ -63,13 +66,13 @@ export function CapabilityRadar({
         {/* 刻度 */}
         {[1, 3, 5].map((v) => (
           <text
-            key={v}
+            key={toTenPointScore(v)}
             x={cx + 4}
             y={cy - (radius * v) / MAX_SCORE + 10}
             fontSize={9}
             fill="hsl(var(--muted-foreground))"
           >
-            {v}
+            {toTenPointScore(v)}
           </text>
         ))}
         {/* 对比轮廓 */}
@@ -107,7 +110,14 @@ export function CapabilityRadar({
         {CAPABILITY_META.map((meta, i) => {
           const [x, y] = point(i, 1.19)
           const deg = (angle(i) * 180) / Math.PI + 90
-          const anchor = Math.abs(deg) < 5 ? 'middle' : Math.abs(deg - 180) < 5 ? 'middle' : deg > 0 ? 'start' : 'end'
+          const anchor =
+            Math.abs(deg) < 5
+              ? 'middle'
+              : Math.abs(deg - 180) < 5
+                ? 'middle'
+                : deg > 0
+                  ? 'start'
+                  : 'end'
           return (
             <text
               key={meta.key}
@@ -177,7 +187,7 @@ export function CapabilityMatrixTable({
                       className="inline-flex h-6 min-w-[2.5rem] items-center justify-center rounded-md text-xs font-semibold text-white"
                       style={{ backgroundColor: scoreColorVar(score) }}
                     >
-                      {score}
+                      {toTenPointScore(score)}
                     </span>
                   </td>
                 )

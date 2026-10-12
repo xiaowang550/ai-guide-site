@@ -18,10 +18,12 @@ export function ToolLogo({
   rounded?: string
   variant?: 'chip' | 'cover'
 }) {
+  const imageSrc =
+    src.startsWith('/logos/') && !src.includes('?') ? `${src}?v=official-20261012` : src
   if (variant === 'cover') {
     return (
       <Image
-        src={src}
+        src={imageSrc}
         alt={alt}
         width={size}
         height={size}
@@ -35,12 +37,12 @@ export function ToolLogo({
       className={cn(
         'inline-flex shrink-0 items-center justify-center border bg-white p-1 dark:bg-white/90',
         rounded,
-        className
+        className,
       )}
       style={{ width: size, height: size }}
     >
       <Image
-        src={src}
+        src={imageSrc}
         alt={alt}
         width={size}
         height={size}

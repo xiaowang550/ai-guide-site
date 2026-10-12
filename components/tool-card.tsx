@@ -8,9 +8,20 @@ import { cn } from '@/lib/utils'
 import { ToolLogo } from '@/components/tool-logo'
 import { ScoreBadge, ScoreValue } from '@/components/score-badge'
 import { UpdatedBadge } from '@/components/updated-badge'
+import { toTenPointScore } from '@/lib/display-score'
+import type { ToolTrends } from '@/lib/tool-trends'
+import { ToolHotBadge } from './tool-trends'
 
 /** 紧凑工具卡：用途、关键能力与使用条件直接可见，评分依据放在详情。 */
-export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: number }) {
+export function ToolCard({
+  tool,
+  index = 0,
+  trends,
+}: {
+  tool: ToolListItem
+  index?: number
+  trends?: ToolTrends
+}) {
   // 列表投影里只有分数，没有 basis 文本；这里还原成既有纯函数可用的形状
   const top = rankedCapabilities(scoresToCapabilityMap(tool.scores), 4).slice(0, 3)
   const isFree = tool.pricing.model === 'free' || tool.pricing.model === 'open-source'
@@ -31,19 +42,20 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
               {tool.name}
               <span className="absolute inset-0" aria-hidden />
             </Link>
-            <ScoreBadge score={tool.overallScore} showMax label={tool.name} />
+            <ScoreBadge score={tool.overallScore} variant="star" label={tool.name} />
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">{tool.vendor}</p>
+          {trends && <ToolHotBadge id={tool.id} trends={trends} />}
         </div>
       </div>
       <p className="mt-2 line-clamp-2 flex-1 text-sm leading-6 text-foreground/80">
         {tool.tagline}
       </p>
 
-      <ul className="tool-strengths" aria-label="较强的能力，满分 5 分">
+      <ul className="tool-strengths" aria-label="较强的能力，满分 10 分">
         {top.map((c) => (
           <li key={c.key}>
-            <strong>{c.score} / 5</strong>
+            <strong>{toTenPointScore(c.score).toFixed(1)}</strong>
             {capabilityShort(c.key)}
           </li>
         ))}
@@ -65,7 +77,7 @@ export function ToolCard({ tool, index = 0 }: { tool: ToolListItem; index?: numb
 }
 
 /** 紧凑表格：用于工具库「表格视图」与对比页 */
-export function ToolTable({ tools }: { tools: ToolListItem[] }) {
+export function ToolTable({ tools, trends }: { tools: ToolListItem[]; trends?: ToolTrends }) {
   return (
     <div
       className="overflow-x-auto"
@@ -84,10 +96,10 @@ export function ToolTable({ tools }: { tools: ToolListItem[] }) {
               分类
             </th>
             <th scope="col" className="px-4 py-2.5 text-right font-medium text-muted-foreground">
-              综合分
+              综合分 / 10
             </th>
             <th scope="col" className="px-4 py-2.5 text-right font-medium text-muted-foreground">
-              中文
+              中文 / 10
             </th>
             <th scope="col" className="px-4 py-2.5 text-left font-medium text-muted-foreground">
               大陆直连
@@ -117,6 +129,7 @@ export function ToolTable({ tools }: { tools: ToolListItem[] }) {
                   <span>
                     <span className="font-medium">{tool.name}</span>
                     <span className="ml-1.5 text-xs text-muted-foreground">{tool.vendor}</span>
+                    {trends && <ToolHotBadge id={tool.id} trends={trends} />}
                   </span>
                 </Link>
               </th>
@@ -126,7 +139,9 @@ export function ToolTable({ tools }: { tools: ToolListItem[] }) {
               <td className="px-4 py-2.5 text-right">
                 <ScoreValue score={tool.overallScore} />
               </td>
-              <td className="px-4 py-2.5 text-right tabular-nums">{tool.chineseQuality}</td>
+              <td className="px-4 py-2.5 text-right tabular-nums">
+                {toTenPointScore(tool.chineseQuality).toFixed(1)}
+              </td>
               <td className="px-4 py-2.5 text-muted-foreground">
                 {tool.chinaAccessible ? '是' : '否'}
               </td>

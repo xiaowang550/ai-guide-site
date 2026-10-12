@@ -1,3 +1,4 @@
+import { toTenPointScore } from '@/lib/display-score'
 import { SaveButton } from '@/components/learning/save-button'
 import { ToolNews } from '@/components/news/tool-news'
 import { ToolOverview } from '@/components/learning/tool-overview'
@@ -64,7 +65,7 @@ export async function generateMetadata({
   if (!tool) return { title: '工具不存在' }
   return {
     title: `${tool.name}（${tool.nameEn}）能力评测与弱点`,
-    description: `${tool.tagline}。14 维能力评分（综合 ${tool.overallScore}/5）、强项、弱项、别用它做的场景、价格与上手三步，数据更新于 ${tool.updatedAt}。`,
+    description: `${tool.tagline}。14 维能力评分（综合 ${toTenPointScore(tool.overallScore).toFixed(1)}/10）、强项、弱项、别用它做的场景、价格与上手三步，数据更新于 ${tool.updatedAt}。`,
     alternates: { canonical: `/tools/${tool.id}` },
     openGraph: { title: `${tool.name} 能力评测`, description: tool.tagline },
   }
@@ -195,8 +196,8 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           />
         </div>
         {/* 概览三栏 */}
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="min-w-0 space-y-8">
             {/* 2. 雷达图（桌面）/ 条形（移动端） */}
             <section aria-labelledby="radar-title">
               <h2 id="radar-title" className="text-xl">
@@ -272,7 +273,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                 <ListBox title="最适合这些场景" items={tool.bestFor} tone="positive" />
                 <ListBox
                   title="明确的短板与不适用场景"
-                  items={weak.map((w) => `${capabilityLabel(w.key)} 仅 ${w.score} 分`)}
+                  items={weak.map(
+                    (w) => `${capabilityLabel(w.key)} 仅 ${toTenPointScore(w.score)} / 10 分`,
+                  )}
                   tone="negative"
                 />
               </div>
@@ -476,7 +479,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                               <span className="flex items-baseline justify-between gap-2">
                                 <span className="text-sm font-medium">{a.name}</span>
                                 <span className="text-xs tabular-nums text-muted-foreground">
-                                  综合 {a.overallScore.toFixed(1)}/5
+                                  综合 {toTenPointScore(a.overallScore).toFixed(1)}/10
                                 </span>
                               </span>
                               <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">
@@ -632,7 +635,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                         {capabilityShort(w.key)}
                       </span>
                       <span className="text-xs tabular-nums text-muted-foreground">
-                        {w.score}/5
+                        {toTenPointScore(w.score)}/10
                       </span>
                     </li>
                   ))}

@@ -44,6 +44,7 @@ import type { Db } from '../db/types.ts'
 import {
   assistantAdmin,
   assistantCatalog,
+  assistantToolTrends,
   assistantChat,
   assistantTest,
   type AssistantEnv,
@@ -574,6 +575,12 @@ const ROUTES: Route[] = [
           env.CODEX_BRIDGE && item.status === 'ready' ? await env.CODEX_BRIDGE.changes(p.id) : [],
       })
     },
+  },
+  {
+    method: 'GET',
+    pattern: '/api/tool-trends',
+    auth: 'public',
+    handler: async (ctx) => assistantToolTrends(ctx.db, ctx.env),
   },
   { method: 'GET', pattern: '/api/news', auth: 'public', handler: handlePublicNews },
   { method: 'GET', pattern: '/api/admin/news', auth: 'required', handler: handleAdminNews },
