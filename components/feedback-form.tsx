@@ -11,32 +11,37 @@ async function screenshot(file: File): Promise<Shot> {
   if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type))
     throw new Error('请选择 PNG、JPG 或 WebP 图片。')
   if (file.size > 5 * 1024 * 1024) throw new Error('原始图片请控制在 5 MB 以内。')
-  const url = URL.createObjectURL(file)
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = () => reject(new Error('这张图片无法读取，请换一张截图。'))
-      img.src = url
-    })
-    const canvas = document.createElement('canvas')
-    let scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
-    for (let attempt = 0; attempt < 4; attempt++) {
-      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
-      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('当前浏览器无法处理截图，请先使用文字反馈。')
-      ctx.fillStyle = '#fff'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
-      const data = canvas.toDataURL('image/jpeg', 0.86 - attempt * 0.06)
-      if (data.length < (300 * 1024 * 4) / 3) return { id: crypto.randomUUID(), data }
-      scale *= 0.8
-    }
-    throw new Error('截图内容过大，请裁剪后再上传。')
-  } finally {
-    URL.revokeObjectURL(url)
+  // 部署策略允许 data: 图片；直接读取文件，避免 blob: URL 被 CSP 拦截。
+  const url = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () =>
+      typeof reader.result === 'string'
+        ? resolve(reader.result)
+        : reject(new Error('图片读取失败。'))
+    reader.onerror = () => reject(new Error('图片读取失败，请重新选择。'))
+    reader.readAsDataURL(file)
+  })
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('这张图片无法读取，请换一张截图。'))
+    img.src = url
+  })
+  const canvas = document.createElement('canvas')
+  let scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight))
+  for (let attempt = 0; attempt < 4; attempt++) {
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('当前浏览器无法处理截图，请先使用文字反馈。')
+    ctx.fillStyle = '#fff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+    const data = canvas.toDataURL('image/jpeg', 0.86 - attempt * 0.06)
+    if (data.length < (300 * 1024 * 4) / 3) return { id: crypto.randomUUID(), data }
+    scale *= 0.8
   }
+  throw new Error('截图内容过大，请裁剪后再上传。')
 }
 export function FeedbackForm() {
   const [type, setType] = useState<(typeof TYPES)[number]>('使用问题')

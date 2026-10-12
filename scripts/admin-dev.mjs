@@ -38,6 +38,7 @@ import { schoolPageAccess, schoolPath, normalizedSchoolPath } from '../lib/admin
 import { handleApi } from '../lib/admin/api.ts'
 import { createSqliteDb } from '../lib/db/sqlite.ts'
 import { createD1Shim } from '../lib/db/d1-shim.ts'
+import { SECURITY_HEADERS } from '../lib/deployment-headers.ts'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const projectRoot = resolve(__dirname, '..')
@@ -165,6 +166,8 @@ if (!existsSync(outDir)) {
 }
 
 const server = createServer(async (req, res) => {
+  // 本地验收使用同一份部署策略，及时发现 CSP 对上传或预览的影响。
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value)
   const host = req.headers.host ?? `localhost:${port}`
   const origin = `http://${host}`
 
@@ -196,6 +199,8 @@ const server = createServer(async (req, res) => {
         AI_CREDENTIALS_KEY: process.env.AI_CREDENTIALS_KEY,
         OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
         OPENCODE_API_KEY: process.env.OPENCODE_API_KEY,
+        RESEND_API_KEY: process.env.RESEND_API_KEY,
+        FEEDBACK_FROM: process.env.FEEDBACK_FROM,
       })
 
       if (response) {
