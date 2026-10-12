@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Bookmark, Menu, X } from 'lucide-react'
 import { BrandMark } from './brand-mark'
 import { secondaryNav, siteConfig } from '@/lib/site'
-import { siteNavigation } from '@/lib/site-navigation'
+import { activeNavigationHref, siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
 import { pathEnabled } from '@/lib/site-modules'
 import { cn } from '@/lib/utils'
@@ -43,8 +43,12 @@ export function SiteHeader() {
     setMenuOpen(false)
   }, [pathname])
 
-  const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
+  const activeHref = activeNavigationHref(pathname, navigation)
+  const isActive = (href: string) => href === activeHref
+  const isChildActive = (href: string) => {
+    const target = href.replace(/\/+$/, '')
+    return pathname.replace(/\/+$/, '') === target || pathname.startsWith(`${target}/`)
+  }
 
   return (
     <header className="site-header sticky top-0 z-40 border-b border-border/60 bg-background">
@@ -183,9 +187,10 @@ export function SiteHeader() {
                       <li key={item.href}>
                         <Link
                           href={item.href}
+                          aria-current={isChildActive(item.href) ? 'page' : undefined}
                           className={cn(
                             'flex items-baseline justify-between rounded-lg px-3 py-1.5 text-sm',
-                            isActive(item.href)
+                            isChildActive(item.href)
                               ? 'bg-accent font-medium text-accent-foreground'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                           )}

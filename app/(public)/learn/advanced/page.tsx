@@ -1,4 +1,5 @@
 import '@/app/styles/advanced.css'
+import '@/app/styles/reference-hero.css'
 import '@/app/styles/content-visuals.css'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -20,6 +21,7 @@ export default function AdvancedPage() {
   return (
     <>
       <PageHeader
+        illustrated
         title="模型与 Agent 进阶"
         description="从一次好回答，到一条能检查、能复用的工作流程。"
         breadcrumbs={[

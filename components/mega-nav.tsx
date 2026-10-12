@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowRight, ChevronDown } from 'lucide-react'
 import { type NavItem } from '@/lib/site'
-import { siteNavigation } from '@/lib/site-navigation'
+import { activeNavigationHref, siteNavigation } from '@/lib/site-navigation'
 import { useSiteModules } from './site-module-context'
 import { pathEnabled } from '@/lib/site-modules'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,7 @@ export function MegaNav() {
           { href: '#more-navigation', label: '更多', hint: '', children: allNav.slice(6) },
         ]
   const pathname = usePathname()
+  const activeHref = activeNavigationHref(pathname, allNav)
   const [openKey, setOpenKey] = useState<string | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const navRef = useRef<HTMLElement | null>(null)
@@ -70,7 +71,9 @@ export function MegaNav() {
   }
 
   const isActive = (href: string) =>
-    href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`)
+    allNav.some((item) => item.href === href)
+      ? activeHref === href
+      : pathname === href || pathname.startsWith(`${href}/`)
 
   return (
     <nav
@@ -93,6 +96,9 @@ export function MegaNav() {
             ...(item.children ?? []).filter((child) => pathEnabled(config, child.href)),
           ]
           const id = `${baseId}-${key.replace(/\W/g, '')}`
+          const active =
+            activeHref === key ||
+            (key === '#more-navigation' && children.some((child) => child.href === activeHref))
 
           const isLast = index >= visibleNav.length - 2
 
@@ -110,6 +116,7 @@ export function MegaNav() {
                   type="button"
                   data-nav-trigger={key}
                   aria-expanded={open}
+                  aria-current={active ? 'page' : undefined}
                   aria-controls={open ? id : undefined}
                   onClick={() => (open ? setOpenKey(null) : openNow(key))}
                   onKeyDown={(event) => {
@@ -123,9 +130,11 @@ export function MegaNav() {
                   }}
                   className={cn(
                     'flex h-9 items-center gap-1.5 whitespace-nowrap rounded-xl px-2.5 text-sm transition-colors',
-                    isActive(item.href) || open
+                    active
                       ? 'bg-accent font-medium text-accent-foreground'
-                      : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+                      : open
+                        ? 'bg-muted text-foreground'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
                   )}
                 >
                   <span className="max-w-[7rem] truncate">{item.label}</span>
@@ -137,10 +146,10 @@ export function MegaNav() {
               ) : (
                 <Link
                   href={item.href}
-                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  aria-current={active ? 'page' : undefined}
                   className={cn(
                     'flex h-9 items-center rounded-xl px-2.5 text-sm transition-colors',
-                    isActive(item.href)
+                    active
                       ? 'bg-accent font-medium text-accent-foreground'
                       : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
                   )}

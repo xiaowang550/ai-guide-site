@@ -1,0 +1,434 @@
+.access-diagram {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr) 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  padding: 18px 0;
+  color: hsl(var(--primary));
+}
+.access-browser,
+.access-diagram-check {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 190px;
+  text-align: center;
+  padding: 22px 10px 16px;
+  border-radius: 20px;
+}
+.access-browser {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  box-shadow: 0 12px 32px -18px hsl(var(--primary) / 0.25);
+}
+.access-browser:first-child {
+  transform: rotate(-5deg);
+}
+.access-browser.is-ready {
+  transform: rotate(5deg);
+  background: hsl(var(--accent));
+}
+.access-browser b,
+.access-diagram-check b {
+  font-size: 16px;
+}
+.access-diagram small {
+  font-size: 13px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+.access-browser-dots {
+  position: absolute;
+  left: 12px;
+  top: 11px;
+  display: flex;
+  gap: 4px;
+}
+.access-browser-dots i {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: hsl(var(--primary) / 0.3);
+}
+.access-ready-icon {
+  display: grid;
+  place-items: center;
+  width: 57px;
+  height: 57px;
+  border-radius: 50%;
+  color: hsl(var(--primary));
+  background: hsl(var(--card));
+}
+.access-layout {
+  display: grid;
+  gap: 30px;
+  align-items: start;
+}
+.access-main {
+  min-width: 0;
+}
+.access-section {
+  margin-bottom: 30px;
+  scroll-margin-top: 100px;
+}
+.access-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 25px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.access-section h2 svg {
+  flex-shrink: 0;
+  color: hsl(var(--primary));
+}
+.access-section-description {
+  margin: 9px 0 18px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.access-symptoms,
+.access-reasons,
+.access-tool-grid {
+  display: grid;
+  gap: 16px;
+}
+.access-symptom,
+.access-reason,
+.access-tool {
+  border: 1px solid hsl(var(--border));
+  border-radius: 22px;
+  background: hsl(var(--card));
+  padding: 22px;
+}
+.access-symptom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.access-symptom:hover {
+  border-color: hsl(var(--primary) / 0.45);
+  box-shadow: 0 10px 25px -16px hsl(var(--primary) / 0.25);
+}
+.access-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+.access-symptom h3,
+.access-reason h3 {
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+.access-symptom p,
+.access-reason p {
+  font-size: 16px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.access-card-action {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: auto;
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(var(--primary));
+}
+.access-steps {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+.access-steps li {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  padding: 22px;
+  border-radius: 20px;
+  background: hsl(var(--accent) / 0.3);
+}
+.access-step-number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 18px;
+}
+.access-steps h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.access-steps h3 svg {
+  color: hsl(var(--primary));
+  flex-shrink: 0;
+}
+.access-steps p {
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.access-reason h3 {
+  margin-top: 14px;
+}
+.access-reason > p {
+  margin-top: 7px;
+}
+.access-reason-advice {
+  margin-top: 16px;
+  padding: 13px;
+  border-radius: 14px;
+  background: hsl(var(--accent) / 0.4);
+}
+.access-reason-advice strong {
+  font-size: 14px;
+  color: hsl(var(--primary));
+}
+.access-reason-advice p {
+  margin-top: 4px;
+  font-size: 14px;
+}
+.access-reason details {
+  margin-top: 12px;
+}
+.access-reason summary,
+.access-tool-detail summary,
+.access-boundary summary {
+  cursor: pointer;
+  font-size: 14px;
+  min-height: 44px;
+  line-height: 1.7;
+  padding-block: 10px;
+  color: hsl(var(--primary));
+}
+.access-reason details li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+.access-reason details li a:hover {
+  background: hsl(var(--accent));
+}
+.access-tool-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.access-tool-heading p {
+  margin-top: 4px;
+  font-size: 14px;
+  color: hsl(var(--muted-foreground));
+}
+.access-tool-detail {
+  margin-top: 12px;
+  border-block: 1px solid hsl(var(--border));
+}
+.access-tool-detail p {
+  margin: 4px 0 14px;
+  font-size: 16px;
+  line-height: 1.85;
+  color: hsl(var(--muted-foreground));
+}
+.access-alternative-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.access-alternative-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+  font-size: 14px;
+  color: hsl(var(--primary));
+}
+.access-alternative-links a:hover {
+  background: hsl(var(--accent));
+}
+.access-note {
+  padding: 17px 20px;
+  margin-top: 20px;
+  border-radius: 16px;
+  background: hsl(var(--accent) / 0.3);
+  font-size: 14px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.access-boundary {
+  padding: 6px 20px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  background: hsl(var(--card));
+}
+.access-boundary p,
+.access-boundary li {
+  font-size: 14px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 10px;
+}
+.access-sidebar {
+  display: grid;
+  gap: 18px;
+}
+.access-sidebar .reference-panel {
+  padding: 22px;
+}
+.access-toc-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  font-size: 16px;
+}
+.access-toc-link:hover {
+  background: hsl(var(--accent));
+}
+.access-toc-link > span {
+  color: hsl(var(--primary));
+}
+.access-toc-link svg {
+  margin-left: auto;
+  color: hsl(var(--primary));
+}
+.access-direct-tools {
+  display: grid;
+  gap: 8px;
+  margin-top: 15px;
+}
+.access-direct-tools a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+.access-direct-tool-copy {
+  min-width: 0;
+  flex: 1;
+}
+.access-direct-tools strong {
+  display: block;
+  font-size: 16px;
+}
+.access-direct-tools small {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+.access-direct-tools a > svg {
+  flex-shrink: 0;
+  color: hsl(var(--primary));
+}
+.access-sidebar-help {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 0 12px;
+}
+.access-sidebar-help a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: hsl(var(--primary));
+}
+@media (min-width: 640px) {
+  .access-symptoms,
+  .access-reasons {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .access-steps,
+  .access-tool-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .access-layout {
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 32px;
+  }
+  .access-sidebar {
+    position: sticky;
+    top: 96px;
+  }
+  .access-layout .access-section:last-of-type {
+    margin-bottom: 24px;
+  }
+}
+@media (max-width: 1099px) {
+  .access-sidebar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .access-sidebar-help {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 639px) {
+  .access-symptom,
+  .access-reason,
+  .access-tool,
+  .access-steps li {
+    padding: 18px;
+  }
+  .access-section h2 {
+    font-size: 22px;
+  }
+  .access-sidebar {
+    grid-template-columns: 1fr;
+  }
+  .access-diagram {
+    display: none;
+  }
+  .access-section {
+    scroll-margin-top: 80px;
+  }
+  .access-sidebar-help {
+    padding: 0;
+  }
+}
+@media print {
+  .access-sidebar {
+    display: none;
+  }
+  .access-layout {
+    display: block;
+  }
+}

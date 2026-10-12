@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import '@/app/styles/reference-hero.css'
 import { PageHeader } from '@/components/page-header'
 import { RookieLab } from '@/components/learning/rookie-lab'
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export default function StartPage() {
   return (
     <>
       <PageHeader
+        illustrated
         title="零基础一对一"
         description="不用先懂术语，也不赶进度。从第一条消息开始，做完六个小练习，学会在本站继续探索。"
         breadcrumbs={[
