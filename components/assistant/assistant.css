@@ -15,7 +15,7 @@ body:has(.assistant-dialog[open]) { overflow: hidden; }
 .assistant-body { flex:1; min-height:0; overflow:auto; padding:12px 20px 20px; overscroll-behavior:contain; scrollbar-width:thin; }
 .assistant-welcome { padding:22px 0 10px; }
 .assistant-welcome-mark { padding-bottom:16px; }
-.assistant-welcome-mark svg { width:68px; height:68px; }
+.assistant-welcome-mark .assistant-avatar { width:68px; height:68px; }
 .assistant-welcome h2,.assistant-practice h2 { font-size:24px; line-height:1.5; font-weight:600; letter-spacing:-.5px; }
 .assistant-welcome > p,.assistant-practice > p { color:hsl(var(--muted-foreground)); line-height:1.9; margin:8px 0 22px; }
 .assistant-starters { display:grid; gap:8px; }

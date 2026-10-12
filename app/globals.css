@@ -592,8 +592,31 @@
 /* 触屏：点击区域、键盘、安全区与原生惯性滚动。 */
 .site-header { padding-top:var(--safe-top); }
 .mobile-nav-panel { max-height:calc(100dvh - 72px - var(--safe-top)); overflow-y:auto; overscroll-behavior:contain; padding-bottom:var(--safe-bottom); }
-.assistant-launcher[data-dragging] button { cursor:grabbing !important; box-shadow:0 10px 28px #172b2233; }
-.assistant-discovery { position:fixed; width:min(260px,calc(100vw - 32px)); padding:14px 16px; border:1px solid hsl(var(--primary)/.2); border-radius:15px; background:hsl(var(--card)); box-shadow:0 8px 30px #173a2218; font-size:16px; }.assistant-discovery strong { display:block; color:hsl(var(--primary)); padding-right:20px; }.assistant-discovery p { margin-top:6px; color:hsl(var(--muted-foreground)); font-size:14px; }.assistant-discovery > button { position:absolute; right:4px; top:2px; width:32px; height:32px; font-size:18px; color:hsl(var(--muted-foreground)); }
+.assistant-launcher[data-dragging] .assistant-pet-button { cursor:grabbing !important; }
+.assistant-pet-button { position:relative; display:inline-flex; align-items:center; justify-content:center; width:72px; height:72px; border-radius:20px; background:transparent; user-select:none; -webkit-user-select:none; }
+.assistant-pet-button:focus-visible { outline:2px solid hsl(var(--primary)/.6); outline-offset:3px; }
+.assistant-pet-shadow { position:absolute; bottom:0; left:20%; width:60%; height:8px; border-radius:50%; background:hsl(var(--primary)/.13); filter:blur(4px); pointer-events:none; }
+.assistant-pet-gaze { width:100%; height:100%; pointer-events:none; transform:translate(var(--pet-x,0px),var(--pet-y,0px)) rotate(var(--pet-turn,0deg)); transition:transform .18s ease-out; }
+.assistant-pet-float { display:block; width:100%; height:100%; animation:sprout-float 4.8s ease-in-out infinite; transform-origin:50% 70%; }
+.assistant-avatar { display:inline-block; position:relative; flex-shrink:0; width:44px; height:44px; pointer-events:none; }
+.assistant-avatar img { user-select:none; -webkit-user-drag:none; }
+.assistant-avatar-portrait { overflow:hidden; border-radius:50%; background:#e5efe6; }
+.assistant-avatar-portrait img { position:absolute; width:200%; max-width:none; height:auto; left:-50%; top:-35%; }
+.assistant-avatar-full { width:100%; height:100%; }
+.assistant-avatar-full img { width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 3px 3px #21473228); }
+.assistant-pet-button[aria-expanded=true] .assistant-pet-float,.assistant-launcher[data-dragging] .assistant-pet-float { animation-play-state:paused; }
+.assistant-launcher[data-dragging] .assistant-pet-gaze { transform:none; transition:none; }
+.assistant-discovery { position:fixed; width:min(248px,calc(100vw - 24px)); padding:14px 15px; border:1px solid hsl(var(--primary)/.2); border-radius:18px; background:hsl(var(--card)); box-shadow:0 8px 30px #173a2218; font-size:16px; pointer-events:none; user-select:none; animation:sprout-tip .2s ease-out; }
+.assistant-discovery::after { content:''; position:absolute; left:var(--bubble-tail,200px); bottom:-6px; width:11px; height:11px; background:hsl(var(--card)); border-right:1px solid hsl(var(--primary)/.2); border-bottom:1px solid hsl(var(--primary)/.2); transform:translateX(-50%) rotate(45deg); }
+.assistant-discovery[data-placement=below]::after { top:-6px; bottom:auto; transform:translateX(-50%) rotate(225deg); }
+.assistant-discovery strong { display:block; padding-right:25px; color:hsl(var(--primary)); font-size:15px; line-height:1.6; }
+.assistant-discovery p { margin-top:5px; color:hsl(var(--muted-foreground)); font-size:14px; line-height:1.65; }
+.assistant-discovery > span { display:block; margin-top:6px; color:hsl(var(--primary)/.85); font-size:12px; }
+.assistant-discovery > button { position:absolute; right:2px; top:2px; width:32px; height:32px; border-radius:50%; font-size:20px; color:hsl(var(--muted-foreground)); pointer-events:auto; touch-action:manipulation; }
+.assistant-discovery > button:hover { background:hsl(var(--accent)); }
+@keyframes sprout-float { 0%,100% { transform:translateY(0) rotate(-1deg); } 50% { transform:translateY(-3px) rotate(1deg); } }
+@keyframes sprout-tip { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .assistant-pet-float,.assistant-discovery { animation:none; } .assistant-pet-gaze { transform:none; transition:none; } }
 @media (pointer:coarse) {
   button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
   button,a { touch-action:manipulation; }

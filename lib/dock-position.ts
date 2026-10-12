@@ -13,7 +13,7 @@ export function panelWidthFor(viewportWidth: number): number {
 }
 
 /** 折叠按钮的尺寸 */
-export const DOCK_BUTTON_SIZE = 52
+export const DOCK_BUTTON_SIZE = 72
 
 /**
  * 计算浮窗容器位置。
@@ -39,7 +39,7 @@ export function computeDockPosition(
   const { width: vw, height: vh, left = 0, top = 0, insets } = viewport
   const gap = viewport.gap ?? DOCK_GAP
   // 展开时容器要让出面板宽度；窄屏上直接靠边
-  const needed = panelOpen ? panelWidthFor(vw) : DOCK_BUTTON_SIZE
+  const needed = panelOpen ? panelWidthFor(vw) : size.width
   const minLeft = left + Math.max(0, Math.min(Math.max(gap, insets?.left ?? 0), vw - size.width))
   const minTop = top + Math.max(0, Math.min(Math.max(gap, insets?.top ?? 0), vh - size.height))
   const maxLeft = Math.max(minLeft, left + vw - size.width - Math.max(gap, insets?.right ?? 0))

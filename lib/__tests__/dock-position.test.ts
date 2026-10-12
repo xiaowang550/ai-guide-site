@@ -105,11 +105,11 @@ describe('computeDockPosition：拖拽后的自定义坐标会被夹回可视区
 
 describe('可视窗口、安全区与手机键盘', () => {
   it('键盘缩小可视区时始终可点击，保留原坐标以便键盘收起后恢复', () => {
-    const dock = { x: 310, y: 720 }
+    const dock = { x: 290, y: 720 }
     const keyboard = computeDockPosition(dock, { width: 390, height: 340, top: 30 }, false)
     expect(keyboard.top + DOCK_BUTTON_SIZE).toBeLessThanOrEqual(30 + 340 - DOCK_GAP)
     expect(computeDockPosition(dock, { width: 390, height: 844 }, false)).toEqual({
-      left: 310,
+      left: 290,
       top: 720,
     })
   })
@@ -123,8 +123,8 @@ describe('可视窗口、安全区与手机键盘', () => {
     }
     expect(computeDockPosition({ x: -200, y: -300 }, vp, false)).toEqual({ left: 64, top: 66 })
     expect(computeDockPosition({ x: 2000, y: 2000 }, vp, false)).toEqual({
-      left: 20 + 812 - 44 - 52,
-      top: 50 + 375 - 34 - 52,
+      left: 20 + 812 - 44 - DOCK_BUTTON_SIZE,
+      top: 50 + 375 - 34 - DOCK_BUTTON_SIZE,
     })
   })
   it('手机对话面板可使用 8px 边距而不被推出屏幕', () => {

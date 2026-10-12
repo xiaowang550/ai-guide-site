@@ -7,7 +7,7 @@ import { AssistantAvatar } from './assistant-avatar'
 import type { AssistantDock } from '@/lib/settings'
 import { readSettings, subscribeSettings, writeSettings } from '@/lib/settings'
 import { computeDockPosition, DOCK_BUTTON_SIZE } from '@/lib/dock-position'
-import { cn } from '@/lib/utils'
+import { AssistantBubble, useAssistantPresence } from './assistant-presence'
 
 /**
  * AI 小助手浮窗（只负责「停在哪里 / 展开收起 / 拖拽」，不含任何数据与引擎）。
@@ -27,7 +27,8 @@ export function AssistantDock() {
   const [dock, setDock] = useState<AssistantDock>('bottom-right')
   const [ready, setReady] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [hint, setHint] = useState(false)
+  const path = usePathname()
+  const inAdmin = path?.startsWith('/admin') ?? false
 
   const dragState = useRef<{
     id: number
@@ -38,7 +39,14 @@ export function AssistantDock() {
     moved: boolean
   } | null>(null)
   const suppressClick = useRef(false)
+  const touchClickUntil = useRef(0)
   const wrapRef = useRef<HTMLDivElement>(null)
+  const { hint, dismiss, dragging, pause } = useAssistantPresence({
+    active: ready && enabled && !inAdmin,
+    open,
+    path,
+    anchor: wrapRef,
+  })
   function viewport() {
     const v = window.visualViewport
     const css = getComputedStyle(document.documentElement)
@@ -60,44 +68,18 @@ export function AssistantDock() {
   useEffect(() => {
     const s = readSettings()
     setEnabled(s.assistant)
-    setOpen(s.assistantPanelOpen)
+    setOpen(false)
     setDock(s.assistantDock)
-    setMounted(s.assistantPanelOpen)
+    setMounted(false)
     setReady(true)
+    // 新的一次访问只介绍助手；聊天窗口必须由用户点击打开。
+    if (s.assistantPanelOpen) writeSettings({ assistantPanelOpen: false })
     return subscribeSettings((next) => {
       setEnabled(next.assistant)
       setOpen(next.assistantPanelOpen)
       if (next.assistantPanelOpen) setMounted(true)
       setDock(next.assistantDock)
     })
-  }, [])
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>
-    function show(force = false) {
-      if (document.querySelector('.first-visit-dialog[open]')) return
-      try {
-        if (
-          !force &&
-          (localStorage.getItem('ai-map:assistant-tip:v1') || readSettings().onboardingDone)
-        )
-          return
-        localStorage.setItem('ai-map:assistant-tip:v1', '1')
-      } catch {}
-      setHint(true)
-      clearTimeout(timer)
-      timer = setTimeout(() => setHint(false), 16000)
-    }
-    const initial = setTimeout(() => show(), 1200),
-      afterIntro = () => {
-        clearTimeout(timer)
-        timer = setTimeout(() => show(true), 60)
-      }
-    window.addEventListener('ai-map:intro-closed', afterIntro)
-    return () => {
-      clearTimeout(initial)
-      clearTimeout(timer)
-      window.removeEventListener('ai-map:intro-closed', afterIntro)
-    }
   }, [])
 
   useEffect(() => {
@@ -123,7 +105,6 @@ export function AssistantDock() {
   // 后台不显示助手浮窗：它是为访客准备的问答入口，
   // 而后台已经有自己的反馈处理与审计记录，浮窗在这里只是干扰。
   // 同 GuidedTour —— 后台无法脱离公开站根布局，所以由组件自行识别路径退出。
-  const inAdmin = usePathname()?.startsWith('/admin') ?? false
 
   if (!ready || !enabled || inAdmin) return null
 
@@ -133,7 +114,8 @@ export function AssistantDock() {
   })
   function onPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
     if (!e.isPrimary || e.button !== 0) return
-    setHint(false)
+    pause()
+    dragging.current = true
     const rect = wrapRef.current!.getBoundingClientRect()
     suppressClick.current = false
     dragState.current = {
@@ -161,11 +143,18 @@ export function AssistantDock() {
     el.style.top = `${next.top}px`
     el.dataset.dragging = 'true'
   }
+  function toggleAssistant() {
+    setMounted(true)
+    pause()
+    setOpen((v) => !v)
+    writeSettings({ assistantPanelOpen: !open })
+  }
   function endDrag(e: React.PointerEvent<HTMLButtonElement>) {
     const st = dragState.current,
       el = wrapRef.current
     if (!st || !el || st.id !== e.pointerId) return
     dragState.current = null
+    dragging.current = false
     delete el.dataset.dragging
     suppressClick.current = st.moved
     if (e.currentTarget.hasPointerCapture(e.pointerId))
@@ -179,6 +168,11 @@ export function AssistantDock() {
       const next = computeDockPosition({ x: rect.left, y: rect.top }, viewport(), false)
       setDock({ x: next.left, y: next.top })
       writeSettings({ assistantDock: { x: next.left, y: next.top } })
+    } else if (e.type === 'pointerup' && e.pointerType === 'touch') {
+      // 手机浏览器不一定派发兼容 click；轻触在 pointerup 完成，忽略其后重复的 click。
+      touchClickUntil.current = performance.now() + 650
+      e.preventDefault()
+      toggleAssistant()
     }
   }
   return (
@@ -186,6 +180,7 @@ export function AssistantDock() {
       ref={wrapRef}
       data-print-hide
       className="assistant-launcher fixed z-40"
+      data-greeting={hint?.hello ? 'true' : undefined}
       style={{
         left: position.left,
         top: position.top,
@@ -193,31 +188,7 @@ export function AssistantDock() {
         height: DOCK_BUTTON_SIZE,
       }}
     >
-      {hint && !open && (
-        <div
-          className="assistant-discovery"
-          role="status"
-          style={{
-            left: Math.max(
-              (window.visualViewport?.offsetLeft ?? 0) + 16,
-              Math.min(
-                position.left - 190,
-                (window.visualViewport?.offsetLeft ?? 0) +
-                  (window.visualViewport?.width ?? window.innerWidth) -
-                  Math.min(260, window.innerWidth - 32) -
-                  16,
-              ),
-            ),
-            top: position.top < 120 ? position.top + 60 : position.top - 94,
-          }}
-        >
-          <button aria-label="关闭助手提示" onClick={() => setHint(false)}>
-            ×
-          </button>
-          <strong>小芽在这里，随时可以问。</strong>
-          <p>点头像打开；按住头像能拖动。</p>
-        </div>
-      )}
+      {hint && !open && <AssistantBubble {...hint} anchor={wrapRef} onDismiss={dismiss} />}
       {mounted ? (
         <AssistantPanel
           open={open}
@@ -230,7 +201,7 @@ export function AssistantDock() {
 
       <button
         type="button"
-        title="点击打开，拖动可移动位置"
+        title="小芽：点击聊天，按住可拖动"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -238,23 +209,27 @@ export function AssistantDock() {
         onLostPointerCapture={endDrag}
         style={{ touchAction: 'none', cursor: 'grab' }}
         onClick={(e) => {
-          if (suppressClick.current) {
+          const pointerType = (e.nativeEvent as PointerEvent).pointerType
+          const touchDuplicate =
+            pointerType !== 'mouse' && performance.now() < touchClickUntil.current
+          if (e.detail > 0 && (suppressClick.current || touchDuplicate)) {
             suppressClick.current = false
             e.preventDefault()
             return
           }
-          setMounted(true)
-          setOpen((v) => !v)
-          writeSettings({ assistantPanelOpen: !open })
+          suppressClick.current = false
+          toggleAssistant()
         }}
         aria-label={open ? '收起助手' : '打开站内助手'}
         aria-expanded={open}
-        className={cn(
-          'inline-flex h-[52px] w-[52px] items-center justify-center rounded-full border bg-card shadow-lg transition-colors',
-          open ? 'border-primary/40 bg-primary text-primary-foreground' : 'hover:border-primary/40',
-        )}
+        className="assistant-pet-button"
       >
-        <AssistantAvatar />
+        <span className="assistant-pet-shadow" aria-hidden="true" />
+        <span className="assistant-pet-gaze">
+          <span className="assistant-pet-float">
+            <AssistantAvatar full />
+          </span>
+        </span>
       </button>
     </div>
   )
