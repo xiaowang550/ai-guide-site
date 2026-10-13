@@ -27,3 +27,13 @@
 > Use case: background-extraction. Edit target supplied logo. Extract ONLY the left illustrated logo mark: the same round cream sprout face, two green leaves, dark green cape, green circular swoosh/ribbon and orbit nodes and single four-point star. Remove ALL lettering to the right and all white background. Preserve the supplied logo mark exactly: shape, expression, colors, pose, 3D shading. Square transparent image, round logo mark centered occupying about 88% of square, readable at 48px, no added lettering or UI, do not redesign the logo.
 
 生成插画属于参考图复现，不能保证逐像素相同；页面使用真实组件，按屏幕宽度响应排版，不把截图当成页面。
+
+## 知芽AI 品牌更新，2026-10-13
+
+三个端统一为「知芽AI」，站点配置、浏览器标题、安装名称、反馈署名与邮件发件显示名共用 `lib/brand.ts`。HTTP 请求头使用 ASCII 英文名 `Zhiya AI`。共用 `BrandMark` 的新字标为 `public/brand/zhiya-wordmark-v1.webp`（752×285），在学校端及后台完整展示，在大众端按屏幕宽度使用完整字标或萌芽图标。保留绿色萌芽风格及现有独立图标、角色插画。
+
+新字标使用内置 imagegen，以用户 Logo 截图为编辑目标，替换文字为「知芽AI」，使用原有深绿色圆润字形。生成后仅裁去空白并压缩为 WebP，原图未覆盖。
+
+最终字标提示词：
+
+> Edit the supplied brand logo. Replace ONLY the lettering with the exact brand name 知芽AI (two Chinese characters 知芽 followed immediately by uppercase Latin AI). Keep the existing sprout mascot emblem on the left, its smiling face, green leaves, ring, colors and soft illustrative style. Use deep forest-green, bold rounded Chinese lettering matching the source's playful smooth typography. Exact text must be 知芽AI, no spaces, no extra text, no original brand text remaining. Horizontal compact website header wordmark, emblem and text aligned centrally, mascot height slightly taller than text. Plain white background, generous enough padding that nothing is clipped, but do not add large blank margins. Produce a high-resolution clean single logo suitable for web header use, roughly 3:1 horizontal composition. No mockup, no border, no shadows behind the whole logo.

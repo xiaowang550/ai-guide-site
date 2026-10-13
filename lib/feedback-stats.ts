@@ -15,6 +15,7 @@
  * 复制与邮件两个出口始终可用 —— 功能不因缺少仓库而降级。
  */
 import { buildErrataBatchText, type ErrataSubmission } from './errata'
+import { BRAND_NAME } from './brand'
 
 export const ISSUE_LABEL = '勘误反馈'
 
@@ -32,13 +33,13 @@ export interface FeedbackIssue {
 export function buildIssueUrl(
   repo: string,
   list: ErrataSubmission[],
-  options: { titlePrefix?: string } = {}
+  options: { titlePrefix?: string } = {},
 ): string {
   const title = `${options.titlePrefix ?? ''}[勘误] ${list[0]?.pageUrl ?? '站内数据'}${list.length > 1 ? ` 等 ${list.length} 处` : ''}`
   const body = `${buildErrataBatchText(list)}
 
 ---
-提交者：使用「AI 能力图谱」的读者
+提交者：使用「${BRAND_NAME}」的读者
 如果需要补充上下文（你的业务场景、为什么发现这个问题），可以直接追加在下方。`
 
   const params = new URLSearchParams({

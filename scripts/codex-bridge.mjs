@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process'
 import { readdir, readFile, writeFile, mkdir, lstat, copyFile } from 'node:fs/promises'
 import { join, resolve, relative, extname, sep, isAbsolute } from 'node:path'
 import { ensureModules } from '../lib/admin/modules.ts'
+import { BRAND_NAME } from '../lib/brand.ts'
 
 const roots = [
   'app',
@@ -247,7 +248,7 @@ export async function createCodexBridge(projectRoot, db) {
         const exe = await findCodex()
         if (!exe) throw new Error('未找到 Codex CLI。')
         const output = join(directory, 'result.txt')
-        const prompt = `你正在 AI 能力图谱的独立代码草稿副本中工作。用户已授权生成新功能草稿。\n需求：\n${request}\n\n先查看 README、项目说明与现有组件。只修改当前副本中的网站源码，保留访客无需注册登录、后台所有写操作需要 owner 登录和同源校验。不要访问原项目、修改其他目录、读写凭据、部署、推送或发送消息。这里没有复制 node_modules，可使用父项目已有依赖进行验证。不要在副本创建新执行器或启动长驻服务。新增交互需使用清晰、柔和、匹配现有风格的布局。完成后说明具体改动、验证结果与未验证事项；代码草稿将由管理员检查后纳入网站。`
+        const prompt = `你正在${BRAND_NAME}的独立代码草稿副本中工作。用户已授权生成新功能草稿。\n需求：\n${request}\n\n先查看 README、项目说明与现有组件。只修改当前副本中的网站源码，保留访客无需注册登录、后台所有写操作需要 owner 登录和同源校验。不要访问原项目、修改其他目录、读写凭据、部署、推送或发送消息。这里没有复制 node_modules，可使用父项目已有依赖进行验证。不要在副本创建新执行器或启动长驻服务。新增交互需使用清晰、柔和、匹配现有风格的布局。完成后说明具体改动、验证结果与未验证事项；代码草稿将由管理员检查后纳入网站。`
         const result = await new Promise((resolveResult, reject) => {
           const child = spawn(exe, codexExecArgs(workspace, output), {
             cwd: workspace,

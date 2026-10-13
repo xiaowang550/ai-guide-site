@@ -51,7 +51,7 @@ export function LoginView({ onSuccess }: { onSuccess: () => void }) {
     <div className="admin-login">
       <div className="admin-login-story">
         <Link href="/" className="flex items-center gap-3 text-sm font-semibold">
-          <BrandMark />
+          <BrandMark full />
           <span className="text-sm text-primary">管理工作台</span>
         </Link>
         <div className="login-intro mt-10">

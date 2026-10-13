@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { BookOpen, Sprout, Zap } from 'lucide-react'
 import { FeedbackForm } from '@/components/feedback-form'
 import { ReferenceArt } from '@/components/reference-art'
+import { siteConfig } from '@/lib/site'
 export const metadata: Metadata = {
   title: '问题反馈',
   description: '提出使用问题、建议与感受，支持文字和截图，无需登录。',
@@ -22,7 +23,7 @@ export default function FeedbackPage() {
           <p>
             遇到了问题，有一个建议，或想聊聊使用感受？
             <br />
-            欢迎告诉我们，一起让 AI 能力图谱变得更好。
+            欢迎告诉我们，一起让{siteConfig.name}变得更好。
           </p>
           <ReferenceArt />
         </section>

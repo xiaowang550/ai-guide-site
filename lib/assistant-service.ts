@@ -27,6 +27,7 @@ import { validAssistantImage } from './assistant-image.ts'
 import { freshTrends, summarizeTrends, type ToolTrends } from './tool-trends.ts'
 import { toolTrendsSeed } from '../data/tool-trends.ts'
 import { localizeNews } from './news/localize.ts'
+import { BRAND_ENGLISH_NAME } from './brand.ts'
 
 export interface AssistantEnv {
   AI_CREDENTIALS_KEY?: string
@@ -371,7 +372,7 @@ export async function assistantTest(db: Db, env: AssistantEnv, request: Request)
         headers: {
           Authorization: 'Bearer ' + key,
           'content-type': 'application/json',
-          'X-Title': 'AI Capability Map',
+          'X-Title': BRAND_ENGLISH_NAME,
           'HTTP-Referer': new URL(request.url).origin,
         },
         body: JSON.stringify({
@@ -815,7 +816,7 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         Authorization: 'Bearer ' + key,
         'content-type': 'application/json',
         'HTTP-Referer': new URL(request.url).origin,
-        'X-Title': 'AI Capability Map',
+        'X-Title': BRAND_ENGLISH_NAME,
       },
       body: JSON.stringify({
         model: model.provider === 'openrouter' ? model.id : 'space-bunny-free',

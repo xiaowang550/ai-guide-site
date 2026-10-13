@@ -1,4 +1,5 @@
 'use client'
+import { BRAND_NAME } from './brand'
 
 /**
  * AI 模式客户端（可选增强）。
@@ -70,10 +71,7 @@ export function writeAiConfig(patch: Partial<AiConfig>): AiConfig {
 export function clearAiKey(): void {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(
-      KEY_PREFIX,
-      JSON.stringify({ ...readAiConfig(), apiKey: '' })
-    )
+    localStorage.setItem(KEY_PREFIX, JSON.stringify({ ...readAiConfig(), apiKey: '' }))
   } catch {
     /* 忽略 */
   }
@@ -107,13 +105,13 @@ export interface SiteFacts {
  */
 export function buildAiMessages(
   question: string,
-  facts: SiteFacts
+  facts: SiteFacts,
 ): { role: 'system' | 'user'; content: string }[] {
   const relevantText = facts.relevant.length
     ? facts.relevant.map((r, i) => `${i + 1}. ${r.title}（${r.href}）：${r.note}`).join('\n')
     : '（本次没有匹配到站内条目）'
 
-  const system = `你是「AI 能力图谱」站内的助手，服务对象主要是中小学教师与学生。
+  const system = `你是「${BRAND_NAME}」站内的助手，服务对象主要是中小学教师与学生。
 
 **必须用简体中文回答**，即使提问是英文或夹杂外文术语；专有名词（如 RAG、Prompt）保留英文原名并在首次出现时用括号给中文解释。
 
@@ -208,7 +206,10 @@ export interface AiErrorKind {
 /** 把 HTTP 状态与异常翻译成用户能看懂、能自己处理的话 */
 export function explainAiError(status: number | null, body?: string): AiErrorKind {
   if (!status) {
-    return { kind: 'network', message: '请求没有到达接口：检查网络，或该接口是否允许浏览器直连（自建代理可绕过 CORS）。' }
+    return {
+      kind: 'network',
+      message: '请求没有到达接口：检查网络，或该接口是否允许浏览器直连（自建代理可绕过 CORS）。',
+    }
   }
   if (status === 401 || status === 403) {
     return {
@@ -298,7 +299,7 @@ export interface AiTestResult {
 
 export async function testAiConnection(
   config: AiConfig,
-  fetchImpl: typeof fetch = fetch
+  fetchImpl: typeof fetch = fetch,
 ): Promise<AiTestResult> {
   const base = {
     endpointUsed: config.endpoint || '(未填写)',

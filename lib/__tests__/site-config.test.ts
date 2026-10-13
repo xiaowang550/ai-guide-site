@@ -33,7 +33,7 @@ function walk(dir: string, out: string[] = []): string[] {
 const files = SCAN_DIRS.flatMap((d) => walk(d))
 
 /** 站点名曾经用过的旧名，出现在源码里就说明漏改了 */
-const OLD_NAMES = ['AI 能力地图']
+const OLD_NAMES = ['AI 能力地图', 'AI 能力图谱', 'AI能力图谱']
 
 describe('站点配置', () => {
   it('扫描范围覆盖到文件（防止路径写错导致空跑）', () => {

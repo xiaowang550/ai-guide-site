@@ -169,7 +169,7 @@ export function AdminShell() {
     <div className="admin-frame">
       <aside className="admin-sidebar">
         <Link href="/" className="admin-brand">
-          <BrandMark />
+          <BrandMark full />
           <span className="admin-brand-caption">管理工作台</span>
         </Link>
         <p className="admin-nav-label">工作空间</p>

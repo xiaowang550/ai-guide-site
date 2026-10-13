@@ -38,10 +38,7 @@ export const NEGATION_WORDS =
   /(不做|不做自建|不来自|未经|不做任何|不来自本地|不会|未能|无法|不涉及|不靠|不以|而非|不是)/
 
 /** 允许出现「实测」的正当场景：说明本站**没有**做实测 */
-const CLAIM_EXEMPT = [
-  '结论段必须能指出哪些是实测',
-  '我实测下来并不成立',
-]
+const CLAIM_EXEMPT = ['结论段必须能指出哪些是实测', '我实测下来并不成立']
 
 function hasUnnegatedClaim(text: string): boolean {
   if (!text.includes('实测')) return false
@@ -50,7 +47,11 @@ function hasUnnegatedClaim(text: string): boolean {
 }
 
 /** 会渲染给用户的所有文本字段，逐个查「实测」 */
-function collectUserVisibleText(value: unknown, path: string, out: { text: string; path: string }[]) {
+function collectUserVisibleText(
+  value: unknown,
+  path: string,
+  out: { text: string; path: string }[],
+) {
   if (typeof value === 'string') {
     out.push({ text: value, path })
     return
@@ -70,7 +71,7 @@ function requireString(
   obj: Record<string, unknown>,
   field: string,
   issues: ValidationIssue[],
-  opts: { min?: number; max?: number } = {}
+  opts: { min?: number; max?: number } = {},
 ): string {
   const v = obj[field]
   if (typeof v !== 'string' || v.trim() === '') {
@@ -91,7 +92,7 @@ function requireStringArray(
   obj: Record<string, unknown>,
   field: string,
   issues: ValidationIssue[],
-  opts: { min: number; max?: number }
+  opts: { min: number; max?: number },
 ): string[] {
   const v = obj[field]
   if (!Array.isArray(v)) {
@@ -206,7 +207,10 @@ export function validateToolContent(input: ValidateToolInput): ValidationResult 
       if (typeof score !== 'number' || !Number.isFinite(score)) {
         issues.push({ field: `capabilities.${key}.score`, message: '必须是数字' })
       } else if (score < 0 || score > 5) {
-        issues.push({ field: `capabilities.${key}.score`, message: `分数必须在 0-5 之间，当前 ${score}` })
+        issues.push({
+          field: `capabilities.${key}.score`,
+          message: `分数必须在 0-5 之间，当前 ${score}`,
+        })
       }
       // 依据可以留空（公开站会标「依据写得薄」），但必须能是字符串
       if (c.basis !== undefined && typeof c.basis !== 'string') {
@@ -221,12 +225,12 @@ export function validateToolContent(input: ValidateToolInput): ValidationResult 
       }
     }
     const extra = Object.keys(capObj).filter(
-      (k) => !(ADMIN_CAPABILITY_KEYS as readonly string[]).includes(k)
+      (k) => !(ADMIN_CAPABILITY_KEYS as readonly string[]).includes(k),
     )
     if (extra.length > 0) {
       issues.push({
         field: 'capabilities',
-        message: `出现了未知维度：${extra.join(', ')}。维度集合由能力图谱定义，不能自行增删。`,
+        message: `出现了未知维度：${extra.join(', ')}。维度集合由本站定义，不能自行增删。`,
       })
     }
   }
@@ -307,7 +311,7 @@ export function validateToolContent(input: ValidateToolInput): ValidationResult 
 export function validateContent(
   kind: ContentKind,
   itemId: string,
-  data: unknown
+  data: unknown,
 ): ValidationResult {
   if (kind === 'tool') return validateToolContent({ itemId, data })
   return { ok: false, issues: [{ field: '', message: `暂不支持编辑 ${kind} 类型的内容` }] }

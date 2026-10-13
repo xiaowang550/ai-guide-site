@@ -60,8 +60,8 @@ export function SchoolLogin() {
             prefetch={false}
             className="inline-flex items-center gap-3 text-sm font-semibold"
           >
-            <BrandMark />
-            <span className="text-sm text-primary">学校教师端</span>
+            <BrandMark full />
+            <span className="whitespace-nowrap text-xs text-primary sm:text-sm">学校教师端</span>
           </Link>
           <p className="mt-10 text-sm text-primary">学校教师工作空间</p>
           <h2 className="mt-3 text-3xl font-semibold leading-tight">
@@ -99,7 +99,7 @@ export function SchoolLogin() {
             prefetch={false}
             className="mb-7 hidden items-center gap-2 text-sm font-semibold"
           >
-            <BrandMark />
+            <BrandMark full />
             <span>学校教师端</span>
           </Link>
           <h1 className="text-xl font-semibold">学校账号登录</h1>

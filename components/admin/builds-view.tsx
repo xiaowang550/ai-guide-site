@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiGet, apiSend } from './api-client'
 import type { BuildRequest } from '@/lib/admin/modules'
+import { siteConfig } from '@/lib/site'
 type Changes = { path: string; before: string | null; after: string | null }[]
 interface BuildState {
   items: BuildRequest[]
@@ -52,7 +53,7 @@ export function BuildsView() {
   async function copy(item: BuildRequest) {
     try {
       await navigator.clipboard.writeText(
-        `请完善 AI 能力图谱网站。\n需求：${item.title}\n${item.request}\n\n先阅读项目说明，保持访客无需登录、后台仅管理员可用，新增功能附必要验证。生成可预览的改动，完成后说明测试与限制。`,
+        `请完善${siteConfig.name}网站。\n需求：${item.title}\n${item.request}\n\n先阅读项目说明，保持访客无需登录、后台仅管理员可用，新增功能附必要验证。生成可预览的改动，完成后说明测试与限制。`,
       )
       setMessage('需求已复制，可粘贴到 Codex。')
     } catch {

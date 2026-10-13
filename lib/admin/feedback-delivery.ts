@@ -1,6 +1,7 @@
 /** 私有截图、邮件通知与发信配置。只依赖 Web API，可在 Pages 和本地运行。 */
 import type { Db } from '../db/types.ts'
 import { fromBase64Url, toBase64Url } from './crypto.ts'
+import { BRAND_NAME } from '../brand.ts'
 
 export const FEEDBACK_RECIPIENT = '1987215931@qq.com'
 export const SCREENSHOT_BYTES = 300 * 1024
@@ -223,11 +224,11 @@ async function sendMail(
       'Idempotency-Key': 'feedback/' + id,
     },
     body: JSON.stringify({
-      from: 'AI 能力图谱 <' + settings.sender + '>',
+      from: BRAND_NAME + ' <' + settings.sender + '>',
       to: [FEEDBACK_RECIPIENT],
       subject: id.startsWith('test-')
-        ? 'AI 能力图谱：反馈通知测试'
-        : 'AI 能力图谱：收到新的问题反馈',
+        ? `${BRAND_NAME}：反馈通知测试`
+        : `${BRAND_NAME}：收到新的问题反馈`,
       text,
       ...(assets.length
         ? { attachments: assets.map((a) => ({ filename: a.name, content: a.content })) }

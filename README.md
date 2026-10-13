@@ -1,4 +1,4 @@
-# AI 能力地图（ai-guide-site）
+# 知芽AI（ai-guide-site）
 
 中文优先的 **AI 学习与工具指南网站**。核心差异化是三件事：
 

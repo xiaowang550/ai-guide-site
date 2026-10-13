@@ -49,7 +49,7 @@ export function SchoolSessionHeader() {
     <header className="school-session-header border-b bg-card">
       <div className="container flex flex-wrap items-center justify-between gap-4 py-5">
         <a href="/edu/" className="inline-flex items-center gap-3 font-semibold">
-          <BrandMark />
+          <BrandMark full />
           <span className="text-sm font-normal text-muted-foreground">学校教师端</span>
         </a>
         <div className="flex flex-wrap items-center gap-4 text-sm">

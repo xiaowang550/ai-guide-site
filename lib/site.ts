@@ -1,14 +1,15 @@
 import type { Difficulty, Platform, ToolCategory, UpdateType } from '@/data/types'
+import { BRAND_NAME, BRAND_SHORT_NAME } from './brand'
 
 /** 站点基础配置：改品牌信息只动这里 */
 export const siteConfig = {
-  name: 'AI 能力图谱',
-  shortName: '能力图谱',
+  name: BRAND_NAME,
+  shortName: BRAND_SHORT_NAME,
   /**
    * 标语：留空表示「首页标题只用站点名」。
    *
    * 用它拼标题而不是反过来，是因为标语经常变（活动、口号），
-   * 而站点名是身份、几乎不改。留空时不要拼出「AI 能力图谱 —— 」这种尾巴。
+   * 而站点名是身份、几乎不改。留空时不要拼出「站点名 —— 」这种尾巴。
    */
   tagline: '',
   description:
@@ -35,7 +36,7 @@ export const siteConfig = {
 } as const
 
 /**
- * 首页标题：标语为空时只用站点名，避免拼出「AI 能力图谱—— 」这种尾巴。
+ * 首页标题：标语为空时只用站点名，避免拼出「站点名—— 」这种尾巴。
  * 这个函数也是 page-titles 测试的断言对象。
  */
 /**
