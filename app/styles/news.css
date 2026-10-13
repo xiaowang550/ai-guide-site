@@ -628,6 +628,13 @@
   position: static;
   gap: 14px;
 }
+@media (min-width: 1024px) {
+  .news-page-grid .news-reference-aside {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+}
 .news-reference-aside .reference-panel {
   padding: 22px;
   border-radius: 23px;

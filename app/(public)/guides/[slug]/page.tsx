@@ -1,3 +1,4 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import { SaveButton } from '@/components/learning/save-button'
 import '@/app/styles/advanced.css'
 import { AgentLab } from '@/components/learning/agent-lab'
@@ -330,7 +331,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
           </article>
 
           {/* 侧栏 */}
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start print:hidden">
+          <ScrollSidebar className="space-y-4 lg:sticky lg:top-24 lg:self-start print:hidden">
             <nav className="lesson-info-card" aria-label="本页学习导航">
               <h2 className="text-sm font-semibold">按步骤，慢慢来</h2>
               <ol className="mt-4 space-y-3">
@@ -360,7 +361,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
             <p className="px-3 text-xs leading-6 text-muted-foreground">
               先用自己的材料试一遍。遇到不确定的信息，回原始资料核对。
             </p>
-          </aside>
+          </ScrollSidebar>
         </div>
       </div>
     </>

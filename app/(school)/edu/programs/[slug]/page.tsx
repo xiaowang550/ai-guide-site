@@ -1,4 +1,5 @@
-﻿import type { Metadata } from 'next'
+import { ScrollSidebar } from '@/components/scroll-sidebar'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AlertTriangle, ArrowRight, Clock, FileStack, Target, Users } from 'lucide-react'
@@ -333,7 +334,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
           </article>
 
           {/* 侧栏 */}
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start print:hidden">
+          <ScrollSidebar className="space-y-4 lg:sticky lg:top-20 lg:self-start print:hidden">
             <div className="border-b border-hairline pb-5 text-sm">
               <h2 className="text-sm font-semibold">本页速览</h2>
               <dl className="mt-3 space-y-2">
@@ -379,7 +380,7 @@ export default async function ProgramDetailPage({ params }: { params: Promise<{ 
               </Link>{' '}
               说明，我们会提供可调整的部分，而不是替换成另一套课件。
             </div>
-          </aside>
+          </ScrollSidebar>
         </div>
       </div>
     </>

@@ -1,3 +1,4 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import { BenchmarkEvidence, BenchmarkTag } from '@/components/benchmark-evidence'
 import { toolBenchmark } from '@/data/tool-benchmarks'
 import { toTenPointScore } from '@/lib/display-score'
@@ -571,7 +572,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           </div>
 
           {/* 侧栏速览 */}
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          <ScrollSidebar className="space-y-4 lg:sticky lg:top-20 lg:self-start">
             <div id="benchmarks" className="scroll-mt-24">
               <BenchmarkEvidence evidence={toolBenchmark(tool.id)} />
             </div>
@@ -671,7 +672,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                 </span>
               </a>
             ) : null}
-          </aside>
+          </ScrollSidebar>
         </div>
 
         {/* 9. 相关内容 */}

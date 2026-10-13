@@ -1,4 +1,5 @@
 'use client'
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 /* eslint-disable @next/next/no-img-element -- 本次本地图片预览，不通过服务器图片优化器。 */
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -290,7 +291,7 @@ export function RookieLab() {
         </span>
       </div>
       <div className="rookie-layout">
-        <nav className="rookie-route" aria-label="零基础学习步骤">
+        <ScrollSidebar as="nav" className="rookie-route" aria-label="零基础学习步骤">
           {rookieLessons.map((l, i) => (
             <button
               key={l.title}
@@ -303,7 +304,7 @@ export function RookieLab() {
             </button>
           ))}
           <small>进度只存在本浏览器。下次从“教程 → 零基础一对一”继续。</small>
-        </nav>
+        </ScrollSidebar>
         <section className="rookie-workbench">
           <p className="eyebrow">
             第 {stage + 1} 步 · {lesson.goal}

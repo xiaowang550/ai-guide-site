@@ -1,4 +1,5 @@
-﻿import { BenchmarkMethod } from '@/components/benchmark-method'
+import { ScrollSidebar } from '@/components/scroll-sidebar'
+import { BenchmarkMethod } from '@/components/benchmark-method'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CircleHelp, Mail, Scale } from 'lucide-react'
@@ -317,7 +318,7 @@ export default function AboutPage() {
           </div>
 
           {/* 侧栏 */}
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          <ScrollSidebar className="space-y-4 lg:sticky lg:top-20 lg:self-start">
             <nav className="border-b border-hairline pb-5 text-sm">
               <h2 className="text-sm font-semibold">本页目录</h2>
               <ul className="mt-3 space-y-2 text-muted-foreground">
@@ -375,7 +376,7 @@ export default function AboutPage() {
               {siteConfig.name} 是独立编辑的第三方指南站，不隶属于任何 AI 厂商，
               与厂商无赞助或返佣关系。所有商标归各自权利人所有。
             </p>
-          </aside>
+          </ScrollSidebar>
         </div>
       </div>
     </>

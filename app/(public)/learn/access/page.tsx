@@ -1,3 +1,4 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import '@/app/styles/reference-hero.css'
 import '@/app/styles/access.css'
 import type { Metadata } from 'next'
@@ -271,7 +272,7 @@ export default function AccessPage() {
             </ul>
           </details>
         </div>
-        <aside className="access-sidebar">
+        <ScrollSidebar className="access-sidebar">
           <nav className="reference-panel" aria-label="本页排查目录">
             <h2>
               <ListChecks size={23} />
@@ -320,7 +321,7 @@ export default function AccessPage() {
             <Link href="/feedback/?from=%2Flearn%2Faccess%2F">信息过时？问题反馈 →</Link>
             <Link href="/guides">回到教程继续学 →</Link>
           </div>
-        </aside>
+        </ScrollSidebar>
       </div>
     </>
   )

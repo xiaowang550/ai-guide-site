@@ -1,4 +1,6 @@
 'use client'
+import { ScrollSidebar } from '@/components/scroll-sidebar'
+
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
@@ -234,7 +236,7 @@ export function NewsBoard({
         )}
       </div>
       {!compact && (
-        <aside className="news-reference-aside">
+        <ScrollSidebar className="news-reference-aside">
           <section className="reference-panel news-overview">
             <h2>
               <BadgeCheck size={23} aria-hidden />
@@ -322,7 +324,7 @@ export function NewsBoard({
               <small>来源暂不可达时保留历史消息，不把获取时间当作发布时间。</small>
             </details>
           </section>
-        </aside>
+        </ScrollSidebar>
       )}
     </div>
   )

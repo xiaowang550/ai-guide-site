@@ -1,9 +1,10 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import Link from 'next/link'
 import { ArrowRight, BookOpen, Lightbulb, Map, Sparkles } from 'lucide-react'
 
 export function ExplorationAside({ tools = false }: { tools?: boolean }) {
   return (
-    <aside className="exploration-aside">
+    <ScrollSidebar className="exploration-aside">
       <section className="reference-panel">
         <h2>
           <Lightbulb size={24} />
@@ -75,6 +76,6 @@ export function ExplorationAside({ tools = false }: { tools?: boolean }) {
           ))}
         </section>
       )}
-    </aside>
+    </ScrollSidebar>
   )
 }

@@ -1,3 +1,4 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import '@/app/styles/reference-hero.css'
 import '@/app/styles/reference-concept.css'
 import { SaveButton } from '@/components/learning/save-button'
@@ -214,7 +215,7 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
           </article>
 
           {/* 侧栏 */}
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start print:hidden">
+          <ScrollSidebar className="space-y-4 lg:sticky lg:top-24 lg:self-start print:hidden">
             <nav className="concept-toc" aria-label="本文目录">
               <h2 className="font-semibold">本文目录</h2>
               <a href="#concept-definition">它是什么</a>
@@ -265,7 +266,7 @@ export default async function ConceptPage({ params }: { params: Promise<{ slug: 
                 </li>
               </ul>
             </div>
-          </aside>
+          </ScrollSidebar>
         </div>
       </div>
     </>

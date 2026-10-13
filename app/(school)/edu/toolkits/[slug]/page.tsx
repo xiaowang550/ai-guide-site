@@ -1,3 +1,4 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -129,7 +130,7 @@ export default async function ToolkitDetailPage({ params }: { params: Promise<{ 
               {toolkit.version} · 内容整理于 {toolkit.updatedAt}。课前请按本校教材与学情复核。
             </p>
           </article>
-          <aside className="space-y-7 lg:sticky lg:top-24 lg:self-start">
+          <ScrollSidebar className="space-y-7 lg:sticky lg:top-24 lg:self-start">
             <section className="rounded-2xl bg-muted/50 p-5">
               <h2 className="text-base">课前准备</h2>
               <ul className="mt-4 space-y-3">
@@ -175,7 +176,7 @@ export default async function ToolkitDetailPage({ params }: { params: Promise<{ 
                 返回这个学段的教案
               </Link>
             </nav>
-          </aside>
+          </ScrollSidebar>
         </div>
       </div>
     </>

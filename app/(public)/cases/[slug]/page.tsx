@@ -1,3 +1,4 @@
+import { ScrollSidebar } from '@/components/scroll-sidebar'
 import { SaveButton } from '@/components/learning/save-button'
 import '@/app/styles/advanced.css'
 import { LessonDiagram } from '@/components/learning/lesson-diagram'
@@ -155,7 +156,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             </p>
           </article>
 
-          <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start print:hidden">
+          <ScrollSidebar className="space-y-4 lg:sticky lg:top-20 lg:self-start print:hidden">
             <div className="border-b border-hairline pb-5">
               <h2 className="text-sm font-semibold">用到的工具</h2>
               <ul className="mt-3 space-y-3">
@@ -205,7 +206,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
                 </ul>
               </div>
             ) : null}
-          </aside>
+          </ScrollSidebar>
         </div>
       </div>
     </>
