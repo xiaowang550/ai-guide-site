@@ -1,37 +1,63 @@
-/**
- * Service Worker：让站点在无网络时也能打开已访问过的页面。
- *
- * 策略取舍（内容站最重要的是"新内容要能看到"）：
- *   - HTML / 页面请求：network-first —— 有网永远拿最新的，没网才回退到缓存
- *   - /_next/static/**：cache-first —— 文件名带 hash，内容不会变，可以放心长期缓存
- *   - JSON（索引类）：stale-while-revalidate —— 先用缓存秒开，再后台更新
- *
- * 版本更新：改动本文件后请把 CACHE_VERSION 加一，
- * activate 时会自动清掉旧版本缓存，避免用户卡在旧资源上。
- */
-
-const CACHE_VERSION = 'v6'
+/* Public reading cache only. Authenticated pages and API responses never enter it. */
+const CACHE_VERSION = 'v7'
 const STATIC_CACHE = `ai-map-static-${CACHE_VERSION}`
 const PAGES_CACHE = `ai-map-pages-${CACHE_VERSION}`
-
-/** 离线时兜底的页面（静态导出下路径固定） */
 const OFFLINE_URL = '/offline/'
-
-/** 安装时预缓存：离线兜底页 + 首页 */
 const PRECACHE = [OFFLINE_URL, '/']
-
+function cacheable(response) {
+  return response.ok && !/(?:private|no-store)/i.test(response.headers?.get('Cache-Control') ?? '')
+}
+async function remember(cacheName, request, response) {
+  if (!cacheable(response)) return
+  const copy = response.clone()
+  const cache = await caches.open(cacheName)
+  await cache.put(request, copy)
+}
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(PAGES_CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
-      .catch(() => {
-        /* 预缓存失败不阻塞安装 */
-      })
+    (async () => {
+      const pages = await caches.open(PAGES_CACHE)
+      await pages.addAll(PRECACHE)
+      // Registration follows the first render: save scripts/styles already loaded too.
+      const assets = new Set([
+        '/brand/sprout-mark-v3.webp',
+        '/brand/sprout-hero-v3.webp',
+        '/brand/zhiya-wordmark-v1.webp',
+      ])
+      for (const page of PRECACHE) {
+        const html = await (await pages.match(page)).text()
+        for (const match of html.matchAll(/(?:src|href)=["']([^"']+)["']/g)) {
+          const url = new URL(match[1], self.location.origin)
+          if (url.origin === self.location.origin && url.pathname.startsWith('/_next/static/'))
+            assets.add(url.href)
+        }
+      }
+      const resources = await caches.open(STATIC_CACHE)
+      await Promise.allSettled([...assets].map((asset) => resources.add(asset)))
+      // Updates wait for the visitor's refresh button, preserving unfinished forms.
+    })().catch(() => {}),
   )
 })
-
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') event.waitUntil(self.skipWaiting())
+  if (event.data?.type === 'CACHE_PUBLIC_RESOURCES' && Array.isArray(event.data.urls)) {
+    event.waitUntil(
+      (async () => {
+        const cache = await caches.open(STATIC_CACHE)
+        await Promise.allSettled(
+          event.data.urls.slice(0, 64).map(async (value) => {
+            const url = new URL(value, self.location.origin)
+            if (
+              url.origin === self.location.origin &&
+              (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/brand/'))
+            )
+              await cache.add(url.href)
+          }),
+        )
+      })().catch(() => {}),
+    )
+  }
+})
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -39,84 +65,75 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== STATIC_CACHE && key !== PAGES_CACHE)
-            .map((key) => caches.delete(key))
-        )
+            .filter(
+              (key) =>
+                /^ai-map-(?:static|pages)-/.test(key) &&
+                key !== STATIC_CACHE &&
+                key !== PAGES_CACHE,
+            )
+            .map((key) => caches.delete(key)),
+        ),
       )
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   )
 })
-
 self.addEventListener('fetch', (event) => {
   const request = event.request
   if (request.method !== 'GET') return
-
   const url = new URL(request.url)
-  // 只处理同源请求；跨域（例如 GitHub API）直接走网络
   if (url.origin !== self.location.origin) return
-
-  // API、后台和 RSC 响应不能进入离线缓存，尤其不能缓存登录态或管理数据。
-  if (url.pathname.startsWith('/api/') || url.pathname === '/admin' ||
-      url.pathname.startsWith('/admin/') || /^\/edu(?:\/|\.|$)/.test(url.pathname) || url.pathname.startsWith('/school/') || url.searchParams.has('admin-preview') || request.cache === 'no-store' ||
-      request.headers.get('RSC') === '1' || url.searchParams.has('_rsc')) return
-
-  // 1) 带 hash 的静态资源：内容不变，缓存优先
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname === '/admin' ||
+    url.pathname.startsWith('/admin/') ||
+    /^\/edu(?:\/|\.|$)/.test(url.pathname) ||
+    /^\/school(?:\/|$)/.test(url.pathname) ||
+    url.searchParams.has('admin-preview') ||
+    request.cache === 'no-store' ||
+    request.headers.get('RSC') === '1' ||
+    url.searchParams.has('_rsc')
+  )
+    return
+  function save(cache, response) {
+    const pending = remember(cache, request, response).catch(() => {})
+    event.waitUntil?.(pending)
+    return response
+  }
   if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached
-        return fetch(request)
-          .then((response) => {
-            if (response.ok) {
-              const copy = response.clone()
-              caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy))
-            }
-            return response
-          })
-          .catch(() => cached ?? Response.error())
-      })
+      caches.match(request).then(
+        (cached) =>
+          cached ??
+          fetch(request)
+            .then((response) => save(STATIC_CACHE, response))
+            .catch(() => Response.error()),
+      ),
     )
     return
   }
-
-  // 2) 页面导航：先网络，失败回退缓存，再失败给离线页
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone()
-            caches.open(PAGES_CACHE).then((cache) => cache.put(request, copy))
-          }
-          return response
-        })
-        .catch(async () => {
-          const cached = await caches.match(request)
-          if (cached) return cached
-          const offline = await caches.match(OFFLINE_URL)
-          if (offline) return offline
-          return new Response('<h1>离线</h1><p>该页面尚未缓存。</p>', {
-            status: 503,
-            headers: { 'content-type': 'text/html; charset=utf-8' },
-          })
-        })
+        .then((response) => save(PAGES_CACHE, response))
+        .catch(
+          async () =>
+            (await caches.match(request)) ??
+            (await caches.match(OFFLINE_URL)) ??
+            new Response('<h1>暂时离线</h1><p>请联网后重试，这个页面尚未缓存。</p>', {
+              status: 503,
+              headers: { 'content-type': 'text/html; charset=utf-8' },
+            }),
+        ),
     )
     return
   }
-
-  // 3) 其他同源 GET（JSON、图标）：先给缓存，后台更新
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone()
-            caches.open(STATIC_CACHE).then((cache) => cache.put(request, copy))
-          }
-          return response
-        })
+        .then((response) => save(STATIC_CACHE, response))
         .catch(() => cached ?? Response.error())
+      event.waitUntil?.(network.then(() => {}))
       return cached ?? network
-    })
+    }),
   )
 })

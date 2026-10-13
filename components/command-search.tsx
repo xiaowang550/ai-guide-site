@@ -86,7 +86,10 @@ export function CommandSearch({ className }: { className?: string } = {}) {
       if (!rect) return
       const v = window.visualViewport
       const width = Math.min(520, (v?.width ?? window.innerWidth) - 32)
-      const top = Math.max(rect.bottom + 10, (v?.offsetTop ?? 0) + 8)
+      const top =
+        window.innerWidth < 640
+          ? (v?.offsetTop ?? 0) + 8
+          : Math.max(rect.bottom + 10, (v?.offsetTop ?? 0) + 8)
       setPosition({
         top,
         left:
@@ -94,7 +97,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
             ? (v?.offsetLeft ?? 0) + 16
             : Math.max(16, Math.min(rect.right - width, window.innerWidth - width - 16)),
         width,
-        height: Math.max(100, (v?.offsetTop ?? 0) + (v?.height ?? window.innerHeight) - top - 16),
+        height: Math.max(0, (v?.offsetTop ?? 0) + (v?.height ?? window.innerHeight) - top - 16),
       })
     }
     place()

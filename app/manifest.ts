@@ -6,12 +6,14 @@ export const dynamic = 'force-static'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${siteConfig.name} —— ${siteConfig.description.slice(0, 20)}…`,
+    id: '/',
+    name: siteConfig.name,
     short_name: siteConfig.shortName,
     description: siteConfig.description,
     start_url: '/',
     scope: '/',
     display: 'standalone',
+    orientation: 'any',
     background_color: '#fdfdfc',
     theme_color: '#3e6b59',
     lang: 'zh-CN',
@@ -24,6 +26,12 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: 'any',
       },
       { src: '/brand/app-icon-512-v3.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      {
+        src: '/brand/app-icon-maskable-v1.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
     ],
     shortcuts: [
       { name: '场景决策器', url: '/find' },

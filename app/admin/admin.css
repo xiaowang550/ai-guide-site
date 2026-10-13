@@ -694,3 +694,106 @@
     align-items: center;
   }
 }
+
+/* Phone management workspace. */
+@media (max-width: 760px) {
+  .admin-workspace .admin-sidebar {
+    padding: calc(12px + var(--safe-top)) max(16px, var(--safe-right)) 12px
+      max(16px, var(--safe-left));
+  }
+  .admin-workspace .admin-navigation {
+    display: none;
+  }
+  .admin-workspace .admin-mobile-sections {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    border: 1px solid hsl(var(--border));
+    border-radius: 14px;
+    background: hsl(var(--accent));
+    color: hsl(var(--primary));
+    text-align: left;
+    font-size: 14px;
+  }
+  .admin-workspace .admin-topbar {
+    height: auto;
+    min-height: 54px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+  .admin-workspace .admin-content-area {
+    padding-bottom: max(32px, var(--safe-bottom));
+  }
+  .admin-workspace :where(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    font-size: 16px;
+    max-width: 100%;
+  }
+  .admin-workspace :where(button, select, .admin-input) {
+    min-height: 44px;
+  }
+  .admin-workspace :where(.grid, .flex) > :where(div, section, article) {
+    min-width: 0;
+  }
+  .admin-workspace .admin-section-intro {
+    padding: 16px;
+  }
+  .admin-workspace .admin-section-intro > div {
+    min-width: 0;
+  }
+  .admin-workspace .admin-section-intro h1 {
+    overflow-wrap: anywhere;
+    font-size: 24px;
+  }
+  .admin-workspace .admin-section-intro img {
+    width: 48px;
+    height: 48px;
+  }
+  .admin-workspace,
+  .admin-workspace .admin-frame,
+  .admin-workspace .admin-login {
+    min-height: 100svh;
+  }
+  .admin-section-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.admin-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-block: 12px;
+}
+.admin-section-grid button {
+  display: flex;
+  align-items: flex-start;
+  text-align: left;
+  gap: 10px;
+  padding: 14px 10px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  min-height: 64px;
+}
+.admin-section-grid button > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.admin-section-grid button[aria-current] {
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+.admin-section-grid strong {
+  font-size: 14px;
+  display: block;
+}
+
+.admin-section-grid small {
+  font-size: 12px;
+  line-height: 1.5;
+  display: block;
+  margin-top: 5px;
+  color: hsl(var(--muted-foreground));
+}

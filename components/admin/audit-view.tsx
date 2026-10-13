@@ -77,10 +77,10 @@ export function AuditView() {
       const res = await apiSend<{ items: number; versions: number; skipped: number }>(
         '/api/admin/backup',
         'POST',
-        parsed
+        parsed,
       )
       setMsg(
-        `导入完成：条目 ${res.items}，新增版本 ${res.versions}，跳过 ${res.skipped}（已存在）。`
+        `导入完成：条目 ${res.items}，新增版本 ${res.versions}，跳过 ${res.skipped}（已存在）。`,
       )
       setError(null)
       setImporting(false)
@@ -169,7 +169,9 @@ export function AuditView() {
       <section className="mt-6">
         <h3 className="text-xs font-medium">操作记录</h3>
         {error ? (
-          <p className="mt-2 rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm">{error}</p>
+          <p className="mt-2 rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm">
+            {error}
+          </p>
         ) : null}
         {entries === null ? (
           <p className="mt-2 text-sm text-muted-foreground">{busy ? '加载中…' : ''}</p>
@@ -178,32 +180,44 @@ export function AuditView() {
             没有符合条件的操作记录。
           </p>
         ) : (
-          <table className="mt-2 w-full text-left text-xs">
-            <thead className="border-b border-hairline text-muted-foreground">
-              <tr>
-                <th className="py-1.5 pr-3 font-medium">时间</th>
-                <th className="py-1.5 pr-3 font-medium">操作人</th>
-                <th className="py-1.5 pr-3 font-medium">操作</th>
-                <th className="py-1.5 pr-3 font-medium">对象</th>
-                <th className="py-1.5 font-medium">详情</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((e) => (
-                <tr key={e.id} className="border-b border-hairline/60">
-                  <td className="py-1.5 pr-3 whitespace-nowrap text-muted-foreground" title={formatDateTime(e.at)}>
-                    {relativeTime(e.at)}
-                  </td>
-                  <td className="py-1.5 pr-3">{e.actor}</td>
-                  <td className="py-1.5 pr-3">{ACTION_LABEL[e.action] ?? e.action}</td>
-                  <td className="py-1.5 pr-3 font-mono text-[11px] text-muted-foreground">
-                    {e.target ?? '—'}
-                  </td>
-                  <td className="py-1.5 font-mono text-[11px] text-muted-foreground">{e.detail ?? '—'}</td>
+          <div
+            className="mt-2 max-w-full overflow-x-auto"
+            role="region"
+            aria-label="操作记录表格，窄屏可左右滑动"
+            tabIndex={0}
+          >
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-hairline text-muted-foreground">
+                <tr>
+                  <th className="py-1.5 pr-3 font-medium">时间</th>
+                  <th className="py-1.5 pr-3 font-medium">操作人</th>
+                  <th className="py-1.5 pr-3 font-medium">操作</th>
+                  <th className="py-1.5 pr-3 font-medium">对象</th>
+                  <th className="py-1.5 font-medium">详情</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {entries.map((e) => (
+                  <tr key={e.id} className="border-b border-hairline/60">
+                    <td
+                      className="whitespace-nowrap py-1.5 pr-3 text-muted-foreground"
+                      title={formatDateTime(e.at)}
+                    >
+                      {relativeTime(e.at)}
+                    </td>
+                    <td className="py-1.5 pr-3">{e.actor}</td>
+                    <td className="py-1.5 pr-3">{ACTION_LABEL[e.action] ?? e.action}</td>
+                    <td className="py-1.5 pr-3 font-mono text-[11px] text-muted-foreground">
+                      {e.target ?? '—'}
+                    </td>
+                    <td className="py-1.5 font-mono text-[11px] text-muted-foreground">
+                      {e.detail ?? '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <p className="mt-2 text-[11px] text-muted-foreground">
           记录只增不删。内容本身的历史在「内容 → 历史版本」，两者分工不同：

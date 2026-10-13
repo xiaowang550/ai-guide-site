@@ -19,9 +19,30 @@ import { useMascotContext } from './use-mascot-context'
  * 这份数据会被打进 layout chunk —— 全站每个页面都要下载它
  * （实测首屏会从 166 KB 涨到 314 KB）。这个教训写在 README「性能基线」章节里。
  */
-const AssistantPanel = dynamic(() => import('./assistant-panel').then((m) => m.AssistantPanel), {
-  ssr: false,
-})
+const AssistantPanel = dynamic(
+  () => import('./assistant-panel').then((m) => m.AssistantPanel).catch(() => AssistantUnavailable),
+  {
+    ssr: false,
+  },
+)
+
+function AssistantUnavailable({
+  open,
+  onClose,
+}: {
+  open: boolean
+  onClose: () => void
+  onStateChange?: (state: MascotState) => void
+}) {
+  return open ? (
+    <div className="assistant-load-error" role="status">
+      <p>小芽暂时未能加载。请联网后刷新再试，已打开的页面可以继续阅读。</p>
+      <button type="button" onClick={onClose}>
+        关闭提示
+      </button>
+    </div>
+  ) : null
+}
 
 export function AssistantDock() {
   const [enabled, setEnabled] = useState(true)
@@ -56,6 +77,10 @@ export function AssistantDock() {
     const v = window.visualViewport
     const css = getComputedStyle(document.documentElement)
     const inset = (edge: string) => parseFloat(css.getPropertyValue('--safe-' + edge)) || 0
+    // Reserve the bar before its lazy chunk mounts, preventing a first-frame overlap.
+    const tabHeight =
+      document.querySelector('.mobile-tabs')?.getBoundingClientRect().height ??
+      (parseFloat(css.getPropertyValue('--mobile-tab-height')) || 62) + inset('bottom')
     return {
       width: v?.width ?? window.innerWidth,
       height: v?.height ?? window.innerHeight,
@@ -64,7 +89,12 @@ export function AssistantDock() {
       insets: {
         top: inset('top'),
         right: inset('right'),
-        bottom: inset('bottom'),
+        bottom: Math.max(
+          inset('bottom'),
+          window.innerWidth < 1024 && document.documentElement.dataset.keyboard !== 'open'
+            ? tabHeight + 12
+            : 0,
+        ),
         left: inset('left'),
       },
     }
@@ -89,19 +119,26 @@ export function AssistantDock() {
 
   useEffect(() => {
     if (!ready) return
+    let frame = 0
     function reposition() {
-      const el = wrapRef.current
-      if (!el || dragState.current) return
-      const next = computeDockPosition(readSettings().assistantDock, viewport(), false)
-      el.style.left = `${next.left}px`
-      el.style.top = `${next.top}px`
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        const el = wrapRef.current
+        if (!el || dragState.current) return
+        const next = computeDockPosition(readSettings().assistantDock, viewport(), false)
+        el.style.left = `${next.left}px`
+        el.style.top = `${next.top}px`
+      })
     }
     reposition()
     window.addEventListener('resize', reposition)
+    window.addEventListener('zhiya:layout', reposition)
     window.visualViewport?.addEventListener('resize', reposition)
     window.visualViewport?.addEventListener('scroll', reposition)
     return () => {
+      cancelAnimationFrame(frame)
       window.removeEventListener('resize', reposition)
+      window.removeEventListener('zhiya:layout', reposition)
       window.visualViewport?.removeEventListener('resize', reposition)
       window.visualViewport?.removeEventListener('scroll', reposition)
     }
@@ -126,6 +163,7 @@ export function AssistantDock() {
     height: DOCK_BUTTON_SIZE,
   })
   function onPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    if (e.pointerType === 'mouse') touchClickUntil.current = 0
     if (!e.isPrimary || e.button !== 0) return
     pause()
     dragging.current = true
@@ -228,9 +266,9 @@ export function AssistantDock() {
         onLostPointerCapture={endDrag}
         style={{ touchAction: 'none', cursor: 'grab' }}
         onClick={(e) => {
-          const pointerType = (e.nativeEvent as PointerEvent).pointerType
-          const touchDuplicate =
-            pointerType !== 'mouse' && performance.now() < touchClickUntil.current
+          // Safari reports a compatibility click as "mouse" after a touch pointerup.
+          // A genuine mouse pointerdown resets the timer above; keyboard clicks keep detail 0.
+          const touchDuplicate = performance.now() < touchClickUntil.current
           if (e.detail > 0 && (suppressClick.current || touchDuplicate)) {
             suppressClick.current = false
             e.preventDefault()

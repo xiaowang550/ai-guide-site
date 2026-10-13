@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils'
 import { MegaNav } from '@/components/mega-nav'
 import { CommandSearch } from '@/components/command-search'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { ResponsiveSheet } from '@/components/mobile/responsive-sheet'
+import { InstallHelp } from '@/components/mobile/install-help'
 
 export function SiteHeader() {
   const { config } = useSiteModules()
@@ -59,6 +61,7 @@ export function SiteHeader() {
           aria-label={`${siteConfig.name} 首页`}
         >
           <BrandMark />
+          <span className="mobile-brand-name">{siteConfig.name}</span>
           {/* 窄屏用 sr-only 而不是 hidden：hidden 会让链接在移动端失去可访问名称 */}
           <span className="sr-only">{siteConfig.name}</span>
         </Link>
@@ -140,7 +143,10 @@ export function SiteHeader() {
             ref={menuButton}
             type="button"
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border bg-background text-muted-foreground lg:hidden"
-            onClick={() => setMenuOpen((v) => !v)}
+            onClick={(event) => {
+              event.currentTarget.focus({ preventScroll: true })
+              setMenuOpen((v) => !v)
+            }}
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
             aria-label={menuOpen ? '关闭菜单' : '打开菜单'}
@@ -155,38 +161,57 @@ export function SiteHeader() {
       </div>
 
       {menuOpen ? (
-        <div id="mobile-nav" className="mobile-nav-panel border-t bg-background lg:hidden">
-          <nav aria-label="移动端导航" className="container py-3">
-            <ul className="grid gap-1 sm:grid-cols-2">
-              {navigation.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={isActive(item.href) ? 'page' : undefined}
-                    className={cn(
-                      'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
-                      isActive(item.href)
-                        ? 'bg-accent font-medium text-accent-foreground'
-                        : 'hover:bg-muted',
+        <ResponsiveSheet title="探索知芽AI" onClose={() => setMenuOpen(false)}>
+          <div id="mobile-nav" className="mobile-nav-panel border-t bg-background lg:hidden">
+            <nav aria-label="移动端导航" className="container py-3">
+              <ul className="grid gap-1 sm:grid-cols-2">
+                {navigation.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      aria-current={isActive(item.href) ? 'page' : undefined}
+                      className={cn(
+                        'flex items-baseline justify-between rounded-lg px-3 py-2 text-sm',
+                        isActive(item.href)
+                          ? 'bg-accent font-medium text-accent-foreground'
+                          : 'hover:bg-muted',
+                      )}
+                    >
+                      {item.label}
+                      <span className="max-w-[55%] text-right text-xs text-muted-foreground">
+                        {item.hint}
+                      </span>
+                    </Link>
+                    {item.children?.map(
+                      (child) =>
+                        pathEnabled(config, child.href) && (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className="mobile-menu-child"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        ),
                     )}
-                  >
-                    {item.label}
-                    <span className="max-w-[55%] text-right text-xs text-muted-foreground">
-                      {item.hint}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-              <li className="mt-1 border-t pt-1 sm:col-span-2">
-                <p className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  更多
-                </p>
-                <ul className="mt-1 grid gap-0.5 sm:grid-cols-2">
-                  {[...secondaryNav.filter((item) => pathEnabled(config, item.href))].map(
-                    (item) => (
+                  </li>
+                ))}
+                <li className="mt-1 border-t pt-1 sm:col-span-2">
+                  <p className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    更多
+                  </p>
+                  <ul className="mt-1 grid gap-0.5 sm:grid-cols-2">
+                    {[
+                      ...secondaryNav.filter(
+                        (item) => !item.href.startsWith('/edu') && pathEnabled(config, item.href),
+                      ),
+                    ].map((item) => (
                       <li key={item.href}>
                         <Link
                           href={item.href}
+                          onClick={() => setMenuOpen(false)}
                           aria-current={isChildActive(item.href) ? 'page' : undefined}
                           className={cn(
                             'flex items-baseline justify-between rounded-lg px-3 py-1.5 text-sm',
@@ -201,18 +226,19 @@ export function SiteHeader() {
                           </span>
                         </Link>
                       </li>
-                    ),
-                  )}
-                </ul>
-              </li>
-              <li className="sm:col-span-2">
-                <div className="px-3 pt-1 sm:hidden">
-                  <ThemeToggle />
-                </div>
-              </li>
-            </ul>
-          </nav>
-        </div>
+                    ))}
+                  </ul>
+                </li>
+                <li className="sm:col-span-2">
+                  <div className="px-3 pt-1">
+                    <ThemeToggle />
+                  </div>
+                </li>
+              </ul>
+              <InstallHelp />
+            </nav>
+          </div>
+        </ResponsiveSheet>
       ) : null}
     </header>
   )

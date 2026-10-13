@@ -1,39 +1,93 @@
 'use client'
+import { useEffect, useState } from 'react'
 
-import { useEffect } from 'react'
-
-/**
- * 注册 Service Worker（离线能力）。
- *
- * 两个刻意的选择：
- * 1) **只在生产构建注册**：开发时注册会让缓存干扰热更新，越改越难调试。
- * 2) **失败不影响页面**：浏览器不支持、HTTP 环境（非 localhost）、
- *    用户屏蔽注册时静默跳过 —— 离线只是增强，不能成为使用门槛。
- */
+/** Offline public reading; updates only activate after the visitor clicks refresh. */
 export function ServiceWorkerRegistrar() {
+  const [waiting, setWaiting] = useState<ServiceWorker | null>(null)
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (process.env.NODE_ENV !== 'production') return
-    if (!('serviceWorker' in navigator)) return
-
-    // 注册需要同源且安全上下文：localhost 或 https
-    const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname)
-    if (!isLocal && window.location.protocol !== 'https:') return
-
-    const register = () => {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {
-        /* 注册失败不影响使用 */
-      })
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      !('serviceWorker' in navigator) ||
+      !window.isSecureContext
+    )
+      return
+    let disposed = false
+    let registration: ServiceWorkerRegistration | undefined
+    let watched: ServiceWorker | null = null
+    let refreshing = false
+    const stateChanged = () => {
+      if (!disposed && registration?.waiting && navigator.serviceWorker.controller)
+        setWaiting(registration.waiting)
     }
-
-    // 页面完全空闲后再注册，不与首屏资源争带宽
-    if ('requestIdleCallback' in window) {
-      ;(window as unknown as { requestIdleCallback: (cb: () => void, o?: object) => void })
-        .requestIdleCallback(register)
-    } else {
-      setTimeout(register, 2000)
+    const found = () => {
+      watched?.removeEventListener('statechange', stateChanged)
+      watched = registration?.installing ?? null
+      watched?.addEventListener('statechange', stateChanged)
+    }
+    const cacheLoadedResources = () => {
+      const urls = performance
+        .getEntriesByType('resource')
+        .map((resource) => resource.name)
+        .filter((value) => {
+          const url = new URL(value)
+          return (
+            url.origin === location.origin &&
+            (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/brand/'))
+          )
+        })
+      navigator.serviceWorker.controller?.postMessage({ type: 'CACHE_PUBLIC_RESOURCES', urls })
+    }
+    const controllerChanged = () => {
+      if (refreshing) window.location.reload()
+      else if (!disposed) cacheLoadedResources()
+    }
+    const activate = () => {
+      refreshing = true
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', controllerChanged)
+    window.addEventListener('zhiya:refresh', activate)
+    const register = async () => {
+      try {
+        registration = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+          updateViaCache: 'none',
+        })
+        if (disposed) return
+        stateChanged()
+        registration.addEventListener('updatefound', found)
+        found()
+        void navigator.serviceWorker.ready.then(() => {
+          if (!disposed) cacheLoadedResources()
+        })
+      } catch {
+        /* Offline support is optional. */
+      }
+    }
+    const timer = window.setTimeout(() => void register(), 2000)
+    return () => {
+      disposed = true
+      clearTimeout(timer)
+      watched?.removeEventListener('statechange', stateChanged)
+      registration?.removeEventListener('updatefound', found)
+      navigator.serviceWorker.removeEventListener('controllerchange', controllerChanged)
+      window.removeEventListener('zhiya:refresh', activate)
     }
   }, [])
-
-  return null
+  return waiting ? (
+    <div className="sw-update-notice" role="status">
+      <span>新版本已准备好</span>
+      <button
+        type="button"
+        onClick={() => {
+          window.dispatchEvent(new Event('zhiya:refresh'))
+          waiting.postMessage({ type: 'SKIP_WAITING' })
+        }}
+      >
+        刷新更新
+      </button>
+      <button type="button" onClick={() => setWaiting(null)} aria-label="稍后更新">
+        稍后
+      </button>
+    </div>
+  ) : null
 }

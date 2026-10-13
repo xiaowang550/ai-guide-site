@@ -3,6 +3,8 @@ import type { ReactNode } from 'react'
 import './globals.css'
 import './styles/surfaces.css'
 import './styles/learning.css'
+import './styles/mobile.css'
+import { MOBILE_VIEWPORT_BOOTSTRAP } from '@/lib/mobile-viewport'
 import { siteConfig, siteTitle } from '@/lib/site'
 import { ThemeScript } from '@/components/theme-toggle'
 
@@ -45,6 +47,9 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   keywords: [...siteConfig.keywords],
+  applicationName: siteConfig.name,
+  appleWebApp: { capable: true, title: siteConfig.name, statusBarStyle: 'default' },
+  formatDetection: { telephone: false },
   openGraph: {
     type: 'website',
     locale: 'zh-CN',
@@ -74,6 +79,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           放在 <head> 里此时 body 还不存在，元素一个都扫不到。
         */}
         <script dangerouslySetInnerHTML={{ __html: REVEAL_EAGER }} />
+        <script dangerouslySetInnerHTML={{ __html: MOBILE_VIEWPORT_BOOTSTRAP }} />
       </body>
     </html>
   )

@@ -43,7 +43,9 @@ export function ToolkitExplorer({
   }, [])
   useEffect(() => {
     if (!hydrated) return
-    const params = new URLSearchParams()
+    const params = new URLSearchParams(window.location.search)
+    params.delete('stage')
+    params.delete('program')
     if (stage !== '全部') params.set('stage', stage)
     if (program) params.set('program', program)
     window.history.replaceState(null, '', `/edu/toolkits/${params.size ? `?${params}` : ''}`)
@@ -68,12 +70,12 @@ export function ToolkitExplorer({
             </button>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          配套课程
+        <label className="school-course-filter flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          <span className="shrink-0">配套课程</span>
           <select
             value={program}
             onChange={(event) => setProgram(event.target.value)}
-            className="max-w-[220px] rounded-lg border bg-background px-3 py-2 text-sm text-foreground"
+            className="min-w-0 max-w-[220px] flex-1 rounded-lg border bg-background px-3 py-2 text-sm text-foreground"
           >
             <option value="">不限课程</option>
             {programs.map((item) => (

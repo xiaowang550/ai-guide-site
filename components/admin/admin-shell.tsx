@@ -19,6 +19,7 @@ import { SchoolModulesView } from './school-modules-view'
 import { SchoolAccountsView } from './school-accounts-view'
 import Link from 'next/link'
 import { BrandMark } from '@/components/brand-mark'
+import { ResponsiveSheet } from '@/components/mobile/responsive-sheet'
 import {
   Activity,
   ArrowUpRight,
@@ -106,6 +107,7 @@ export function AdminShell() {
   const [session, setSession] = useState<SessionInfo | null>(null)
   const [checking, setChecking] = useState(true)
   const [tab, setTab] = useState<TabKey>('dashboard')
+  const [sectionsOpen, setSectionsOpen] = useState(false)
 
   async function logout() {
     try {
@@ -173,6 +175,41 @@ export function AdminShell() {
           <span className="admin-brand-caption">管理工作台</span>
         </Link>
         <p className="admin-nav-label">工作空间</p>
+        <button
+          type="button"
+          className="admin-mobile-sections"
+          aria-expanded={sectionsOpen}
+          onClick={(event) => {
+            event.currentTarget.focus({ preventScroll: true })
+            setSectionsOpen(true)
+          }}
+        >
+          切换分区 · {TABS.find((item) => item.key === tab)?.label}
+        </button>
+        {sectionsOpen && (
+          <ResponsiveSheet title="管理后台分区" onClose={() => setSectionsOpen(false)}>
+            <nav className="admin-section-grid" aria-label="手机后台分区">
+              {TABS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  aria-current={tab === item.key ? 'page' : undefined}
+                  onClick={() => {
+                    setTab(item.key)
+                    setSectionsOpen(false)
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                  }}
+                >
+                  <item.icon size={20} aria-hidden />
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>{item.hint}</small>
+                  </span>
+                </button>
+              ))}
+            </nav>
+          </ResponsiveSheet>
+        )}
         <nav aria-label="后台分区" className="admin-navigation">
           {TABS.map((t) => (
             <button

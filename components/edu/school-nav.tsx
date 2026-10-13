@@ -23,7 +23,10 @@ export function SchoolNav() {
       .map((m) => ({ href: moduleHref(m), label: m.title })),
   ]
   return (
-    <div className="border-b border-hairline bg-background">
+    <div
+      className="school-secondary-navigation border-b border-hairline bg-background"
+      data-custom-navigation={items.length > eduNav.length ? 'true' : undefined}
+    >
       <div className="container flex flex-col sm:flex-row sm:items-center sm:gap-8">
         <Link href="/edu" className="py-3 text-sm font-semibold">
           学校服务
@@ -33,7 +36,13 @@ export function SchoolNav() {
             {items.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
               return (
-                <li key={item.href} className="shrink-0">
+                <li
+                  key={item.href}
+                  className={cn(
+                    'shrink-0',
+                    eduNav.some((entry) => entry.href === item.href) && 'school-nav-builtin',
+                  )}
+                >
                   <a
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
