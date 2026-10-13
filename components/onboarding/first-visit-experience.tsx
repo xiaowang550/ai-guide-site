@@ -8,6 +8,23 @@ import './onboarding.css'
 const FIRST_MESSAGE = '你好！我是 AI 新手，请推荐一个今天就能用上的 AI 小技巧。'
 const EXAMPLE =
   '你可以让 AI 把一段杂乱的笔记整理成待办清单。试着告诉它：“把下面的笔记整理成三条待办，每条写清要做什么。”发出消息后，先检查结果，再修改使用。'
+const QUICK_TASKS = [
+  {
+    label: '整理待办',
+    prompt:
+      '请把这段练习笔记整理成三条待办，80 字以内：周五下午四点开教研会，每位老师带一个案例，会议室要提前确认。不确定的信息标【待核对】。',
+  },
+  {
+    label: '起草通知',
+    prompt:
+      '请写一段 80 字以内的教研通知：本周五下午四点，学校会议室，每位老师带一个备课案例。不要新增具体日期或联系人。',
+  },
+  {
+    label: '学习作图',
+    prompt:
+      '我要画一株教室窗边的小绿植。请给一条 60 字以内的作图描述，含主体、场景和风格。只写提示词，不声称已生成图片。',
+  },
+]
 type Stage = 'input' | 'send' | 'answer' | 'choose'
 
 export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) => void }) {
@@ -63,17 +80,12 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
     router.push(path)
   }
   function skipOrClose() {
-    if (stage === 'choose') finish('/')
-    else chooseRoute(true)
+    request.current.id++
+    tutor.stop()
+    onClose(today)
   }
   async function generate() {
-    if (
-      (stage !== 'send' && !(stage === 'answer' && tutor.error)) ||
-      !tutor.ready ||
-      tutor.busy ||
-      !prompt.trim()
-    )
-      return
+    if (stage === 'choose' || !tutor.ready || tutor.busy || !prompt.trim()) return
     const id = ++request.current.id
     setAnswer('')
     setKind('正在回答…')
@@ -93,6 +105,8 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
     }
   }
   function example() {
+    request.current.id++
+    tutor.stop()
     setAnswer(EXAMPLE)
     setKind('教学示例 · 未调用模型')
     setStage('answer')
@@ -117,6 +131,8 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
         skipOrClose()
       }}
     >
+      <style>{`.intro-task-chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.intro-task-chips button{border:1px solid hsl(var(--border));border-radius:20px;background:hsl(var(--accent));color:hsl(var(--foreground));padding:8px 14px;min-height:44px}.intro-task-chips button:focus-visible{outline:2px solid hsl(var(--primary));outline-offset:3px}`}</style>
+      <style>{`.intro-scene{display:flex;align-items:center;gap:16px;border-radius:12px;background:hsl(var(--accent));overflow:hidden;margin:12px 0}.intro-scene img{width:96px;height:72px;object-fit:cover}.intro-scene p{font-size:14px;line-height:1.7;margin:0;padding:8px 12px 8px 0}`}</style>
       <header>
         <span className="intro-mark">
           <Sparkles size={20} />
@@ -125,11 +141,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
           <small>{stage === 'choose' ? '按你的起点出发' : '小芽带你试一次 · 约 1 分钟'}</small>
           <h2>{stage === 'choose' ? '选一条适合你的学习路线' : '欢迎，先和 AI 聊一句吧'}</h2>
         </div>
-        <button
-          type="button"
-          aria-label={stage === 'choose' ? '关闭路线选择，进入首页' : '跳过新手指引，选择学习路线'}
-          onClick={skipOrClose}
-        >
+        <button type="button" aria-label="关闭新手指引" onClick={skipOrClose}>
           <X size={20} />
         </button>
       </header>
@@ -161,11 +173,42 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
         ) : (
           <>
             <p className="intro-purpose-line">
-            <span>找 AI 工具、学方法、完成教学和工作任务。</span>无需注册，打开就能学。
+              <span>找 AI 工具、学方法、完成教学和工作任务。</span>无需注册，打开就能学。
             </p>
+            <div className="intro-scene">
+              {/* eslint-disable-next-line @next/next/no-img-element -- Optimized local teaching scene. */}
+              <img
+                src="/images/cases/campus-notice.webp"
+                alt="把零散资料整理成通知的场景插画"
+                width="96"
+                height="72"
+              />
+              <p>
+                <strong>一段材料 → 一份短草稿 → 你来核对</strong>
+                <br />
+                选一件小事，试着把要求说清楚。
+              </p>
+            </div>
             <div className="intro-guide" role="status">
               <span>{guide}</span>
               {stage !== 'answer' && !tutor.busy && <ArrowDown size={18} aria-hidden="true" />}
+            </div>
+            <div className="intro-task-chips" aria-label="选择一个小任务">
+              {QUICK_TASKS.map((task) => (
+                <button
+                  key={task.label}
+                  disabled={tutor.busy}
+                  onClick={() => {
+                    setPrompt(task.prompt)
+                    setAnswer('')
+                    setStage('send')
+                    tutor.setError('')
+                    input.current?.focus()
+                  }}
+                >
+                  {task.label}
+                </button>
+              ))}
             </div>
             <label className="intro-input-label" data-spotlight={stage === 'input'}>
               你发给 AI 的话
@@ -194,18 +237,13 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
               />
             </label>
             <p id="intro-prompt-help" className="intro-muted">
-            “提示词”就是你发给 AI 的要求，像平时聊天一样写。
+              “提示词”就是你发给 AI 的要求，像平时聊天一样写。
             </p>
             <div className="intro-actions">
               <button
                 className="intro-primary"
                 data-spotlight={stage === 'send' && !tutor.busy}
-                disabled={
-                  (stage !== 'send' && !(stage === 'answer' && tutor.error)) ||
-                  !tutor.ready ||
-                  tutor.busy ||
-                  !prompt.trim()
-                }
+                disabled={!tutor.ready || tutor.busy || !prompt.trim()}
                 onClick={() => void generate()}
               >
                 {tutor.busy ? (
@@ -213,7 +251,11 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
                 ) : (
                   <Send size={16} />
                 )}
-                {tutor.busy ? '正在回答…' : tutor.error ? '重试发送' : '发送消息'}
+                {tutor.busy
+                  ? `正在回答 · ${tutor.elapsed} 秒`
+                  : tutor.error
+                    ? '重试发送'
+                    : '发送消息'}
               </button>
               {tutor.busy && <button onClick={tutor.stop}>停止生成</button>}
               {stage === 'input' && (
@@ -260,14 +302,19 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
                 </label>
               </div>
             )}
-            {(!tutor.ready || tutor.error) && !tutor.busy && (
+            {!tutor.busy && (
               <button className="intro-example" onClick={example}>
                 先看对话示例
               </button>
             )}
+            {tutor.busy && tutor.elapsed >= 12 && (
+              <p className="intro-muted" role="status">
+                当前免费通道等待较久。可以停止后看示例，或者直接选择学习路线。
+              </p>
+            )}
             {stage === 'answer' && answer && (
               <p className="intro-muted intro-takeaway">
-              可以继续追问、补充要求。使用前先核对；页面上的小芽也能陪你练习。
+                可以继续追问、补充要求。使用前先核对；页面上的小芽也能陪你练习。
               </p>
             )}
           </>

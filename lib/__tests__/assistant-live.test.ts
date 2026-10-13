@@ -162,6 +162,29 @@ describe('助手私有配置与公开推理', () => {
       message.messages[0].content,
     )
   })
+  it('练习模式优先低延迟、限制短回答、关闭思考且保留零价保护', async () => {
+    const { env, fetcher } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    const result = await request(env, 'POST', '/api/assistant/chat', {
+      ...message,
+      mode: 'practice',
+    })
+    expect(result.status).toBe(200)
+    const call = fetcher.mock.calls.find(([url]) => String(url).endsWith('/chat/completions'))!
+    const payload = JSON.parse(String(call[1]?.body))
+    expect(payload.max_tokens).toBe(700)
+    expect(payload.provider).toEqual({
+      max_price: { prompt: 0, completion: 0 },
+      allow_fallbacks: true,
+      sort: 'latency',
+    })
+    expect(payload.reasoning).toEqual({ enabled: false, exclude: true })
+    expect(payload.messages[0].content).toContain('未知事实用【待核对】')
+    expect(payload.messages[0].content).toContain('站内公开资料：[]')
+    expect(
+      (await request(env, 'POST', '/api/assistant/chat', { ...message, mode: 'paid' })).status,
+    ).toBe(400)
+  })
   it('中途上游错误不会假装生成成功或泄露内部错误', async () => {
     const { env } = await fixture(
       'data: {"choices":[{"delta":{"content":"部分"}}]}\n\ndata: {"error":{"message":"SECRET INTERNAL ERROR"}}\n\n',

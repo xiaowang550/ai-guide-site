@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, Check, Copy, ImagePlus, Mic, Square, Sprout } from 'lucide-react'
 import { useTutor } from './use-tutor'
 import { rookieLessons } from './rookie-lessons'
+import { domesticPracticeTools, practiceCards } from './practice-kit'
 import { rookieProgress, readLocal, saveLocal, ROOKIE_KEY } from '@/lib/onboarding-state'
 import { copyText } from '@/lib/copy-text'
 import './rookie.css'
@@ -56,8 +57,26 @@ function practiceImage() {
 async function compressedImage(file: File) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024)
     throw new Error('请选择 8MB 以内的 JPG、PNG 或 WebP 图片。')
-  const bitmap = await createImageBitmap(file)
+  // HTMLImageElement also decodes user-selected files in Safari implementations
+  // where createImageBitmap(File) is absent or stalls. Keep the URL alive until drawImage.
+  const bitmap = new Image(),
+    url = URL.createObjectURL(file)
   try {
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error('图片读取超时，请改用 JPG 或 PNG 后再试。')),
+        12000,
+      )
+      bitmap.onload = () => {
+        clearTimeout(timer)
+        resolve()
+      }
+      bitmap.onerror = () => {
+        clearTimeout(timer)
+        reject(new Error('图片无法解码，请保存为 JPG 或 PNG 后再上传。'))
+      }
+      bitmap.src = url
+    })
     const ratio = Math.min(1, 1000 / Math.max(bitmap.width, bitmap.height)),
       canvas = document.createElement('canvas')
     canvas.width = Math.max(1, Math.round(bitmap.width * ratio))
@@ -72,7 +91,8 @@ async function compressedImage(file: File) {
     }
     throw new Error('图片细节较多，请裁剪要读取的部分后再上传。')
   } finally {
-    bitmap.close()
+    URL.revokeObjectURL(url)
+    bitmap.src = ''
   }
 }
 export function RookieLab() {
@@ -81,6 +101,8 @@ export function RookieLab() {
     [done, setDone] = useState<number[]>([]),
     [drafts, setDrafts] = useState(rookieLessons.map((l) => l.prompt)),
     [outputs, setOutputs] = useState<string[]>(rookieLessons.map(() => '')),
+    [outputKinds, setOutputKinds] = useState<string[]>(rookieLessons.map(() => '')),
+    [checks, setChecks] = useState<boolean[]>([false, false]),
     [checked, setChecked] = useState(false),
     [notice, setNotice] = useState(''),
     [finished, setFinished] = useState(false),
@@ -98,6 +120,19 @@ export function RookieLab() {
   const recognition = useRef<Recognition | null>(null),
     voiceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lesson = rookieLessons[stage]
+  const card = practiceCards[stage]
+  const evidence =
+    stage === 2
+      ? imageLabel === '你本次上传的图片' && !!image
+      : !!outputs[stage].trim() && (stage !== 3 || !!image)
+  const canComplete =
+    evidence &&
+    checks.every(Boolean) &&
+    checked &&
+    !tutor.busy &&
+    !imageBusy &&
+    !listening &&
+    (stage !== 5 || quiz.every((a) => a === '0'))
   useEffect(() => {
     const place = () => {
       const route = document.querySelector<HTMLElement>('.rookie-route'),
@@ -136,7 +171,14 @@ export function RookieLab() {
           m.provider === 'openrouter' &&
           availableCatalog.connected.openrouter,
       )
-      if (model) setTutorModel(model.id)
+      const quickVision = availableCatalog.models.find(
+        (m) =>
+          m.id.includes('inkling-small') &&
+          m.available &&
+          m.vision &&
+          availableCatalog.connected[m.provider],
+      )
+      if (quickVision || model) setTutorModel((quickVision || model)!.id)
     }
   }, [stage, availableCatalog, modelVision, setTutorModel])
   function move(next: number) {
@@ -145,6 +187,7 @@ export function RookieLab() {
     setListening(false)
     setStage(next)
     setChecked(false)
+    setChecks([false, false])
     setNotice('')
     setCoaching('')
     setFinished(false)
@@ -154,9 +197,20 @@ export function RookieLab() {
     )
   }
   function complete() {
+    if (!canComplete) return
     const completed = [...new Set([...done, stage])]
     setDone(completed)
     const next = Math.min(stage + 1, rookieLessons.length - 1)
+    if (stage === 2 && imageLabel === '你本次上传的图片')
+      setDrafts((old) =>
+        old.map((r, i) =>
+          i === 3
+            ? '请描述这张图片的主体、场景和画面风格，并检查它是否符合这条生成要求：' +
+              imagePrompt +
+              '。看不清的地方标【待核对】，不要猜。150字以内。'
+            : r,
+        ),
+      )
     saveLocal(ROOKIE_KEY, { stage: next, done: completed })
     if (stage === rookieLessons.length - 1) {
       if (completed.length === rookieLessons.length) setFinished(true)
@@ -164,6 +218,7 @@ export function RookieLab() {
     } else {
       setStage(next)
       setChecked(false)
+      setChecks([false, false])
       setNotice('')
       setCoaching('')
       requestAnimationFrame(() =>
@@ -181,6 +236,8 @@ export function RookieLab() {
             : drafts[stage]
     setOutputs((old) => old.map((r, i) => (i === at ? '' : r)))
     setNotice('')
+    setChecks([false, false])
+    setOutputKinds((old) => old.map((r, i) => (i === at ? '当前模型的实时回答 · 请核对' : r)))
     try {
       await tutor.run(
         input,
@@ -246,6 +303,9 @@ export function RookieLab() {
     try {
       setImage(await compressedImage(file))
       setImageLabel('你本次上传的图片')
+      setOutputs((old) => old.map((r, i) => (i === 3 ? '' : r)))
+      setChecks([false, false])
+      setChecked(false)
     } catch (e) {
       setNotice(e instanceof Error ? e.message : '图片无法读取，请重试。')
     } finally {
@@ -296,7 +356,7 @@ export function RookieLab() {
             <button
               key={l.title}
               aria-current={i === stage ? 'step' : undefined}
-              disabled={tutor.busy || listening}
+              disabled={tutor.busy || listening || imageBusy}
               onClick={() => move(i)}
             >
               <span>{done.includes(i) ? <Check size={15} /> : i + 1}</span>
@@ -310,6 +370,19 @@ export function RookieLab() {
             第 {stage + 1} 步 · {lesson.goal}
           </p>
           <h3>{lesson.title}</h3>
+          <div className="practice-scene">
+            <img
+              src={`/images/cases/${card.cover}.webp`}
+              width="640"
+              height="427"
+              alt={`${card.title}的工作场景插画`}
+            />
+            <div>
+              <strong>{card.title}</strong>
+              <p>{card.hint}</p>
+              <small>场景插画 · 看步骤，亲手练</small>
+            </div>
+          </div>
           <ol className="rookie-how">
             {lesson.steps.map((text, i) => (
               <li key={text}>
@@ -351,17 +424,15 @@ export function RookieLab() {
                   <Copy size={16} />
                   复制作图提示词
                 </button>
-                <a
-                  href="https://www.canva.com/ai-image-generator/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  打开作图工具 ↗
-                </a>
+                {domesticPracticeTools.map((tool) => (
+                  <a key={tool.name} href={tool.href} target="_blank" rel="noreferrer">
+                    去{tool.name}生成 ↗
+                  </a>
+                ))}
                 <Link href="/tools/">选择其他图像工具 →</Link>
               </div>
               <p className="rookie-note">
-                本站当前没有可核验的免费作图接口，这一步到外部作图工具实际生成。外部平台可能需要自己的账号，有免费次数限制；回来后可以用下一课读取图片。
+                国内工具提供免费体验入口，需要平台账号，额度和可用功能以官网为准。本站不收取作图费用。生成后把图片带回来，完成下方核对。
               </p>
               <details>
                 <summary>到了作图页面，下一步点哪里？</summary>
@@ -370,14 +441,29 @@ export function RookieLab() {
                   <li>选择样式和横向比例；首次使用按平台提示登录。</li>
                   <li>点击生成，核对主体和背景，保存图片后回到本站。</li>
                 </ol>
-                <a
-                  href="https://www.canva.com/ai-image-generator/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  查看官方作图说明 ↗
-                </a>
+                {domesticPracticeTools.map((tool) => (
+                  <p key={tool.name}>
+                    <strong>{tool.name}：</strong>
+                    {tool.tip}
+                  </p>
+                ))}
               </details>
+              <label className="rookie-file">
+                {imageBusy ? '正在读取…' : '生成好了，上传我保存的图片'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  aria-label="上传本次生成的图片"
+                  disabled={imageBusy || tutor.busy}
+                  onChange={(e) => void upload(e.target.files?.[0])}
+                />
+              </label>
+              {image && imageLabel === '你本次上传的图片' && (
+                <figure className="practice-return">
+                  <img src={image} alt="本次带回的生成图片" />
+                  <figcaption>本次带回的图片 · 下一课可以继续读取</figcaption>
+                </figure>
+              )}
             </div>
           ) : (
             <>
@@ -388,6 +474,9 @@ export function RookieLab() {
                       onClick={() => {
                         setImage(practiceImage())
                         setImageLabel('手绘日程图 · 教学练习样例')
+                        setOutputs((old) => old.map((r, i) => (i === 3 ? '' : r)))
+                        setChecks([false, false])
+                        setChecked(false)
                       }}
                     >
                       <ImagePlus size={16} />
@@ -403,6 +492,14 @@ export function RookieLab() {
                         onChange={(e) => void upload(e.target.files?.[0])}
                       />
                     </label>
+                  </div>
+                  <div className="rookie-actions">
+                    {domesticPracticeTools.map((tool) => (
+                      <a key={tool.name} href={tool.href} target="_blank" rel="noreferrer">
+                        用{tool.name}看图 ↗
+                      </a>
+                    ))}
+                    <small>也可在国内工具上传同一张图，把实际回答粘贴到下方。</small>
                   </div>
                   {image && (
                     <figure>
@@ -456,6 +553,7 @@ export function RookieLab() {
                 {stage === 4 ? '先核对识别文字，再发给 AI' : '你发给 AI 的话'}
                 <textarea
                   aria-label="当前练习提示词"
+                  disabled={tutor.busy || listening}
                   value={drafts[stage]}
                   maxLength={2000}
                   onChange={(e) =>
@@ -478,7 +576,7 @@ export function RookieLab() {
               }
             >
               {tutor.busy
-                ? '小芽正在回答…'
+                ? `正在回答 · ${tutor.elapsed} 秒`
                 : stage === 2
                   ? '让小芽检查作图描述'
                   : stage === 3
@@ -488,6 +586,24 @@ export function RookieLab() {
                       : '发给 AI，看看回答'}
             </button>
             {tutor.busy && <button onClick={tutor.stop}>停止生成</button>}
+            <button
+              disabled={
+                tutor.busy ||
+                listening ||
+                stage === 2 ||
+                (stage === 3 && imageLabel !== '手绘日程图 · 教学练习样例')
+              }
+              onClick={() => {
+                setOutputs((old) => old.map((r, i) => (i === stage ? card.sample : r)))
+                setOutputKinds((old) =>
+                  old.map((r, i) => (i === stage ? '教学示例 · 未调用模型，请动手修改' : r)),
+                )
+                setChecks([false, false])
+                setChecked(false)
+              }}
+            >
+              先看示例，动手修改
+            </button>
             <select
               aria-label="陪练免费模型"
               value={tutor.model}
@@ -510,12 +626,37 @@ export function RookieLab() {
             </select>
           </div>
           <p className="rookie-note">
-            点击才使用免费请求；可能遇到平台额度或排队限制。结果需要你核对。
+            简短练习模式 · 点击才请求免费模型。
+            {tutor.busy && tutor.elapsed >= 12
+              ? '当前通道等待较久，可停止后换模型，或先用示例继续练习。'
+              : '基础提示可直接查看，无需等待。'}
           </p>
           {outputs[stage] && (
             <article className="rookie-output">
-              <small>当前模型的实时回答</small>
-              <p>{outputs[stage]}</p>
+              <small>{outputKinds[stage] || '你手工录入的练习结果'}</small>
+              <textarea
+                aria-label="修改当前练习结果"
+                value={outputs[stage]}
+                disabled={tutor.busy}
+                maxLength={5000}
+                onChange={(e) => {
+                  setOutputs((old) => old.map((r, i) => (i === stage ? e.target.value : r)))
+                  setChecks([false, false])
+                  setChecked(false)
+                }}
+              />
+              <button
+                disabled={tutor.busy}
+                onClick={async () =>
+                  setNotice(
+                    (await copyText(outputs[stage]))
+                      ? '练习成果已复制，可以保存。'
+                      : '请选中文字手工复制。',
+                  )
+                }
+              >
+                复制我的成果
+              </button>
             </article>
           )}
           {(notice || tutor.error) && (
@@ -523,20 +664,41 @@ export function RookieLab() {
               {notice || tutor.error}
             </p>
           )}
+          {stage !== 2 && (
+            <details className="practice-paste">
+              <summary>我在其他工具做了练习，粘贴实际结果</summary>
+              <textarea
+                aria-label="粘贴外部工具实际回答"
+                maxLength={5000}
+                value={outputs[stage]}
+                onChange={(e) => {
+                  setOutputs((old) => old.map((r, i) => (i === stage ? e.target.value : r)))
+                  setOutputKinds((old) =>
+                    old.map((r, i) => (i === stage ? '你从外部工具带回的结果 · 请核对' : r)),
+                  )
+                  setChecks([false, false])
+                  setChecked(false)
+                }}
+                disabled={tutor.busy}
+              />
+            </details>
+          )}
           <section className="rookie-coach">
             <h4>这一步卡住了？小芽只讲你现在的问题。</h4>
             <div className="rookie-actions">
               <button
-                disabled={!tutor.ready || tutor.busy}
-                onClick={() =>
-                  void coach('我完全没听懂，请换一个生活里的例子，并告诉我现在先点哪里。')
-                }
+                disabled={tutor.busy}
+                onClick={() => setCoaching(`【本课操作提示】${card.hint}`)}
               >
                 再简单一点
               </button>
               <button
-                disabled={!tutor.ready || tutor.busy}
-                onClick={() => void coach('我应该怎样检查当前结果是否能用？给我一个具体检查动作。')}
+                disabled={tutor.busy}
+                onClick={() =>
+                  setCoaching(
+                    `【本课核对提示】请检查：${card.checks.join('；')}。发现一项不符合，就修改输入再生成，或者亲手修改结果。`,
+                  )
+                }
               >
                 帮我检查这一小步
               </button>
@@ -588,6 +750,29 @@ export function RookieLab() {
             </div>
           )}
           <footer className="rookie-next">
+            <fieldset className="practice-checks">
+              <legend>对照结果，逐项确认</legend>
+              {card.checks.map((text, i) => (
+                <label key={text}>
+                  <input
+                    type="checkbox"
+                    checked={checks[i]}
+                    disabled={!evidence || tutor.busy}
+                    onChange={(e) =>
+                      setChecks((old) => old.map((v, k) => (k === i ? e.target.checked : v)))
+                    }
+                  />
+                  {text}
+                </label>
+              ))}
+              {!evidence && (
+                <small>
+                  {stage === 2
+                    ? '请先实际生成并上传图片。'
+                    : '请先拿到回答、填写外部结果，或使用教学示例动手练习。'}
+                </small>
+              )}
+            </fieldset>
             <label>
               <input
                 type="checkbox"
@@ -596,13 +781,7 @@ export function RookieLab() {
               />
               {lesson.check}
             </label>
-            <button
-              className="rookie-primary"
-              disabled={
-                !checked || tutor.busy || listening || (stage === 5 && quiz.some((a) => a !== '0'))
-              }
-              onClick={complete}
-            >
+            <button className="rookie-primary" disabled={!canComplete} onClick={complete}>
               {stage === 5 ? '确认完成，开始独立探索' : '我做到了，继续下一步'}
               <ArrowRight size={16} />
             </button>

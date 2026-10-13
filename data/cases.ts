@@ -2,6 +2,7 @@ import type { CaseStudy } from '@/data/types'
 import { casesExtraA } from './cases-extra-a'
 import { casesExtraB } from './cases-extra-b'
 import { moreCases } from './more-cases'
+import { dailyCases } from './daily-cases'
 
 /**
  * 案例库数据
@@ -435,6 +436,7 @@ SELECT ... FROM t_order WHERE status = 0 LIMIT 500，
   ...casesExtraA,
   ...casesExtraB,
   ...moreCases,
+  ...dailyCases,
 ]
 
 export const casesById: Record<string, CaseStudy> = cases.reduce<Record<string, CaseStudy>>(

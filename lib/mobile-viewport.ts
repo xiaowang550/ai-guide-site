@@ -19,4 +19,4 @@ export const MOBILE_VIEWPORT_BOOTSTRAP = `(function(){
   document.addEventListener('focusin',schedule);document.addEventListener('focusout',schedule);
   addEventListener('beforeinstallprompt',function(event){if(innerWidth<1024){event.preventDefault();window.zhiyaInstallPrompt=event}});
   update();
-})()`
+})()`.replace(/\n\s*/g, '')

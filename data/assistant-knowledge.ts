@@ -735,6 +735,90 @@ export default [
     "kind": "case"
   },
   {
+    "id": "customer-reply-check",
+    "title": "电商客服：把三条客户留言分类，回复里不擅自承诺退款",
+    "href": "/cases/customer-reply-check",
+    "summary": "把催发货、商品问题与退款请求分开，先列需要查询的信息，再写给客户的短回复。适用于售前售后沟通，避免模型编出到账时间与退款承诺。",
+    "kind": "case"
+  },
+  {
+    "id": "expense-invoice-review",
+    "title": "财务助理：检查报销清单的重复票号，金额合计交回表格复算",
+    "href": "/cases/expense-invoice-review",
+    "summary": "先保留原始行号，再检查重复票号、缺失金额与合计口径。只做报销资料预检查，最后由表格复算和经办人确认，避免把同号的两行直接删掉。",
+    "kind": "case"
+  },
+  {
+    "id": "lesson-differentiation",
+    "title": "教师备课：把同一阅读材料改成两档练习，答案必须回到原文",
+    "href": "/cases/lesson-differentiation",
+    "summary": "把短文转成基础理解与信息整合两档练习，逐题注明答案来自哪句话。适用于备课与课堂练习，教师核对难度和证据，学生不用上传个人成绩。",
+    "kind": "case"
+  },
+  {
+    "id": "school-meeting-parent",
+    "title": "学校办公室：从家长会筹备记录里提取待办，未定时间保持待确认",
+    "href": "/cases/school-meeting-parent",
+    "summary": "把家长会筹备记录整理成负责人、任务与截止时间清单。先区分决定和建议，未确认的场地与时间不写进正式通知，适合会议纪要和活动协作。",
+    "kind": "case"
+  },
+  {
+    "id": "sales-month-reconcile",
+    "title": "运营分析：先对齐两个月的销售口径，再写月报中的变化解释",
+    "href": "/cases/sales-month-reconcile",
+    "summary": "把销售月报拆成口径确认、公式复算和文字解释。输入里刻意放入未扣退款的数字，练习发现不可直接比较的情况，避免把相关变化写成因果结论。",
+    "kind": "case"
+  },
+  {
+    "id": "contract-change-log",
+    "title": "合同协作：比对两版交付条款，先列变更事实再交法务判断",
+    "href": "/cases/contract-change-log",
+    "summary": "把两版采购合同的日期与验收条款做成变更清单，附版本和原句。练习只定位差异，不做法律效力判断，也不把文本改动直接称作违约风险。",
+    "kind": "case"
+  },
+  {
+    "id": "new-staff-onboarding",
+    "title": "人事协作：把入职资料改成首周清单，缺失权限找负责人确认",
+    "href": "/cases/new-staff-onboarding",
+    "summary": "从部门说明与入职须知整理首周任务，注明负责人和依赖条件。适用于新员工引导，只使用虚构岗位资料，不上传身份证件或替人开通系统权限。",
+    "kind": "case"
+  },
+  {
+    "id": "logistics-status-brief",
+    "title": "物流协调：把四次节点记录写成状态简报，不猜签收与到达时间",
+    "href": "/cases/logistics-status-brief",
+    "summary": "按节点原文整理客户可读的物流状态，区分已发生、缺失与待查询。适用于异常说明和交接，既不编造预计到达时间，也不把“运输中”写成即将签收。",
+    "kind": "case"
+  },
+  {
+    "id": "short-video-workshop",
+    "title": "内容编辑：把培训要点拆成三镜头短视频，画面只服务一个知识点",
+    "href": "/cases/short-video-workshop",
+    "summary": "先明确受众和一个知识点，再写三镜头脚本与配图描述。适用于内部培训和科普内容，配图不冒充真实现场，旁白不增加原材料没有的数据与承诺。",
+    "kind": "case"
+  },
+  {
+    "id": "poster-image-brief",
+    "title": "学校活动：先生成无字海报底图，再由人补上核对过的日期地点",
+    "href": "/cases/poster-image-brief",
+    "summary": "把活动海报拆成无字底图生成与人工排版两步，避免图片模型把日期、地点写错。先练主体与留白描述，再核对正式信息，适合校内活动与社团宣传。",
+    "kind": "case"
+  },
+  {
+    "id": "workorder-handover",
+    "title": "后勤交接：从维修记录写待跟进清单，处理过不等于已经修好",
+    "href": "/cases/workorder-handover",
+    "summary": "把维修记录中的“已登记、已检查、待配件”分开，整理下班交接清单。只有原始记录明确完成才标完成，避免自动摘要把处理中误写成问题已解决。",
+    "kind": "case"
+  },
+  {
+    "id": "form-approval-check",
+    "title": "项目协调：表单先补缺失字段，再经过人工确认进入执行清单",
+    "href": "/cases/form-approval-check",
+    "summary": "练习把表单输入、字段校验、人工确认与执行分开。通过两张虚构申请检查缺失字段和重复编号，适用于内部申请流程，不实际发送消息或创建任务。",
+    "kind": "case"
+  },
+  {
     "id": "model-to-agent",
     "title": "进阶：从模型选型到 Agent 工作流",
     "href": "/paths/model-to-agent",

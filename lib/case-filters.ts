@@ -17,6 +17,7 @@ export interface CasePreview {
   reusability: 'high' | 'medium' | 'low'
   updatedAt: string
   illustrative: boolean
+  cover?: string
 }
 export function caseMatchesTopic(item: CasePreview, topic: CaseTopic): boolean {
   const text = `${item.title} ${item.industry} ${item.role} ${item.summary}`

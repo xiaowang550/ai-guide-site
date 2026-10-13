@@ -4,6 +4,7 @@ export async function runAssistant(options: {
   messages: { role: string; content: string }[]
   page: string
   image?: string
+  mode?: 'practice'
   signal: AbortSignal
   onText: (text: string) => void
   onMeta?: (
@@ -19,6 +20,7 @@ export async function runAssistant(options: {
       model: options.model,
       messages: options.messages,
       page: options.page,
+      ...(options.mode ? { mode: options.mode } : {}),
       ...(options.image ? { image: options.image } : {}),
     }),
   })

@@ -1,6 +1,7 @@
 import { ScrollSidebar } from '@/components/scroll-sidebar'
 import { SaveButton } from '@/components/learning/save-button'
 import '@/app/styles/advanced.css'
+import '@/app/styles/reference-cases.css'
 import { LessonDiagram } from '@/components/learning/lesson-diagram'
 import { caseVisuals } from '@/data/case-visuals'
 import type { Metadata } from 'next'
@@ -11,7 +12,9 @@ import { casesById, cases, getTools } from '@/data'
 import { REUSABILITY_LABELS } from '@/lib/site'
 import { formatDate } from '@/lib/score'
 import { ToolLogo } from '@/components/tool-logo'
-import { CoverArt } from '@/components/cover-art'
+import { caseScene } from '@/data/case-scenes'
+import { caseExercise } from '@/data/case-exercises'
+import { CasePracticeLoader } from '@/components/learning/case-practice-loader'
 import { UpdatedBadge } from '@/components/updated-badge'
 import { PrintButton } from '@/components/print-button'
 import { CopyableText } from '@/components/copyable-text'
@@ -43,6 +46,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
   if (!c) notFound()
 
   const usedTools = getTools(c.tools)
+  const exercise = caseExercise(c.id)
   const others = cases
     .filter((x) => x.id !== c.id && (x.industry === c.industry || x.role === c.role))
     .slice(0, 3)
@@ -78,24 +82,39 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
         <PrintButton />
       </div>
 
-      {!caseVisuals[c.id] && (
-        <div className="container pt-8">
-          {/* 窄封面：与列表页媒体卡共用同一套封面视觉，保证列表↔详情连贯 */}
-          <CoverArt
-            id={c.id}
-            eyebrow={`${c.industry} · ${c.role}`}
-            tools={usedTools}
-            height="sm"
-            className="rounded-lg border"
-          />
-        </div>
-      )}
-
       {/* 打印：纸面上只保留内容，导航与按钮不输出 */}
 
       <div className="container py-8">
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
           <article className="min-w-0 space-y-8">
+            <figure className="case-detail-scene">
+              {/* eslint-disable-next-line @next/next/no-img-element -- Optimized local static illustration. */}
+              <img
+                src={`/images/cases/${caseScene(c.id)}.webp`}
+                width="960"
+                height="640"
+                alt={`${c.industry}中${c.role}处理任务的场景插画`}
+              />
+              <figcaption>
+                <strong>先看场景，再动手练</strong>
+                <p>{c.summary}</p>AI生成场景插画，表达任务用途；不是真实机构或人物的工作照片。
+              </figcaption>
+            </figure>
+            <CasePracticeLoader exercise={exercise} title={c.title} />
+            {exercise.source && (
+              <details className="lesson-details">
+                <summary>公开实践参考与改编说明</summary>
+                <p className="mt-3 text-sm leading-7">{exercise.source.note}</p>
+                <a
+                  href={exercise.source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {exercise.source.title} ↗
+                </a>
+              </details>
+            )}
             {c.kind === 'illustrative' && (
               <p className="mb-6 rounded-xl bg-accent p-4 text-sm leading-6">
                 演示案例 · 使用虚构材料说明方法；结果与耗时为练习标准，不代表真实机构的使用记录。
@@ -127,7 +146,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             </Section>
 
             <Section
-              title={c.kind === 'illustrative' ? '示例结果与验收' : '实际结果'}
+              title={c.kind === 'illustrative' ? '示例结果与验收' : '结果说明与核对'}
               icon={<Target className="h-4 w-4" aria-hidden />}
             >
               <p className="leading-7 text-foreground/85">{c.result}</p>
@@ -171,7 +190,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
                         {t.name}
                       </Link>
                       <span className="block text-xs text-muted-foreground">
-                        综合分 {t.overallScore}/5
+                        按任务能力与使用条件选择
                       </span>
                     </span>
                   </li>

@@ -5,11 +5,12 @@ import { cases, toolsById } from '@/data'
 import { PageHeader } from '@/components/page-header'
 import { CaseExplorer } from '@/components/case-explorer'
 import { DocumentScene } from '@/components/document-scene'
+import { caseScene } from '@/data/case-scenes'
 
 export const metadata: Metadata = {
   title: '案例库',
   description:
-    '真实场景的 AI 应用案例：原来的痛点、用了什么工具、完整提示词原文、实际结果、花了多久、踩过的坑。按行业与角色筛选。',
+    '按任务与行业选择AI案例，配合场景图、可复制提示词与动手工作台，练习准备材料、生成草稿和人工核对。',
   alternates: { canonical: '/cases' },
 }
 
@@ -23,7 +24,7 @@ export default function CasesPage() {
         illustrated
         art={<DocumentScene />}
         title="案例库：别人到底怎么用的"
-        description="选一个任务，看看资料准备、提示词和核对方法。"
+        description="选一个日常任务，看场景图、亲手改材料，带走核对后的成果。"
         breadcrumbs={[{ label: '首页', href: '/' }, { label: '案例' }]}
       />
 
@@ -47,6 +48,7 @@ export default function CasesPage() {
             reusability: item.reusability,
             updatedAt: item.updatedAt,
             illustrative: item.kind === 'illustrative',
+            cover: caseScene(item.id),
             tools: item.tools
               .map((id) => toolsById[id])
               .filter(Boolean)

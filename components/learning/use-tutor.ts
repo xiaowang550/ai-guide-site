@@ -7,12 +7,15 @@ export function useTutor() {
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null),
     [model, setModel] = useState(''),
     [busy, setBusy] = useState(false),
+    [elapsed, setElapsed] = useState(0),
     [error, setError] = useState('')
   const controller = useRef<AbortController | null>(null),
     pathname = usePathname()
   useEffect(() => {
     let alive = true
-    fetch('/api/assistant/models', { cache: 'no-store' })
+    const catalogAbort = new AbortController()
+    const timeout = setTimeout(() => catalogAbort.abort(), 12000)
+    fetch('/api/assistant/models', { cache: 'no-store', signal: catalogAbort.signal })
       .then(async (r) => {
         if (!r.ok) throw new Error('模型目录暂时无法读取。')
         const value = (await r.json()) as ModelCatalog
@@ -22,7 +25,8 @@ export function useTutor() {
         setModel(
           (
             usable.find((m) => m.id === 'liquid/lfm-2.5-2.6b:free') ??
-            usable.find((m) => m.id.startsWith('google/gemma')) ??
+            usable.find((m) => m.id === 'inclusionai/ling-3.1-flash') ??
+            usable.find((m) => m.id.includes('inkling-small')) ??
             usable.find((m) => m.id !== 'openrouter/free' && !m.reasoning) ??
             usable.find((m) => m.id !== 'openrouter/free') ??
             usable[0]
@@ -30,13 +34,22 @@ export function useTutor() {
         )
       })
       .catch((e) => {
-        if (alive) setError(e.message)
+        if (alive)
+          setError(catalogAbort.signal.aborted ? '连接准备超时，可以先做示例练习。' : e.message)
       })
+      .finally(() => clearTimeout(timeout))
     return () => {
       alive = false
+      clearTimeout(timeout)
+      catalogAbort.abort()
       controller.current?.abort()
     }
   }, [])
+  useEffect(() => {
+    if (!busy) return
+    const timer = setInterval(() => setElapsed((seconds) => seconds + 1), 1000)
+    return () => clearInterval(timer)
+  }, [busy])
   const current = catalog?.models.find((m) => m.id === model)
   const ready =
     !!current &&
@@ -54,11 +67,13 @@ export function useTutor() {
     const abort = new AbortController()
     controller.current = abort
     setBusy(true)
+    setElapsed(0)
     setError('')
     try {
       await runAssistant({
         model,
         page: pathname,
+        mode: 'practice',
         signal: abort.signal,
         image: options?.image,
         messages: [
@@ -88,6 +103,7 @@ export function useTutor() {
     current,
     run,
     busy,
+    elapsed,
     error,
     setError,
     stop: () => controller.current?.abort(),

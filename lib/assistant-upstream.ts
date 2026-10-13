@@ -75,11 +75,15 @@ export function generationWatchdog(signal: AbortSignal) {
   }
 }
 export const freeProvider = { max_price: { prompt: 0, completion: 0 }, allow_fallbacks: true }
-export function generationOptions(reasoning: boolean, maxTokens = 4096) {
+export function generationOptions(reasoning: boolean, maxTokens = 4096, practice = false) {
   return {
     max_tokens: maxTokens,
-    provider: freeProvider,
-    ...(reasoning ? { reasoning: { effort: 'low', exclude: true } } : {}),
+    provider: practice ? { ...freeProvider, sort: 'latency' } : freeProvider,
+    ...(practice
+      ? { reasoning: { enabled: false, exclude: true } }
+      : reasoning
+        ? { reasoning: { effort: 'low', exclude: true } }
+        : {}),
   }
 }
 interface StreamResult {

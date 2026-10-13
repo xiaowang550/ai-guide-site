@@ -1,18 +1,10 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import {
-  Search,
-  X,
-  ArrowUpRight,
-  FileText,
-  Wrench,
-  Users,
-  GraduationCap,
-  BarChart3,
-} from 'lucide-react'
+import { Search, X, ArrowUpRight } from 'lucide-react'
 import { CASE_TOPICS, filterCases, type CasePreview, type CaseTopic } from '@/lib/case-filters'
 import { SaveButton } from './learning/save-button'
+/* eslint-disable @next/next/no-img-element -- Static export, optimized original local scene assets. */
 
 export function CaseExplorer({ items }: { items: CasePreview[] }) {
   const [query, setQuery] = useState(''),
@@ -63,6 +55,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
             <span className="sr-only">搜索案例</span>
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <input
+              disabled={!ready}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="搜任务、角色或工具，如：通知、教师、n8n"
@@ -81,6 +74,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
           <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground">
             行业
             <select
+              disabled={!ready}
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
               className="h-11 max-w-44 rounded-xl border bg-background px-3 text-sm text-foreground"
@@ -97,6 +91,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
             <button
               key={value.id}
               type="button"
+              disabled={!ready}
               aria-pressed={topic === value.id}
               onClick={() => setTopic(value.id)}
               className={`min-h-9 rounded-full px-3 text-xs transition-colors ${topic === value.id ? 'bg-accent font-medium text-primary' : 'text-muted-foreground hover:bg-accent/60'}`}
@@ -121,25 +116,28 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
         <div className="grid gap-x-7 gap-y-9 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
           {filtered.map((item) => (
             <article key={item.id} className="media-card case-card flex flex-col overflow-hidden">
+              {item.cover && (
+                <Link
+                  href={`/cases/${item.id}`}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="case-scene-link"
+                >
+                  <img
+                    src={`/images/cases/${item.cover}.webp`}
+                    alt=""
+                    width="960"
+                    height="640"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </Link>
+              )}
               <div className="flex flex-1 flex-col">
                 <p className="mb-2 text-xs text-muted-foreground">
                   {item.illustrative ? '演示案例 · 虚构材料练习' : '典型场景 · 编辑整理'}
                 </p>
                 <div className="case-card-head">
-                  <span className="case-card-icon">
-                    {(() => {
-                      const Icon = /报修|后勤/.test(item.title)
-                        ? Wrench
-                        : /会议|协调|行动清单/.test(item.title)
-                          ? Users
-                          : /数据|表格|统计|分析/.test(item.title)
-                            ? BarChart3
-                            : /教师|课程|作业|课堂/.test(item.title)
-                              ? GraduationCap
-                              : FileText
-                      return <Icon size={28} />
-                    })()}
-                  </span>
                   <h2>
                     <Link className="hover:text-primary" href={`/cases/${item.id}`}>
                       {item.title}
@@ -157,7 +155,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
                       href={`/cases/${item.id}`}
                       className="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-primary"
                     >
-                      看流程与提示词 <ArrowUpRight className="h-3 w-3" />
+                      看案例，动手练 <ArrowUpRight className="h-3 w-3" />
                     </Link>
                     <SaveButton
                       href={`/cases/${item.id}`}

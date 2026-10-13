@@ -42,30 +42,29 @@ describe('案例内容质量', () => {
     const tooShort = cases.filter((c) => c.title.length < 14)
     expect(
       tooShort.map((c) => `${c.id}(${c.title.length}字)`),
-      '标题太短，说不清这个案例做了什么'
+      '标题太短，说不清这个案例做了什么',
     ).toEqual([])
 
     const formulaic = cases.filter((c) => FORMULAIC.test(c.title.trim()))
     expect(
       formulaic.map((c) => `${c.id}: ${c.title}`),
-      '这些是公式化空标题，读者看不出具体做了什么'
+      '这些是公式化空标题，读者看不出具体做了什么',
     ).toEqual([])
   })
 
-  it('行业覆盖够广（同一行业不超过 2 个，避免变成单一行业的案例集）', () => {
+  it('覆盖广泛行业，同一行业允许多种日常任务', () => {
     const byInd = new Map<string, number>()
     for (const c of cases) byInd.set(c.industry, (byInd.get(c.industry) ?? 0) + 1)
-    const over = [...byInd.entries()].filter(([, n]) => n > 2)
-    expect(over, '这些行业的案例过多，其他行业没覆盖到').toEqual([])
     expect(byInd.size, '行业数量太少').toBeGreaterThanOrEqual(12)
+    expect([...byInd.values()].filter((n) => n > 1).length).toBeGreaterThanOrEqual(8)
   })
 
   /**
- * 阈值说明：下面几处下限定得比第一版宽松，因为实测发现第一版把
- * 「写得刚好够」的案例也判为不合格 —— 那是判据不合理，不是内容有问题。
- * 放宽阈值比为了过测试去注水案例要好。
- */
-it('scenario 写清了背景与输入（不少于 60 字）', () => {
+   * 阈值说明：下面几处下限定得比第一版宽松，因为实测发现第一版把
+   * 「写得刚好够」的案例也判为不合格 —— 那是判据不合理，不是内容有问题。
+   * 放宽阈值比为了过测试去注水案例要好。
+   */
+  it('scenario 写清了背景与输入（不少于 60 字）', () => {
     const thin = cases.filter((c) => c.scenario.length < 60)
     expect(thin.map((c) => `${c.id}(${c.scenario.length}字)`)).toEqual([])
   })
@@ -109,7 +108,7 @@ it('scenario 写清了背景与输入（不少于 60 字）', () => {
     })
     expect(
       soft.map((c) => `${c.id}(${c.result.length}字)`),
-      '这些案例只写了成功过程，读者学不到可迁移的东西'
+      '这些案例只写了成功过程，读者学不到可迁移的东西',
     ).toEqual([])
   })
 
@@ -131,13 +130,14 @@ it('scenario 写清了背景与输入（不少于 60 字）', () => {
     const single = cases.filter((c) => (c.timeSpent.match(TIME_QTY)?.length ?? 0) < 2)
     expect(
       single.map((c) => `${c.id}: ${c.timeSpent}`),
-      '这些耗时只给了一个数字 —— 核对花的时间被算进「省下」里了，读者看到的收益是虚的'
+      '这些耗时只给了一个数字 —— 核对花的时间被算进「省下」里了，读者看到的收益是虚的',
     ).toEqual([])
   })
 
   it('耗时对比具体（有分钟/小时数，不写「大幅提升」）', () => {
     const vague = cases.filter(
-      (c) => !/\d+\s*(分钟|小时|min|h)/.test(c.timeSpent) || /大幅|显著|极大|效率提升/.test(c.timeSpent)
+      (c) =>
+        !/\d+\s*(分钟|小时|min|h)/.test(c.timeSpent) || /大幅|显著|极大|效率提升/.test(c.timeSpent),
     )
     expect(vague.map((c) => `${c.id}: ${c.timeSpent.slice(0, 30)}`)).toEqual([])
   })
@@ -179,7 +179,7 @@ it('scenario 写清了背景与输入（不少于 60 字）', () => {
     const noGuard = cases.filter((c) => !/不要|不许|禁止|必须|只允许|一律/.test(c.prompt))
     expect(
       noGuard.map((c) => c.id),
-      '提示词没有约束条款，这类案例对读者没有可迁移价值'
+      '提示词没有约束条款，这类案例对读者没有可迁移价值',
     ).toEqual([])
   })
 
@@ -217,13 +217,15 @@ describe('案例页提示词可复制', () => {
 
   it('案例详情页用了 CopyableText，而不是裸 <pre>', () => {
     expect(page, '案例详情页没有引入 CopyableText').toContain("from '@/components/copyable-text'")
-    expect(page, 'CopyableText 没有接上提示词内容').toMatch(/<CopyableText[\s\S]{0,200}text=\{c\.prompt\}/)
+    expect(page, 'CopyableText 没有接上提示词内容').toMatch(
+      /<CopyableText[\s\S]{0,200}text=\{c\.prompt\}/,
+    )
   })
 
   it('提示词块不再用裸 <pre> 直接渲染', () => {
     // <CopyableText> 组件内部自己渲染 <pre>，这里要排除的是页面自己手写的
     expect(page, '页面里仍有裸 <pre>{c.prompt}</pre>，说明复制按钮被绕过了').not.toMatch(
-      /<pre[^>]*>\s*\{c\.prompt\}\s*<\/pre>/
+      /<pre[^>]*>\s*\{c\.prompt\}\s*<\/pre>/,
     )
   })
 })
