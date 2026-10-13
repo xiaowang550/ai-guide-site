@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { ShieldQuestion } from 'lucide-react'
 import { scenarios, cases } from '@/data'
 import { toCaseListItems } from '@/lib/case-list-item'
-import { ScenarioWizard, ScenarioWeightTable } from '@/components/scenario-wizard'
+import { ScenarioWizard } from '@/components/scenario-wizard'
+import { ScenarioWeightGuide } from '@/components/scenario-weight-guide'
 import { PageHeader, Section } from '@/components/page-header'
 
 export const metadata: Metadata = {
@@ -37,10 +38,16 @@ export default function FindPage() {
             <div>
               <p className="band-kicker mb-2">先说清楚</p>
               <p className="measure-wide leading-6 text-foreground/90">
-                <strong className="font-semibold">这不是一个 AI。</strong>
-                它是一个纯规则引擎：把场景权重归一化，与工具的 14 维能力分加权相乘，再按你勾选的条件加减分。
-                同样的输入永远得到同样的结果，所以你随时可以质疑它 —— 也应该质疑它。
-                权重表在页面底部公开。
+                <strong className="font-semibold">先选任务，再帮你选工具。</strong>
+                我们从工具库中找出符合你条件的工具，按任务所需的能力比较，再给出推荐理由。
+                写文章更看重写作，读长文档更看重理解；免费、直连、隐私等条件也会影响结果。
+                <a
+                  href="#recommendation-basis"
+                  className="ml-1 text-primary underline underline-offset-4"
+                >
+                  查看各任务的推荐依据
+                </a>
+                。
               </p>
             </div>
           </div>
@@ -56,10 +63,10 @@ export default function FindPage() {
 
       <div className="container">
         <Section
-          title="场景权重表（公开可查）"
-          description="每个场景对 14 个维度的权重，引擎会先归一化再计算。如果你认为某个权重不合理，可以提勘误。"
+          title="推荐工具时，我们重点看什么？"
+          description="按你要完成的任务，公开说明推荐侧重点。换一个任务，适合的工具也可能不同。"
         >
-          <ScenarioWeightTable rules={scenarios} />
+          <ScenarioWeightGuide rules={scenarios} />
         </Section>
       </div>
     </>

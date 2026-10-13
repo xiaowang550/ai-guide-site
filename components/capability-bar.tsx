@@ -2,6 +2,7 @@ import { toTenPointScore } from '@/lib/display-score'
 import type { CapabilityKey, CapabilityScore, Score } from '@/data/types'
 import { capabilityLabel, scoreBarWidth, scoreColorVar } from '@/lib/score'
 import { cn } from '@/lib/utils'
+import { capabilityRating } from '@/lib/capability-rating'
 
 /** 带分数与「打分依据」tooltip 的横向评分条 */
 export function CapabilityBar({
@@ -23,13 +24,11 @@ export function CapabilityBar({
   return (
     <div className={cn('py-1.5', className)}>
       <div className="flex items-baseline justify-between gap-3">
-        <span className={cn('font-medium', compact ? 'text-xs' : 'text-sm')}>{label}</span>
-        <span className="flex items-baseline gap-1 text-xs text-muted-foreground">
-          {showBasis && capability.basis ? (
-            <span className="hidden max-w-[60%] truncate text-xs text-muted-foreground/80 sm:inline">
-              {capability.basis}
-            </span>
-          ) : null}
+        <span className={cn('whitespace-nowrap font-medium', compact ? 'text-xs' : 'text-sm')}>
+          {label}
+        </span>
+        <span className="flex shrink-0 items-baseline gap-1 whitespace-nowrap text-xs text-muted-foreground">
+          <span className="mr-1">{capabilityRating(score)?.label}</span>
           <span className="font-semibold tabular-nums" style={{ color: scoreColorVar(score) }}>
             {toTenPointScore(score)}
           </span>
@@ -42,7 +41,7 @@ export function CapabilityBar({
         aria-valuenow={toTenPointScore(score)}
         aria-valuemin={0}
         aria-valuemax={10}
-        aria-label={`${label} 能力评分 ${toTenPointScore(score)} 分，满分 10 分`}
+        aria-label={`${label}，${capabilityRating(score)?.label}，编辑参考 ${toTenPointScore(score)} 分，满分 10 分`}
       >
         <div
           className="h-full rounded-full transition-[width] duration-500"
@@ -50,7 +49,7 @@ export function CapabilityBar({
         />
       </div>
       {showBasis && capability.basis ? (
-        <p className="mt-1 text-xs leading-4 text-muted-foreground sm:hidden">{capability.basis}</p>
+        <p className="mt-1 text-xs leading-6 text-muted-foreground">{capability.basis}</p>
       ) : null}
     </div>
   )

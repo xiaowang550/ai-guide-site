@@ -207,8 +207,8 @@ export default function AboutPage() {
               </p>
               <ol className="mt-3 space-y-2.5 text-sm leading-7 text-foreground/85">
                 <li>
-                  1. 取场景的权重表（例如「读长文档」：长文理解 0.35、联网研究 0.25、逻辑推理
-                  0.20……）， 归一化到总和为 1。
+                  1. 按任务确定要重点比较的能力。例如“读长文档”重点看长文理解、图像理解和逻辑推理。
+                  这些能力占比适用于该任务下所有候选工具，计算前换算到合计 100%。
                 </li>
                 <li>
                   2. 每个工具在这个场景下的基础分 = Σ(该维度得分 / 10 × 权重) × 10，结果落在 0–10
@@ -225,9 +225,9 @@ export default function AboutPage() {
                 </li>
               </ol>
               <p className="mt-3 text-sm text-muted-foreground">
-                权重表在{' '}
-                <Link href="/find" className="text-primary underline underline-offset-4">
-                  决策器页面底部
+                各任务的能力占比在{' '}
+                <Link href="/find#recommendation-basis" className="text-primary underline underline-offset-4">
+                  决策器的推荐依据说明
                 </Link>{' '}
                 公开。如果你觉得某个场景的权重不合理，欢迎提勘误。 当前共 {scenarios.length}{' '}
                 个场景规则。

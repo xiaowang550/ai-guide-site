@@ -330,7 +330,7 @@ function answerRecommend(
         { href: '/compare', label: '手动对比工具' },
       ],
       followUps,
-      basis: `场景「${rule.label}」的权重表在 /find 页面底部公开`,
+      basis: `任务“${rule.label}”的能力占比适用于所有候选工具，见 /find 的推荐依据。`,
     }
   }
 

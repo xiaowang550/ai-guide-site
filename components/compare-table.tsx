@@ -18,6 +18,7 @@ import {
 } from '@/lib/site'
 import { ToolLogo } from '@/components/tool-logo'
 import { ScoreBadge } from '@/components/score-badge'
+import { CapabilityRating } from '@/components/capability-rating'
 import { UpdatedBadge } from '@/components/updated-badge'
 
 /** 横向对比表：首列固定，可横向滚动 */
@@ -172,20 +173,24 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
 
       {/* 14 维逐项对比 */}
       <section>
-        <h2 className="eyebrow mb-3">14 个能力维度逐项对比</h2>
+        <h2 className="text-lg font-semibold">14 项能力：各工具擅长什么？</h2>
+        <p className="mb-4 mt-2 text-sm leading-6 text-muted-foreground">
+          每行比较同一项能力。直接看能力等级和参考分；“本项较高”仅比较当前所选工具。
+          这些是本站编辑能力参考，按 0–10 分档展示；最新模型的公开实测请看上方“公开实测”。
+        </p>
         <div
           className="overflow-x-auto"
           tabIndex={0}
           role="region"
           aria-label="14 个能力维度对比表，可横向滚动查看全部列"
         >
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full border-collapse text-sm" data-capability-comparison>
             <caption className="sr-only">14 个能力维度逐项对比</caption>
             <thead>
               <tr>
                 <th
                   scope="col"
-                  className="sticky left-0 z-10 bg-card px-4 py-2.5 text-left text-xs font-medium text-muted-foreground"
+                  className="sticky left-0 z-10 min-w-[140px] bg-card px-4 py-3 text-left text-sm font-medium"
                 >
                   能力维度
                 </th>
@@ -193,7 +198,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                   <th
                     key={t.id}
                     scope="col"
-                    className="px-4 py-2.5 text-center text-xs font-medium"
+                    className="min-w-[190px] whitespace-nowrap px-4 py-3 text-center text-sm font-semibold"
                   >
                     {t.name}
                   </th>
@@ -204,36 +209,46 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
               {CAPABILITY_META.map((meta) => {
                 const values = tools.map((t) => t.capabilities[meta.key]?.score ?? 0)
                 const top = Math.max(...values)
+                const leaders = values.filter((value) => value === top).length
                 return (
                   <tr key={meta.key} className="border-t border-hairline">
                     <th
                       scope="row"
-                      className="sticky left-0 z-10 w-28 bg-card px-3 py-2.5 text-left font-normal"
+                      className="sticky left-0 z-10 min-w-[140px] max-w-xs bg-card px-3 py-3 text-left font-normal"
                       title={capabilityDescription(meta.key)}
                     >
-                      <span className="font-medium">{meta.label}</span>
-                      <span className="block text-xs text-muted-foreground">
-                        {capabilityDescription(meta.key)}
+                      <span className="whitespace-nowrap font-medium">{meta.label}</span>
+                      <span className="mt-1 flex flex-wrap gap-x-1 text-xs text-muted-foreground">
+                        {capabilityDescription(meta.key)
+                          .split(/[、/]/)
+                          .map((part) => (
+                            <span key={part} className="whitespace-nowrap">
+                              {part.trim()}
+                            </span>
+                          ))}
                       </span>
                     </th>
                     {tools.map((t) => {
                       const score = t.capabilities[meta.key]?.score ?? 0
                       const basis = t.capabilities[meta.key]?.basis
                       return (
-                        <td key={t.id} className="px-3 py-2.5 text-center">
-                          <span
-                            title={basis}
-                            className={`inline-flex h-7 min-w-[3rem] items-center justify-center rounded-md text-xs font-semibold text-white ${
-                              score === top && tools.length > 1
-                                ? 'ring-2 ring-highlight ring-offset-1'
-                                : ''
-                            }`}
-                            style={{
-                              backgroundColor: `hsl(var(--score-${toTenPointScore(score)}))`,
-                            }}
-                          >
-                            {toTenPointScore(score)}
-                          </span>
+                        <td key={t.id} className="px-3 py-3 align-top">
+                          <CapabilityRating
+                            score={t.capabilities[meta.key]?.score}
+                            emphasis={
+                              top > 0 && tools.length > 1 && score === top && leaders < tools.length
+                                ? leaders > 1
+                                  ? '并列本项较高'
+                                  : '本项较高'
+                                : undefined
+                            }
+                          />
+                          <details className="mx-auto mt-1 max-w-xs text-left text-xs leading-6 text-muted-foreground">
+                            <summary className="cursor-pointer py-1">查看能力依据</summary>
+                            <p className="pb-2">
+                              {basis?.trim() || '暂无文字依据，请先用自己的任务试用。'}
+                            </p>
+                          </details>
                         </td>
                       )
                     })}
@@ -250,7 +265,7 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
         <details className="border-y border-hairline">
           <summary className="flex cursor-pointer items-center gap-2 py-3 text-sm font-medium">
             <FileSearch className="h-4 w-4 text-primary" aria-hidden />
-            这几个分数的依据分别是什么
+            汇总查看各工具的能力依据
           </summary>
           <div className="space-y-6 border-t border-hairline py-5">
             {tools.map((t) => {
@@ -272,9 +287,6 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                     {CAPABILITY_META.map((meta) => {
                       const cap = t.capabilities[meta.key]
                       const score = cap?.score ?? 0
-                      const top = Math.max(
-                        ...tools.map((x) => x.capabilities[meta.key]?.score ?? 0),
-                      )
                       return (
                         <div
                           key={meta.key}
@@ -282,9 +294,6 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
                         >
                           <dt className="text-sm text-muted-foreground">
                             {capabilityLabel(meta.key)}
-                            {score === top && tools.length > 1 ? (
-                              <span className="ml-1 text-xs text-highlight">最高</span>
-                            ) : null}
                           </dt>
                           <dd className="text-sm tabular-nums">{toTenPointScore(score)}/10</dd>
                           <dd className="text-xs leading-5 text-muted-foreground">
@@ -302,9 +311,8 @@ export function CompareTable({ tools }: { tools: Tool[] }) {
       </section>
 
       <p className="text-xs leading-6 text-muted-foreground">
-        表格中的高亮圈表示该行分数最高的工具（仅作提示，不代表总分更高）。
-        本站不做自建评测，分数来自官方公开资料与社区公开反馈的交叉整理，
-        <strong className="text-foreground">不构成购买建议</strong>；价格与额度以官网为准。
+        同档表示当前资料中的能力等级相同，不代表实际体验完全一致。参考分用于按任务比较，不能作为所有模型的统一实测排名；
+        请结合能力依据、公开实测、费用和使用条件选择。
       </p>
     </div>
   )

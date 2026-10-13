@@ -680,8 +680,15 @@ function StepThree({
           )}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          适配分 = 场景权重归一化后 × 工具的 14 维能力分，再按你勾的条件加减分。
-          同样的输入永远得到同样的结果，欢迎自己验证和反驳。
+          适配分表示工具与当前任务的匹配程度：先比较任务重点能力，再结合你选择的使用条件。
+          它不是模型的综合实测分。
+          <a
+            href="#recommendation-basis"
+            className="ml-1 text-primary underline underline-offset-4"
+          >
+            查看任务的推荐依据
+          </a>
+          。
         </p>
       </div>
 
@@ -1032,52 +1039,6 @@ function TradeoffBlock({
       ) : null}
 
       {winnerName ? <span className="sr-only">{winnerName}</span> : null}
-    </div>
-  )
-}
-
-/** 供页面说明用的权重表（静态渲染，避免把权重藏成黑盒） */
-export function ScenarioWeightTable({ rules }: { rules: ScenarioRule[] }) {
-  const keys = Array.from(new Set(rules.flatMap((r) => Object.keys(r.weights)))) as CapabilityKey[]
-  return (
-    <div className="overflow-x-auto rounded-xl border">
-      <table className="w-full min-w-[56rem] border-collapse text-sm">
-        <caption className="sr-only">各场景的能力维度权重表</caption>
-        <thead>
-          <tr className="border-b bg-muted/40">
-            <th scope="col" className="px-3 py-2 text-left font-medium">
-              场景
-            </th>
-            {keys.map((k) => (
-              <th key={k} scope="col" className="px-3 py-2 text-right font-medium">
-                {capabilityLabel(k)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rules.map((r) => (
-            <tr key={r.id} className="border-b last:border-0">
-              <th scope="row" className="px-3 py-2 text-left font-medium">
-                {r.label}
-                {variantsOf(r).length > 0 ? (
-                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">
-                    +{variantsOf(r).length} 细分
-                  </span>
-                ) : null}
-              </th>
-              {keys.map((k) => {
-                const w = r.weights[k]
-                return (
-                  <td key={k} className="px-3 py-2 text-right tabular-nums text-muted-foreground">
-                    {typeof w === 'number' ? w.toFixed(2) : '—'}
-                  </td>
-                )
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   )
 }

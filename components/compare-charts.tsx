@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { CapabilityKey } from '@/data/types'
 import type { CompareTool } from '@/lib/compare-tool'
 import { CAPABILITY_META, capabilityLabel, capabilityShort } from '@/lib/score'
+import { CAPABILITY_LEVELS } from '@/lib/capability-rating'
+import { CapabilityRating } from '@/components/capability-rating'
 
 type View = 'radar' | 'bars' | 'line' | 'table'
 const VIEWS: { id: View; name: string; hint: string }[] = [
@@ -16,7 +18,7 @@ const VIEWS: { id: View; name: string; hint: string }[] = [
     name: '折线图',
     hint: '看不同维度的高低；横轴是能力分类，不是时间。重合时可隐藏一条线。',
   },
-  { id: 'table', name: '数值表', hint: '直接查分数；点击能力名称，看它能帮你做什么。' },
+  { id: 'table', name: '能力表', hint: '能力等级和参考分并排显示；点击能力名称，查看含义与依据。' },
 ]
 const GROUPS: { name: string; keys: CapabilityKey[] }[] = [
   { name: '全部 14 维', keys: CAPABILITY_META.map((m) => m.key) },
@@ -26,7 +28,6 @@ const GROUPS: { name: string; keys: CapabilityKey[] }[] = [
 ]
 const COLORS = ['#387461', '#5677ad', '#a56d39', '#916ba3']
 const DASHES = ['', '7 4', '2 4', '10 3 2 3']
-const SCORE_MEANINGS = ['不提供', '基本不具备', '偏弱', '够用', '较强', '第一梯队']
 const keyLabel = (key: CapabilityKey) => (key === 'agent' ? '自动化' : capabilityShort(key))
 
 /** Present the existing editorial scores, without changing weights or inventing a benchmark. */
@@ -411,14 +412,18 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
               aria-label="能力数值表，可左右滑动"
             >
               <table data-chart="table" className="w-full text-sm">
-                <caption className="sr-only">所选任务的能力分数，满分 10 分</caption>
+                <caption className="sr-only">所选任务的能力等级与编辑参考分，满分 10 分</caption>
                 <thead>
                   <tr>
                     <th scope="col" className="sticky left-0 bg-card p-3 text-left">
                       能力
                     </th>
                     {visible.map((t) => (
-                      <th scope="col" key={t.id} className="min-w-[120px] p-3 text-center">
+                      <th
+                        scope="col"
+                        key={t.id}
+                        className="min-w-[190px] whitespace-nowrap p-3 text-center"
+                      >
                         {t.name}
                       </th>
                     ))}
@@ -433,14 +438,14 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                       >
                         <button
                           onClick={() => setDimension(key)}
-                          className="min-h-11 text-primary hover:underline"
+                          className="min-h-11 whitespace-nowrap text-primary hover:underline"
                         >
                           {capabilityLabel(key)}
                         </button>
                       </th>
                       {visible.map((t) => (
                         <td key={t.id} className="p-3 text-center tabular-nums">
-                          {toTenPointScore(t.capabilities[key].score)}/10
+                          <CapabilityRating score={t.capabilities[key]?.score} />
                         </td>
                       ))}
                     </tr>
@@ -498,7 +503,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
                     </span>
                     <span>
                       {toTenPointScore(tool.capabilities[dimension].score)}/10 ·{' '}
-                      {SCORE_MEANINGS[tool.capabilities[dimension].score]}
+                      {CAPABILITY_LEVELS[tool.capabilities[dimension].score]}
                     </span>
                   </p>
                   <details className="mt-1 text-xs text-muted-foreground">
@@ -515,7 +520,7 @@ export function CompareCharts({ tools }: { tools: CompareTool[] }) {
         </aside>
       </div>
       <div className="mt-6 border-t pt-4 text-xs leading-7 text-muted-foreground">
-        <p>0 不提供 · 2 基本不具备 · 4 偏弱 · 6 够用 · 8 较强 · 10 第一梯队</p>
+        <p>0 不支持 · 2 不建议 · 4 能力有限 · 6 基本可用 · 8 较强 · 10 强项</p>
         <p>
           按具体任务看单项分数；图形面积不代表更适合你。评分为公开资料整理，
           <a href="/about" className="text-primary underline underline-offset-4">
