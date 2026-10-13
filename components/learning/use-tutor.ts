@@ -10,6 +10,7 @@ export function useTutor() {
     [elapsed, setElapsed] = useState(0),
     [error, setError] = useState('')
   const controller = useRef<AbortController | null>(null),
+    quickChoice = useRef(''),
     pathname = usePathname()
   useEffect(() => {
     let alive = true
@@ -22,16 +23,18 @@ export function useTutor() {
         if (!alive) return
         setCatalog(value)
         const usable = value.models.filter((m) => m.available && value.connected[m.provider])
-        setModel(
+        const quick =
           (
-            usable.find((m) => m.id === 'liquid/lfm-2.5-2.6b:free') ??
+            usable.find((m) => m.id === 'apodex/apodex-1.1-mini:free') ??
             usable.find((m) => m.id === 'inclusionai/ling-3.1-flash') ??
             usable.find((m) => m.id.includes('inkling-small')) ??
+            usable.find((m) => m.id === 'liquid/lfm-2.5-2.6b:free') ??
             usable.find((m) => m.id !== 'openrouter/free' && !m.reasoning) ??
             usable.find((m) => m.id !== 'openrouter/free') ??
             usable[0]
-          )?.id ?? '',
-        )
+          )?.id ?? ''
+        quickChoice.current = quick
+        setModel(quick)
       })
       .catch((e) => {
         if (alive)
@@ -99,6 +102,9 @@ export function useTutor() {
     catalog,
     model,
     setModel,
+    resetQuickModel: () => {
+      if (quickChoice.current) setModel(quickChoice.current)
+    },
     ready,
     current,
     run,

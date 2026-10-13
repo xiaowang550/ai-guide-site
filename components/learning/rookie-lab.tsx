@@ -183,6 +183,7 @@ export function RookieLab() {
   }, [stage, availableCatalog, modelVision, setTutorModel])
   function move(next: number) {
     tutor.stop()
+    if (stage === 3 && next !== 3) tutor.resetQuickModel()
     recognition.current?.abort()
     setListening(false)
     setStage(next)
@@ -198,6 +199,7 @@ export function RookieLab() {
   }
   function complete() {
     if (!canComplete) return
+    if (stage === 3) tutor.resetQuickModel()
     const completed = [...new Set([...done, stage])]
     setDone(completed)
     const next = Math.min(stage + 1, rookieLessons.length - 1)
