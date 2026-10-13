@@ -185,6 +185,46 @@ describe('助手私有配置与公开推理', () => {
       (await request(env, 'POST', '/api/assistant/chat', { ...message, mode: 'paid' })).status,
     ).toBe(400)
   })
+  it('上游连接排队时先返回等待流，真实回答到达后才显示文字', async () => {
+    const { env, fetcher } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    let open!: (response: Response) => void
+    const queued = new Promise<Response>((resolve) => {
+      open = resolve
+    })
+    fetcher.mockImplementation(async (url) =>
+      String(url).endsWith('/chat/completions') ? queued : json({ data: [MODEL] }),
+    )
+    const { handleApi } = await import('@/lib/admin/api')
+    const response = await handleApi(
+      new Request('https://admin.example.test/api/assistant/chat', {
+        method: 'POST',
+        headers: { Origin: 'https://admin.example.test' },
+        body: JSON.stringify({ ...message, mode: 'practice' }),
+      }),
+      env.env,
+    )
+    expect(response!.status).toBe(200)
+    const reader = response!.body!.getReader(),
+      decoder = new TextDecoder()
+    const first = decoder.decode((await reader.read()).value)
+    expect(first).toContain('"type":"meta"')
+    expect(first).not.toContain('"type":"delta"')
+    open(
+      new Response('data: {"choices":[{"delta":{"content":"真实回答"}}]}\n\ndata: [DONE]\n\n', {
+        headers: { 'content-type': 'text/event-stream' },
+      }),
+    )
+    let rest = ''
+    while (true) {
+      const chunk = await reader.read()
+      if (chunk.done) break
+      rest += decoder.decode(chunk.value)
+    }
+    expect(rest).toContain('真实回答')
+    expect(rest).toContain('"type":"done"')
+    expect(await env.db.all('SELECT * FROM assistant_slots')).toEqual([])
+  })
   it('中途上游错误不会假装生成成功或泄露内部错误', async () => {
     const { env } = await fixture(
       'data: {"choices":[{"delta":{"content":"部分"}}]}\n\ndata: {"error":{"message":"SECRET INTERNAL ERROR"}}\n\n',

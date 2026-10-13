@@ -769,7 +769,7 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
     )
   }
   const release = () => db.run('DELETE FROM assistant_slots WHERE id=?', [slot])
-  let response: Response
+  let response: Response | undefined
   const watch = generationWatchdog(request.signal),
     controller = watch.controller
   const started = Date.now()
@@ -812,7 +812,7 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       model.provider === 'openrouter'
         ? OPENROUTER_BASE + '/chat/completions'
         : ZEN_BASE + '/chat/completions'
-    response = await fetcher(url, {
+    const upstream = fetcher(url, {
       method: 'POST',
       redirect: 'manual',
       signal: controller.signal,
@@ -848,7 +848,20 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
           : { max_tokens: 4096 }),
       }),
     })
-    if (!response.ok || !response.body) {
+    // Return a live stream while the provider is still opening its connection.
+    // Fast upstream failures retain their HTTP status; queued ones become safe SSE errors.
+    let openingTimer: ReturnType<typeof setTimeout> | undefined
+    try {
+      response = await Promise.race([
+        upstream,
+        new Promise<undefined>((resolve) => {
+          openingTimer = setTimeout(() => resolve(undefined), 350)
+        }),
+      ])
+    } finally {
+      clearTimeout(openingTimer)
+    }
+    if (response && (!response.ok || !response.body)) {
       const failure = response.ok ? new UpstreamError(502) : await upstreamFailure(response)
       await record({ ok: false, code: failure.code, message: failure.message })
       await release()
@@ -861,17 +874,21 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       start: async (out) => {
         const emit = (value: unknown) =>
           out.enqueue(encoder.encode('data: ' + JSON.stringify(value) + '\n\n'))
-        heartbeat = setInterval(() => {
-          try {
-            out.enqueue(encoder.encode(': waiting\n\n'))
-          } catch {
-            clearInterval(heartbeat)
-          }
-        }, 15000)
+        heartbeat = setInterval(
+          () => {
+            try {
+              out.enqueue(encoder.encode(': waiting\n\n'))
+            } catch {
+              clearInterval(heartbeat)
+            }
+          },
+          practiceMode ? 2000 : 15000,
+        )
         try {
           emit({ type: 'meta', model: model.id, name: model.name, sources })
+          const opened = response ?? (await upstream)
           const result = await consumeGeneration(
-            response,
+            opened,
             (text) => emit({ type: 'delta', text }),
             watch.activity,
             (actualModel) => emit({ type: 'model', name: actualModel }),
