@@ -294,10 +294,14 @@ export async function archiveSiteModule(db: Db, id: string, actor: string) {
 export async function saveSiteFeatures(db: Db, input: unknown, actor: string) {
   check(input)
   if (
-    Object.keys(input).some((key) => !['assistant', 'onboarding'].includes(key)) ||
-    Object.values(input).some((value) => typeof value !== 'boolean')
+    Object.keys(input).some((key) => !['assistant', 'onboarding', 'design'].includes(key)) ||
+    Object.entries(input).some(([key, value]) =>
+      key === 'design'
+        ? !['classic', 'studio', 'editorial'].includes(value as string)
+        : typeof value !== 'boolean',
+    )
   )
-    throw new ModuleInputError('仅支持助手与引导的布尔开关。')
+    throw new ModuleInputError('请选择有效的界面方案或功能开关。')
   await ensureModules(db)
   const now = new Date().toISOString()
   await db.run('UPDATE site_features SET data=json_patch(data,?),updated_at=? WHERE id=1', [

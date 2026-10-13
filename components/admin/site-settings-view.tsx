@@ -4,6 +4,7 @@ import { apiGet, apiSend } from './api-client'
 import type { PublicSiteConfig } from '@/lib/site-modules'
 import { SettingsPanel } from '@/components/settings/settings-panel'
 import { AssistantSettingsView } from './assistant-settings-view'
+import { DesignSettings } from './design-settings'
 export function SiteSettingsView() {
   const [config, setConfig] = useState<PublicSiteConfig | null>(null),
     [message, setMessage] = useState(''),
@@ -38,6 +39,7 @@ export function SiteSettingsView() {
           公开页面不再提供设置入口；浏览、搜索和练习都无需注册登录。
         </p>
       </div>
+      <DesignSettings config={config} onChange={setConfig} />
       <section className="admin-card p-6">
         <h2 className="font-semibold">全站功能</h2>
         <div className="mt-5 space-y-5">

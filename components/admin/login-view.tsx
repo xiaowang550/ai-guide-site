@@ -57,12 +57,18 @@ export function LoginView({ onSuccess }: { onSuccess: () => void }) {
         <div className="login-intro mt-10">
           <p className="admin-eyebrow">YOUR PRIVATE WORKSPACE</p>
           <h2 className="mt-5 text-4xl font-semibold leading-relaxed tracking-tight">
-            每一次整理，
-            <br />
-            都让网站更好用。
+            <span className="design-original">
+              每一次整理，
+              <br />
+              都让网站更好用。
+            </span>
+            <span className="design-brief">管理网站内容</span>
           </h2>
           <p className="mt-6 max-w-sm text-sm leading-8 text-muted-foreground">
-            看看网站的浏览趋势，更新值得分享的方法，把读者的反馈变成下一次改进。
+            <span className="design-original">
+              看看网站的浏览趋势，更新值得分享的方法，把读者的反馈变成下一次改进。
+            </span>
+            <span className="design-brief">查看统计，编辑内容，处理反馈。</span>
           </p>
           {/* eslint-disable-next-line @next/next/no-img-element -- shared optimized public mascot */}
           <img

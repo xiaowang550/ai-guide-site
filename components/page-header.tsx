@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ReferenceArt } from './reference-art'
+import { DesignCopy } from './design-copy'
 
 export interface Crumb {
   label: string
@@ -70,10 +71,12 @@ export function PageHeader({
           }
         >
           <div className="min-w-0 flex-1">
-            <h1 className="title-serif text-[1.875rem] sm:text-[2.5rem]">{title}</h1>
+            <h1 className="title-serif text-[1.875rem] sm:text-[2.5rem]">
+              <DesignCopy>{title}</DesignCopy>
+            </h1>
             {description ? (
               <p className="measure-wide mt-4 text-base leading-7 text-muted-foreground">
-                {description}
+                <DesignCopy>{description}</DesignCopy>
               </p>
             ) : null}
             {meta ? (
@@ -121,12 +124,12 @@ export function Section({
                   headingLevel === 'h2' ? 'mt-2 text-2xl' : 'mt-1 text-lg',
                 )}
               >
-                {title}
+                <DesignCopy>{title}</DesignCopy>
               </Heading>
             ) : null}
             {description ? (
               <p className="measure-wide mt-2 text-sm leading-6 text-muted-foreground">
-                {description}
+                <DesignCopy>{description}</DesignCopy>
               </p>
             ) : null}
           </div>

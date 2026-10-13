@@ -65,8 +65,11 @@ export function SchoolLogin() {
           </Link>
           <p className="mt-10 text-sm text-primary">学校教师工作空间</p>
           <h2 className="mt-3 text-3xl font-semibold leading-tight">
-            从一节课开始，
-            <br />把 AI 用进教学。
+            <span className="design-original">
+              从一节课开始，
+              <br />把 AI 用进教学。
+            </span>
+            <span className="design-brief">教师工作台</span>
           </h2>
           <p className="mt-5 text-base text-muted-foreground">
             登录后，选课程、借鉴教案，准备能带进课堂的活动。

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, BookOpen, ClipboardList, ShieldCheck } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { SchoolHomeModules } from '@/components/edu/school-home-modules'
+import { DesignCopy } from '@/components/design-copy'
 
 export const metadata: Metadata = {
   title: '学校服务：从一节课开始',
@@ -42,7 +43,7 @@ export default function EduPage() {
         description="初中先认识，高中再实践；教师从正在发生的教学任务入手。"
         breadcrumbs={[{ label: '学校首页', href: '/edu' }, { label: '学校服务' }]}
       />
-      <div className="container py-8">
+      <div className="school-home-content container py-8">
         <figure className="school-illustration">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -59,7 +60,9 @@ export default function EduPage() {
               <span className="flex items-center gap-2 text-xs text-primary">
                 <entry.icon className="h-5 w-5" aria-hidden />第 {index + 1} 步
               </span>
-              <h2 className="mt-4 text-xl">{entry.title}</h2>
+              <h2 className="mt-4 text-xl">
+                <DesignCopy>{entry.title}</DesignCopy>
+              </h2>
               <p className="mb-6 mt-3 flex-1 text-sm leading-6 text-muted-foreground">
                 {entry.note}
               </p>

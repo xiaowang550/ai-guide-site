@@ -39,7 +39,7 @@ export interface SiteModule {
 export interface PublicSiteConfig {
   revision: string
   modules: SiteModule[]
-  features: { assistant: boolean; onboarding: boolean }
+  features: { assistant: boolean; onboarding: boolean; design?: 'classic' | 'studio' | 'editorial' }
   layout: SiteLayout
 }
 export const builtinModules: SiteModule[] = [

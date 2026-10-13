@@ -1,0 +1,956 @@
+/* Two complete visual editions. Classic receives no overrides. */
+html:is([data-design='studio'], [data-design='editorial']) .admin-section-intro {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(.admin-login .admin-eyebrow, .intro-purpose-line) {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(.school-login-mascot, .admin-login-mascot) {
+  visibility: hidden;
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-login-story {
+  background: url('/brand/studio-sprout-v1.webp') center bottom 48px/160px no-repeat
+    hsl(var(--accent) / 0.4);
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-login .login-intro {
+  background: url('/brand/studio-sprout-v1.webp') center bottom 48px/160px no-repeat;
+}
+html[data-design='editorial'] :is(.school-login-story, .admin-login .login-intro) {
+  background-image: url('/brand/editorial-sprout-v1.webp');
+}
+@media (max-width: 767px) {
+  html:is([data-design='studio'], [data-design='editorial']) .school-login-story {
+    background-image: none;
+  }
+}
+html:is([data-design='studio'], [data-design='editorial']) {
+  --background: 145 12% 97%;
+  --card: 0 0% 100%;
+  --foreground: 160 14% 14%;
+  --muted: 150 10% 94%;
+  --muted-foreground: 155 6% 40%;
+  --border: 150 10% 86%;
+  --hairline: 150 10% 90%;
+  --primary: 158 35% 26%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 150 16% 91%;
+  --accent-foreground: 158 35% 23%;
+  --radius: 0.6rem;
+  font-family: Inter, 'SF Pro Text', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+html[data-design='editorial'] {
+  --background: 42 30% 96%;
+  --card: 42 26% 98%;
+  --foreground: 70 12% 18%;
+  --muted: 42 17% 92%;
+  --muted-foreground: 55 6% 40%;
+  --border: 42 13% 81%;
+  --hairline: 42 15% 87%;
+  --primary: 82 22% 28%;
+  --accent: 62 17% 88%;
+  --accent-foreground: 82 22% 22%;
+  --radius: 0.2rem;
+}
+html:is([data-design='studio'], [data-design='editorial']).dark {
+  --background: 155 9% 10%;
+  --card: 155 8% 14%;
+  --foreground: 40 14% 92%;
+  --muted: 155 8% 18%;
+  --muted-foreground: 150 6% 70%;
+  --border: 155 7% 29%;
+  --hairline: 155 7% 23%;
+  --primary: 147 29% 72%;
+  --primary-foreground: 155 20% 12%;
+  --accent: 150 12% 23%;
+  --accent-foreground: 147 24% 85%;
+}
+html:is([data-design='studio'], [data-design='editorial']) .public-site {
+  --background: inherit;
+  --card: inherit;
+  --foreground: inherit;
+  --muted: inherit;
+  --muted-foreground: inherit;
+  --border: inherit;
+  --hairline: inherit;
+  --primary: inherit;
+  --primary-foreground: inherit;
+  --accent: inherit;
+  --accent-foreground: inherit;
+  background: hsl(var(--background));
+  font-family: inherit;
+}
+html:is([data-design='studio'], [data-design='editorial']) .public-site::before {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) body {
+  font-family: Inter, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+html:is([data-design='studio'], [data-design='editorial']) :is(button, input, textarea, select) {
+  font-family: inherit;
+}
+html:is([data-design='studio'], [data-design='editorial']) .reference-heading::before,
+html:is([data-design='studio'], [data-design='editorial']) .reference-heading::after {
+  display: none;
+}
+html[data-design='studio'] .edition-secondary {
+  margin-left: 18px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .assistant-avatar[data-state='resting'] {
+  background: url('/brand/studio-sprout-v1.webp') center/contain no-repeat;
+}
+html[data-design='editorial'] .assistant-avatar[data-state='resting'] {
+  background-image: url('/brand/editorial-sprout-v1.webp');
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  .assistant-avatar[data-state='resting']
+  > img {
+  opacity: 0;
+}
+html:is([data-design='studio'], [data-design='editorial']) .design-original {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .design-brief {
+  display: inline;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(.brand-identity, .mobile-brand-name) {
+  display: none !important;
+}
+html:is([data-design='studio'], [data-design='editorial']) .design-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  white-space: nowrap;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  color: hsl(var(--foreground));
+  width: auto;
+  height: auto;
+  background: none;
+}
+.design-brand-symbol {
+  width: 38px;
+  height: 42px;
+  display: block;
+  background: url('/brand/studio-sprout-v1.webp') center/contain no-repeat;
+}
+html[data-design='editorial'] .design-brand-symbol {
+  background-image: url('/brand/editorial-sprout-v1.webp');
+}
+html:is([data-design='studio'], [data-design='editorial']) .public-site .container {
+  max-width: 1360px;
+  padding-inline: 36px;
+}
+html:is([data-design='studio'], [data-design='editorial']) :is(h1, h2, h3, .title-serif) {
+  font-family: inherit;
+  letter-spacing: -0.035em;
+  text-wrap: pretty;
+}
+html:is([data-design='studio'], [data-design='editorial']) p {
+  overflow-wrap: break-word;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(.site-header, .school-session-header) {
+  background: hsl(var(--card) / 0.97);
+  box-shadow: none;
+  border-color: hsl(var(--border));
+}
+html:is([data-design='studio'], [data-design='editorial']) .site-header > .container {
+  height: 68px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .site-header a[aria-current='page'] {
+  border-radius: 6px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(.home-hero, .hero-eyebrow, .hero-promises, .art-chip) {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .design-new-home {
+  display: grid;
+  position: relative;
+  gap: 32px;
+  align-items: center;
+  padding-block: 64px 40px;
+  min-height: 510px;
+}
+.edition-lead {
+  min-width: 0;
+}
+.edition-kicker {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 22px;
+}
+.edition-kicker > span {
+  width: 6px;
+  height: 6px;
+  background: hsl(var(--primary));
+  border-radius: 50%;
+}
+.edition-lead h1 {
+  font-size: clamp(38px, 4vw, 62px);
+  font-weight: 650;
+  line-height: 1.17;
+  margin: 0 0 22px;
+}
+.edition-summary {
+  font-size: 16px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+  margin: 0 0 30px;
+}
+.edition-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  padding: 15px 20px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 48px;
+}
+.edition-secondary {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  margin-top: 18px;
+  color: hsl(var(--primary));
+}
+.edition-art {
+  position: relative;
+  min-height: 250px;
+  display: grid;
+  place-content: center;
+  background: hsl(var(--accent) / 0.4);
+  border-radius: 100px 100px 24px 24px;
+  padding: 20px;
+}
+.edition-art-image {
+  width: 240px;
+  height: 260px;
+  background: url('/brand/studio-sprout-v1.webp') center/contain no-repeat;
+}
+.edition-art-caption {
+  font-size: 11px;
+  text-align: center;
+  letter-spacing: 0.1em;
+  color: hsl(var(--muted-foreground));
+}
+.edition-actions {
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--card));
+  padding: 24px;
+}
+.edition-section-label {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 12px;
+}
+.edition-entry {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 22px 0;
+  border-bottom: 1px solid hsl(var(--hairline));
+  min-height: 90px;
+  transition:
+    color 0.18s,
+    transform 0.18s;
+}
+.edition-entry > span:not(.edition-entry-number) {
+  flex: 1;
+}
+.edition-entry strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 650;
+}
+.edition-entry small {
+  display: block;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+  margin-top: 7px;
+}
+.edition-entry > svg {
+  flex-shrink: 0;
+  color: hsl(var(--primary));
+}
+.edition-entry-number {
+  display: none;
+}
+.edition-find {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  padding-top: 20px;
+  color: hsl(var(--primary));
+}
+.edition-find > svg:last-child {
+  margin-left: auto;
+}
+html[data-design='studio'] .design-new-home {
+  grid-template-columns: minmax(0, 1fr) 180px;
+  gap: 24px;
+  padding-top: 40px;
+  min-height: 0;
+}
+html[data-design='studio'] .edition-lead h1 {
+  font-size: clamp(32px, 4vw, 48px);
+}
+html[data-design='studio'] .edition-art {
+  padding: 0;
+  min-height: 180px;
+  background: none;
+}
+html[data-design='studio'] .edition-art-image {
+  width: 180px;
+  height: 180px;
+}
+html[data-design='studio'] .edition-art-caption {
+  display: none;
+}
+html[data-design='studio'] .edition-actions {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+html[data-design='studio'] .edition-section-label {
+  grid-column: 1/-1;
+  margin: 0;
+}
+html[data-design='studio'] .edition-entry {
+  padding: 22px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--card));
+  height: 100%;
+}
+html[data-design='studio'] .edition-find {
+  grid-column: 1/-1;
+  padding-top: 0;
+}
+html[data-design='studio'] .editorial-only,
+html[data-design='editorial'] .studio-only {
+  display: none;
+}
+html[data-design='editorial'] .design-new-home {
+  grid-template-columns: 1.4fr 0.6fr;
+  gap: 30px 80px;
+  border-bottom: 1px solid hsl(var(--border));
+  padding-top: 64px;
+}
+html[data-design='editorial'] .edition-lead h1 {
+  font-size: clamp(40px, 4.7vw, 70px);
+  font-weight: 520;
+  line-height: 1.25;
+}
+html[data-design='editorial'] .edition-lead em {
+  font-style: normal;
+  color: hsl(var(--primary));
+}
+html[data-design='editorial'] .edition-art {
+  background: none;
+  border-radius: 0;
+  border-left: 1px solid hsl(var(--border));
+}
+html[data-design='editorial'] .edition-art-image {
+  background-image: url('/brand/editorial-sprout-v1.webp');
+  width: 220px;
+  height: 250px;
+}
+html[data-design='editorial'] .edition-primary {
+  border-radius: 2px;
+}
+html[data-design='editorial'] .edition-secondary {
+  margin-left: 24px;
+}
+html[data-design='editorial'] .edition-actions {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  padding: 22px 0 0;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  background: none;
+}
+html[data-design='editorial'] .edition-section-label {
+  display: none;
+}
+html[data-design='editorial'] .edition-entry {
+  border: 0;
+  padding: 0 0 10px;
+  min-height: 75px;
+  gap: 14px;
+}
+html[data-design='editorial'] .edition-entry > svg:first-of-type {
+  display: none;
+}
+html[data-design='editorial'] .edition-entry-number {
+  display: block;
+  font-size: 30px;
+  font-weight: 300;
+  color: hsl(var(--muted-foreground) / 0.6);
+  font-variant-numeric: tabular-nums;
+}
+html[data-design='editorial'] .edition-find {
+  grid-column: 1/-1;
+  padding: 0;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  .home-layout
+  [data-home-section='start'] {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .home-metrics {
+  background: none;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: none;
+  padding: 22px 0;
+  gap: 24px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  .home-layout
+  section:not(.design-new-home) {
+  padding-block: 36px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(
+    .weekly-card,
+    .learning-card,
+    .entry-card,
+    .reference-panel,
+    .reference-card,
+    .case-card,
+    .compact-tool-card,
+    .school-kit-card,
+    .school-details,
+    .admin-card,
+    .admin-panel,
+    .admin-metric
+  ) {
+  box-shadow: none;
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+  border-radius: 10px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(.weekly-card, .learning-card, .case-card, .compact-tool-card) {
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
+  background: hsl(var(--card));
+}
+html:is([data-design='studio'], [data-design='editorial']) .page-heading {
+  background: none;
+  border-bottom: 1px solid hsl(var(--border));
+}
+html:is([data-design='studio'], [data-design='editorial']) .page-heading > .container {
+  padding-block: 30px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .page-heading h1 {
+  font-size: clamp(28px, 3vw, 40px);
+  line-height: 1.35;
+}
+html:is([data-design='studio'], [data-design='editorial']) .page-heading .reference-art {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .reference-heading-grid {
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  gap: 20px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .reference-heading-grid.has-aside {
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.5fr);
+}
+html:is([data-design='studio'], [data-design='editorial']) .page-heading p {
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 62ch;
+  margin-top: 12px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  :is(
+    .tool-explorer > aside,
+    .case-filter-panel,
+    .rookie-workbench,
+    .rookie-sidebar,
+    .rookie-route button,
+    .first-visit-dialog
+  ) {
+  border-radius: 10px;
+  box-shadow: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .compact-tool-card {
+  padding: 22px;
+  gap: 4px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .case-card h2 {
+  font-size: 17px;
+  line-height: 1.6;
+}
+html:is([data-design='studio'], [data-design='editorial']) .case-card .case-summary {
+  font-size: 14px;
+  line-height: 1.8;
+}
+html:is([data-design='studio'], [data-design='editorial']) .case-scene-link img {
+  aspect-ratio: 16/9;
+}
+html:is([data-design='studio'], [data-design='editorial']) .selection-steps {
+  gap: 18px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .selection-steps p {
+  font-size: 13px;
+}
+html[data-design='editorial']
+  :is(
+    .weekly-card,
+    .learning-card,
+    .case-card,
+    .compact-tool-card,
+    .reference-panel,
+    .school-kit-card,
+    .school-details,
+    .admin-card,
+    .admin-panel,
+    .admin-metric
+  ) {
+  border-radius: 3px;
+}
+html[data-design='editorial'] .weekly-grid {
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-block: 1px solid hsl(var(--border));
+}
+html[data-design='editorial'] .weekly-card {
+  border: 0;
+  border-bottom: 1px solid hsl(var(--hairline));
+  background: none;
+  padding: 20px 6px;
+  min-height: 0;
+}
+html[data-design='editorial'] .learning-card {
+  background: none;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  padding: 24px 0;
+}
+html[data-design='editorial'] .tool-results-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+html[data-design='editorial'] .case-card {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  gap: 0 24px;
+  padding: 24px 0;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  background: none;
+}
+html[data-design='editorial'] .case-card > * {
+  grid-column: 2;
+}
+html[data-design='editorial'] .case-card > .case-scene-link {
+  grid-column: 1;
+  grid-row: 1/7;
+  margin: 0;
+  border-radius: 2px;
+  align-self: start;
+}
+html[data-design='editorial'] .case-card .case-scene-link img {
+  aspect-ratio: 4/3;
+}
+html[data-design='editorial'] .case-card .case-summary {
+  margin-top: 10px;
+}
+html[data-design='editorial'] .case-card > div:last-child {
+  margin-top: 18px;
+  padding-top: 12px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-session-header > .container {
+  min-height: 68px;
+  padding-block: 12px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-secondary-navigation {
+  background: hsl(var(--card));
+  border-color: hsl(var(--border));
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-home-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  .school-home-content
+  > .school-illustration {
+  order: 2;
+  margin: 0;
+  max-width: 100%;
+  border: 0;
+  border-radius: 8px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-home-content > div {
+  margin-top: 0;
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-illustration img {
+  max-height: 220px;
+  object-fit: cover;
+}
+html:is([data-design='studio'], [data-design='editorial']) .school-kit-card {
+  padding: 24px;
+}
+html[data-design='editorial'] .school-home-content {
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
+  align-items: start;
+}
+html[data-design='editorial'] .school-home-content > div {
+  grid-template-columns: 1fr;
+}
+html[data-design='editorial'] .school-home-content > .school-illustration {
+  order: 0;
+  grid-column: 2;
+  grid-row: 1;
+}
+html[data-design='editorial'] .school-illustration img {
+  height: 330px;
+  max-height: none;
+  object-fit: cover;
+  object-position: left;
+}
+html[data-design='editorial'] .school-home-content > p {
+  grid-column: 1/-1;
+  margin-top: 0;
+}
+html:is([data-design='studio'], [data-design='editorial']) :is(.school-login, .admin-login) {
+  background: hsl(var(--background));
+  background-image: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-section-intro {
+  padding: 0 0 24px;
+  margin-bottom: 24px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid hsl(var(--border));
+  border-radius: 0;
+  min-height: 0;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-section-intro > img {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-section-intro h1 {
+  font-size: 28px;
+  margin-block: 5px;
+}
+html:is([data-design='studio'], [data-design='editorial'])
+  .admin-section-intro
+  > div
+  > p:first-child {
+  display: none;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-navigation button {
+  padding: 11px 13px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-sidebar {
+  background: hsl(var(--card));
+  box-shadow: none;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-brand {
+  padding: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-brand > .design-brand {
+  display: inline-flex !important;
+  flex-direction: row;
+  align-items: center;
+  color: hsl(var(--foreground));
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-brand-caption {
+  font-size: 11px !important;
+  background: none !important;
+  color: hsl(var(--muted-foreground)) !important;
+  width: auto !important;
+  height: auto !important;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-topbar {
+  background: hsl(var(--card));
+  height: 60px;
+}
+html:is([data-design='studio'], [data-design='editorial']) .admin-content-area {
+  padding: 32px;
+  max-width: 1350px;
+}
+html[data-design='editorial'] .admin-sidebar {
+  width: 204px;
+  background: hsl(var(--background));
+  border-right: 1px solid hsl(var(--border));
+}
+html[data-design='editorial'] .admin-main-area {
+  margin-left: 204px;
+}
+html[data-design='editorial'] .admin-navigation button[aria-current] {
+  border-left: 3px solid hsl(var(--primary));
+  border-radius: 0;
+  background: hsl(var(--accent) / 0.5);
+}
+html[data-design='editorial'] .admin-panel {
+  background: none;
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+}
+html:is([data-design='studio'], [data-design='editorial']) .assistant-pet-button {
+  width: 64px;
+  height: 64px;
+  border-width: 1px;
+  background: hsl(var(--card));
+  box-shadow: 0 3px 15px #00000010;
+}
+html:is([data-design='studio'], [data-design='editorial']) .assistant-pet-button:hover {
+  transform: translateY(-2px);
+}
+@media (hover: hover) {
+  html:is([data-design='studio'], [data-design='editorial'])
+    :is(.weekly-card, .case-card, .compact-tool-card, .school-kit-card):hover {
+    border-color: hsl(var(--primary) / 0.5);
+    transform: translateY(-2px);
+  }
+  .edition-entry:hover {
+    color: hsl(var(--primary));
+    transform: translateX(3px);
+  }
+}
+@media (min-width: 1024px) {
+  html[data-design='editorial'] .case-card:only-child {
+    grid-column: 1/-1;
+  }
+  html[data-design='editorial'] .case-card {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 1100px) {
+  html[data-design='studio'] .design-new-home {
+    grid-template-columns: 1fr;
+  }
+  .edition-art {
+    display: none;
+  }
+  html[data-design='editorial'] .design-new-home {
+    gap: 24px;
+  }
+  .edition-lead h1 {
+    font-size: 44px;
+  }
+  html[data-design='editorial'] .design-new-home {
+    grid-template-columns: 1fr;
+  }
+  html[data-design='editorial'] .edition-actions {
+    gap: 16px;
+  }
+}
+@media (max-width: 900px) {
+  html[data-design='editorial'] .admin-sidebar {
+    width: auto;
+  }
+  html[data-design='editorial'] .admin-main-area {
+    margin-left: 0;
+  }
+  html[data-design='editorial'] .school-home-content {
+    grid-template-columns: 1fr;
+  }
+  html[data-design='editorial'] .school-home-content > .school-illustration {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  html[data-design='editorial'] .school-illustration img {
+    height: auto;
+    max-height: 180px;
+  }
+}
+@media (max-width: 767px) {
+  html[data-design='studio'] .edition-actions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  html[data-design='studio'] .edition-entry {
+    padding: 18px;
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .public-site .container {
+    padding-inline: 20px;
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .design-new-home {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-block: 32px;
+  }
+  .edition-lead h1 {
+    font-size: 38px;
+  }
+  .edition-summary {
+    font-size: 14px;
+    margin-bottom: 22px;
+  }
+  .edition-kicker {
+    margin-bottom: 16px;
+  }
+  .edition-actions {
+    padding: 20px;
+  }
+  .edition-entry {
+    min-height: 74px;
+    padding: 16px 0;
+  }
+  .edition-secondary {
+    margin-left: 16px;
+  }
+  html[data-design='editorial'] .edition-actions {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .edition-find {
+    margin-top: 16px;
+  }
+  html[data-design='editorial'] .edition-entry {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .reference-heading-grid.has-aside {
+    grid-template-columns: 1fr;
+  }
+  html[data-design='editorial'] .tool-results-grid {
+    grid-template-columns: 1fr;
+  }
+  html[data-design='editorial'] .case-card {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 0 16px;
+  }
+  html[data-design='editorial'] .case-card .case-summary,
+  html[data-design='editorial'] .case-card > div:last-child {
+    grid-column: 1/-1;
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .admin-content-area {
+    padding: 22px 16px;
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .design-brand {
+    font-size: 19px;
+  }
+  .design-brand-symbol {
+    width: 30px;
+    height: 36px;
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .site-header > .container {
+    height: 62px;
+  }
+  html:is([data-design='studio'], [data-design='editorial']) .school-kit-card {
+    padding: 20px;
+  }
+}
+@media (min-width: 1024px) {
+  html[data-design='editorial'] .admin-sidebar {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 16px 28px;
+    padding: 20px 32px;
+    border-right: 0;
+    border-bottom: 1px solid hsl(var(--border));
+    overflow: visible;
+  }
+  html[data-design='editorial'] .admin-navigation {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+  }
+  html[data-design='editorial'] .admin-navigation button {
+    font-size: 12px;
+    padding: 10px 8px;
+    gap: 6px;
+    line-height: 1.5;
+  }
+  html[data-design='editorial'] .admin-navigation button svg {
+    flex-shrink: 0;
+    width: 16px;
+  }
+  html[data-design='editorial'] .admin-nav-label {
+    display: none;
+  }
+  html[data-design='editorial'] .admin-sidebar-bottom {
+    grid-column: 1/-1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0;
+  }
+  html[data-design='editorial'] .admin-sidebar-bottom > div {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: 200px;
+  }
+  html[data-design='editorial'] .admin-main-area {
+    margin-left: 0;
+  }
+  html[data-design='studio'] .school-secondary-navigation > .container {
+    justify-content: space-between;
+  }
+  html[data-design='studio'] .school-kit-card:first-child {
+    background: hsl(var(--accent) / 0.5);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:is([data-design='studio'], [data-design='editorial']) .edition-lead,
+  html:is([data-design='studio'], [data-design='editorial']) .edition-actions {
+    animation: edition-enter 0.4s ease-out both;
+  }
+  .edition-primary {
+    transition:
+      transform 0.18s,
+      box-shadow 0.18s;
+  }
+  .edition-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px #00000012;
+  }
+  @keyframes edition-enter {
+    from {
+      opacity: 0.4;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:is([data-design='studio'], [data-design='editorial']) *,
+  html:is([data-design='studio'], [data-design='editorial']) *::before {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

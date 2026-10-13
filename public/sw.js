@@ -89,6 +89,7 @@ self.addEventListener('fetch', (event) => {
     /^\/edu(?:\/|\.|$)/.test(url.pathname) ||
     /^\/school(?:\/|$)/.test(url.pathname) ||
     url.searchParams.has('admin-preview') ||
+    url.searchParams.has('design-preview') ||
     request.cache === 'no-store' ||
     request.headers.get('RSC') === '1' ||
     url.searchParams.has('_rsc')

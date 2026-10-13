@@ -19,6 +19,7 @@ import { SchoolModulesView } from './school-modules-view'
 import { SchoolAccountsView } from './school-accounts-view'
 import Link from 'next/link'
 import { BrandMark } from '@/components/brand-mark'
+import { DesignCopy } from '@/components/design-copy'
 import { ResponsiveSheet } from '@/components/mobile/responsive-sheet'
 import {
   Activity,
@@ -273,7 +274,9 @@ export function AdminShell() {
         <div className="admin-content-area">
           <section className="admin-section-intro">
             <div>
-              <p className="text-sm text-primary">让每一次整理，都带来收获</p>
+              <p className="text-sm text-primary">
+                <DesignCopy>让每一次整理，都带来收获</DesignCopy>
+              </p>
               <h1>{TABS.find((t) => t.key === tab)?.label}</h1>
               <p>{TABS.find((t) => t.key === tab)?.hint}</p>
             </div>

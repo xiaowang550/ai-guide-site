@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Activity, ArrowRight, BarChart3, Eye, RefreshCw, TrendingUp } from 'lucide-react'
 import { apiGet, type Dashboard } from './api-client'
 import { TrafficChart } from './traffic-chart'
+import { DesignCopy } from '@/components/design-copy'
 import type { TrafficPeriod, TrafficReport } from './traffic-types'
 
 const PERIODS: { key: TrafficPeriod; label: string }[] = [
@@ -90,7 +91,9 @@ export function DashboardView({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="admin-eyebrow">OVERVIEW</p>
-          <h1 className="mt-2 text-2xl font-semibold">一眼看清，网站近况。</h1>
+          <h1 className="mt-2 text-2xl font-semibold">
+            <DesignCopy brief="访问统计">一眼看清，网站近况。</DesignCopy>
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             浏览趋势、内容状态和待处理事项，都在这里。
           </p>

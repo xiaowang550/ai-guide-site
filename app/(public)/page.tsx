@@ -23,6 +23,7 @@ import { cases, concepts, guides, paths, tools } from '@/data'
 import { WeeklyRecommendations, type WeeklyEntry } from '@/components/weekly-recommendations'
 import { Section } from '@/components/page-header'
 import { ReferenceArt } from '@/components/reference-art'
+import { DesignHome } from '@/components/design-home'
 
 export const metadata: Metadata = {
   description: '用清晰的能力地图、实用教程和场景决策器，找到适合你的 AI 工具。',
@@ -110,86 +111,91 @@ export default function HomePage() {
         {
           id: 'hero',
           content: (
-            <section className="home-hero">
-              <div className="home-cover-grid container">
-                <div className="home-cover-copy">
-                  <p className="hero-eyebrow">
-                    <span className="hero-eyebrow-line" />
-                    给好奇心，一个清晰的方向
-                  </p>
-                  <h1 className="home-cover-title">
-                    让 AI 成为
-                    <br />
-                    <span className="text-primary">你顺手的工具。</span>
-                  </h1>
-                  <p className="mt-6 max-w-lg text-base leading-8 text-muted-foreground">
-                    找工具、学方法，把 AI 用到学习和工作里。
-                  </p>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <ModuleSection id="finder">
-                      <Link className="home-button" href="/find">
-                        找到适合我的工具
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </ModuleSection>
-                    <ModuleSection id="guides">
-                      <Link className="home-button home-button-secondary" href="/guides">
-                        先看看使用方法
-                        <BookOpen className="h-4 w-4" />
-                      </Link>
-                    </ModuleSection>
-                  </div>
-                  <div className="hero-promises mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                    {['评分有依据', '把强项与弱项说清楚', '无需注册，直接探索'].map((t) => (
-                      <span key={t} className="flex items-center gap-1.5">
-                        <span className="hero-promise-check">
-                          <Check className="h-3.5 w-3.5 text-primary" />
-                        </span>
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <ReferenceArt home />
-                <ModuleSection id="finder">
-                  <div className="hero-workbench">
-                    <div className="mb-7 flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-sm font-semibold">
-                        <span className="hero-small-icon">
-                          <Sparkles className="h-4 w-4" />
-                        </span>
-                        从一件小事开始
-                      </span>
-                      <span className="text-xs text-muted-foreground">YOUR NEXT STEP</span>
-                    </div>
-                    <p className="text-xl font-semibold tracking-tight">今天，你想完成什么？</p>
-                    <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                      选一个今天要完成的任务。
+            <>
+              <DesignHome />
+              <section className="home-hero">
+                <div className="home-cover-grid container">
+                  <div className="home-cover-copy">
+                    <p className="hero-eyebrow">
+                      <span className="hero-eyebrow-line" />
+                      给好奇心，一个清晰的方向
                     </p>
-                    <div className="mt-6 space-y-3">
-                      {tasks.map(({ title, icon: Icon, hint, task }) => (
-                        <Link key={task} href={`/find?s=${task}`} className="hero-task">
-                          <span className="hero-task-icon">
-                            <Icon className="h-4 w-4" />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-medium">{title}</span>
-                            <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>
-                          </span>
-                          <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                    <h1 className="home-cover-title">
+                      让 AI 成为
+                      <br />
+                      <span className="text-primary">你顺手的工具。</span>
+                    </h1>
+                    <p className="mt-6 max-w-lg text-base leading-8 text-muted-foreground">
+                      找工具、学方法，把 AI 用到学习和工作里。
+                    </p>
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <ModuleSection id="finder">
+                        <Link className="home-button" href="/find">
+                          找到适合我的工具
+                          <ArrowRight className="h-4 w-4" />
                         </Link>
+                      </ModuleSection>
+                      <ModuleSection id="guides">
+                        <Link className="home-button home-button-secondary" href="/guides">
+                          先看看使用方法
+                          <BookOpen className="h-4 w-4" />
+                        </Link>
+                      </ModuleSection>
+                    </div>
+                    <div className="hero-promises mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+                      {['评分有依据', '把强项与弱项说清楚', '无需注册，直接探索'].map((t) => (
+                        <span key={t} className="flex items-center gap-1.5">
+                          <span className="hero-promise-check">
+                            <Check className="h-3.5 w-3.5 text-primary" />
+                          </span>
+                          {t}
+                        </span>
                       ))}
                     </div>
-                    <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5 text-xs">
-                      <span className="text-muted-foreground">规则推荐，每一步都能解释</span>
-                      <Link href="/find" className="font-medium text-primary">
-                        试试决策器 →
-                      </Link>
-                    </div>
                   </div>
-                </ModuleSection>
-              </div>
-            </section>
+                  <ReferenceArt home />
+                  <ModuleSection id="finder">
+                    <div className="hero-workbench">
+                      <div className="mb-7 flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-sm font-semibold">
+                          <span className="hero-small-icon">
+                            <Sparkles className="h-4 w-4" />
+                          </span>
+                          从一件小事开始
+                        </span>
+                        <span className="text-xs text-muted-foreground">YOUR NEXT STEP</span>
+                      </div>
+                      <p className="text-xl font-semibold tracking-tight">今天，你想完成什么？</p>
+                      <p className="mt-2 text-xs leading-6 text-muted-foreground">
+                        选一个今天要完成的任务。
+                      </p>
+                      <div className="mt-6 space-y-3">
+                        {tasks.map(({ title, icon: Icon, hint, task }) => (
+                          <Link key={task} href={`/find?s=${task}`} className="hero-task">
+                            <span className="hero-task-icon">
+                              <Icon className="h-4 w-4" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-medium">{title}</span>
+                              <span className="mt-1 block text-xs text-muted-foreground">
+                                {hint}
+                              </span>
+                            </span>
+                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                          </Link>
+                        ))}
+                      </div>
+                      <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5 text-xs">
+                        <span className="text-muted-foreground">规则推荐，每一步都能解释</span>
+                        <Link href="/find" className="font-medium text-primary">
+                          试试决策器 →
+                        </Link>
+                      </div>
+                    </div>
+                  </ModuleSection>
+                </div>
+              </section>
+            </>
           ),
         },
         {

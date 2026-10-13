@@ -6,7 +6,7 @@ import './styles/learning.css'
 import './styles/mobile.css'
 import { MOBILE_VIEWPORT_BOOTSTRAP } from '@/lib/mobile-viewport'
 import { siteConfig, siteTitle } from '@/lib/site'
-import { ThemeScript } from '@/components/theme-toggle'
+import { ThemeScript } from '@/components/theme-script'
 
 /**
  * 进场淡入的开关：只有确认 JS 可用时才给 <html> 加 .js-reveal，
@@ -66,6 +66,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <ThemeScript />
+        <style>{'.design-brief,.design-new-home,.design-brand{display:none}'}</style>
+        <script src="/design/runtime-v1.js" defer />
         <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOTSTRAP }} />
         {/* 禁用 JS 时撤销进场动画的初始隐藏状态，确保内容永远可见 */}
         <noscript>
