@@ -87,7 +87,7 @@ export function DashboardView({
 
   const current = data?.period === period ? data : null
   return (
-    <div className="space-y-6">
+    <div className="template-admin-dashboard space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="admin-eyebrow">OVERVIEW</p>

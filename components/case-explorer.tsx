@@ -113,7 +113,7 @@ export function CaseExplorer({ items }: { items: CasePreview[] }) {
         </div>
       </section>
       {filtered.length ? (
-        <div className="grid gap-x-7 gap-y-9 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
+        <div className="template-case-grid grid gap-x-7 gap-y-9 sm:grid-cols-2 xl:grid-cols-3 2xl:gap-x-8 2xl:gap-y-10">
           {filtered.map((item) => (
             <article key={item.id} className="media-card case-card flex flex-col overflow-hidden">
               {item.cover && (

@@ -6,6 +6,7 @@ import { SchoolSessionHeader } from '@/components/edu/school-session'
 import { AnalyticsBeacon } from '@/components/analytics-beacon'
 import { ModuleGate } from '@/components/module-visibility'
 import { MobileTabs } from '@/components/mobile/mobile-tabs'
+import { TemplateNavigationEntry } from '@/components/template-entry'
 export const metadata = { robots: { index: false, follow: false } }
 export default function SchoolLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
       <SchoolProvider>
         <AnalyticsBeacon />
         <SchoolSessionHeader />
+        <TemplateNavigationEntry school />
         <main className="flex-1">
           <ModuleGate>{children}</ModuleGate>
         </main>

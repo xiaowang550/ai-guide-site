@@ -24,8 +24,10 @@ const META: Record<Theme, { label: string; next: string; Icon: typeof Sun }> = {
 function apply(theme: Theme) {
   const root = document.documentElement
   const dark =
-    theme === 'dark' ||
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    root.dataset.design === 'editorial' ||
+    (root.dataset.design !== 'studio' &&
+      (theme === 'dark' ||
+        (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)))
   root.classList.toggle('dark', dark)
   root.style.colorScheme = dark ? 'dark' : 'light'
 }
@@ -72,7 +74,7 @@ export function ThemeToggle() {
       title={`主题：${label} → ${next}`}
       className={cn(
         'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background',
-        'text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
+        'text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground',
       )}
     >
       <Icon className="h-4 w-4" aria-hidden />

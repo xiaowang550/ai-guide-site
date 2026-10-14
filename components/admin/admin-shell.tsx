@@ -272,6 +272,24 @@ export function AdminShell() {
           </span>
         </header>
         <div className="admin-content-area">
+          <nav className="template-admin-launcher template-only" aria-label="快捷操作">
+            <button type="button" onClick={() => setTab('content')}>
+              <BookOpen size={17} />
+              编辑内容
+            </button>
+            <button type="button" onClick={() => setTab('feedback')}>
+              <MessageSquare size={17} />
+              查看反馈
+            </button>
+            <button type="button" onClick={() => setTab('school-accounts')}>
+              <Compass size={17} />
+              学校账号
+            </button>
+            <button type="button" onClick={() => setTab('settings')}>
+              <LayoutDashboard size={17} />
+              切换模板
+            </button>
+          </nav>
           <section className="admin-section-intro">
             <div>
               <p className="text-sm text-primary">
