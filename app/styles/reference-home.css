@@ -264,7 +264,7 @@
   z-index: 2;
 }
 .home-cover-title {
-  margin-top: 32px;
+  margin-top: 0;
   font-size: clamp(42px, 4.1vw, 72px);
   line-height: 1.22;
   font-weight: 750;
@@ -422,7 +422,7 @@
   }
   .home-cover-title {
     font-size: 42px;
-    margin-top: 20px;
+    margin-top: 0;
   }
   .home-hero .home-button {
     min-height: 48px;
@@ -456,7 +456,7 @@
   }
   .public-site .home-cover-title {
     font-size: clamp(32px, 8.8vw, 48px);
-    margin-top: 18px;
+    margin-top: 0;
   }
   .public-site .home-cover-copy {
     position: relative;

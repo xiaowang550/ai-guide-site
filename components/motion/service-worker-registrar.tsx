@@ -63,10 +63,16 @@ export function ServiceWorkerRegistrar() {
         /* Offline support is optional. */
       }
     }
-    const timer = window.setTimeout(() => void register(), 2000)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const afterLoad = () => {
+      timer = setTimeout(() => void register(), 2000)
+    }
+    if (document.readyState === 'complete') afterLoad()
+    else window.addEventListener('load', afterLoad, { once: true })
     return () => {
       disposed = true
       clearTimeout(timer)
+      window.removeEventListener('load', afterLoad)
       watched?.removeEventListener('statechange', stateChanged)
       registration?.removeEventListener('updatefound', found)
       navigator.serviceWorker.removeEventListener('controllerchange', controllerChanged)

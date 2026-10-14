@@ -34,7 +34,7 @@ const startingPoints = [
   {
     icon: BookOpen,
     title: '系统教程',
-    description: '从入门到进阶，带你掌握核心用法与最佳实践。',
+    description: '照着步骤，练习对话、写作和资料整理。',
     href: '/guides',
     label: '开始学习',
     tone: 'sage',
@@ -42,7 +42,7 @@ const startingPoints = [
   {
     icon: Lightbulb,
     title: '精选案例',
-    description: '真实场景应用，看看别人如何用 AI 提升效率。',
+    description: '看看周报、会议记录和教学材料怎么做。',
     href: '/cases',
     label: '浏览案例',
     tone: 'sand',
@@ -50,7 +50,7 @@ const startingPoints = [
   {
     icon: Layers,
     title: '实用工具库',
-    description: '收录优质 AI 工具，快速找到适合你的生产力助手。',
+    description: '比较功能、费用和使用条件。',
     href: '/tools',
     label: '探索工具',
     tone: 'lavender',
@@ -99,10 +99,10 @@ export default function HomePage() {
     ]
   })
   const counts = [
-    { value: tools.length, label: '个工具，清楚比较' },
-    { value: concepts.length, label: '个概念，轻松理解' },
-    { value: guides.length, label: '篇教程，边学边用' },
-    { value: cases.length, label: '个案例，找到灵感' },
+    { value: tools.length, label: '个工具' },
+    { value: concepts.length, label: '个概念' },
+    { value: guides.length, label: '篇教程' },
+    { value: cases.length, label: '个案例' },
   ]
 
   return (
@@ -116,34 +116,34 @@ export default function HomePage() {
               <section className="home-hero">
                 <div className="home-cover-grid container">
                   <div className="home-cover-copy">
-                    <p className="hero-eyebrow">
-                      <span className="hero-eyebrow-line" />
-                      给好奇心，一个清晰的方向
-                    </p>
                     <h1 className="home-cover-title">
-                      让 AI 成为
+                      找 AI 工具，
                       <br />
-                      <span className="text-primary">你顺手的工具。</span>
+                      <span className="text-primary">学会怎么用。</span>
                     </h1>
                     <p className="mt-6 max-w-lg text-base leading-8 text-muted-foreground">
-                      找工具、学方法，把 AI 用到学习和工作里。
+                      写消息、整理资料、做汇报，从一个小任务开始。
                     </p>
                     <div className="mt-8 flex flex-wrap gap-3">
                       <ModuleSection id="finder">
-                        <Link className="home-button" href="/find">
+                        <Link prefetch={false} className="home-button" href="/find">
                           找到适合我的工具
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       </ModuleSection>
                       <ModuleSection id="beginner">
-                        <Link className="home-button home-button-secondary" href="/start">
+                        <Link
+                          prefetch={false}
+                          className="home-button home-button-secondary"
+                          href="/start"
+                        >
                           第一次用？从这里开始
                           <BookOpen className="h-4 w-4" />
                         </Link>
                       </ModuleSection>
                     </div>
                     <div className="hero-promises mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                      {['评分有依据', '把强项与弱项说清楚', '无需注册，直接探索'].map((t) => (
+                      {['可查看评分来源', '可比较工具能力', '无需注册'].map((t) => (
                         <span key={t} className="flex items-center gap-1.5">
                           <span className="hero-promise-check">
                             <Check className="h-3.5 w-3.5 text-primary" />
@@ -161,17 +161,18 @@ export default function HomePage() {
                           <span className="hero-small-icon">
                             <Sparkles className="h-4 w-4" />
                           </span>
-                          从一件小事开始
+                          按任务选工具
                         </span>
-                        <span className="text-xs text-muted-foreground">YOUR NEXT STEP</span>
                       </div>
-                      <p className="text-xl font-semibold tracking-tight">今天，你想完成什么？</p>
-                      <p className="mt-2 text-xs leading-6 text-muted-foreground">
-                        选一个今天要完成的任务。
-                      </p>
+                      <p className="text-xl font-semibold tracking-tight">你想做什么？</p>
                       <div className="mt-6 space-y-3">
                         {tasks.map(({ title, icon: Icon, hint, task }) => (
-                          <Link key={task} href={`/find?s=${task}`} className="hero-task">
+                          <Link
+                            prefetch={false}
+                            key={task}
+                            href={`/find?s=${task}`}
+                            className="hero-task"
+                          >
                             <span className="hero-task-icon">
                               <Icon className="h-4 w-4" />
                             </span>
@@ -186,9 +187,9 @@ export default function HomePage() {
                         ))}
                       </div>
                       <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5 text-xs">
-                        <span className="text-muted-foreground">规则推荐，每一步都能解释</span>
-                        <Link href="/find" className="font-medium text-primary">
-                          试试决策器 →
+                        <span className="text-muted-foreground">根据任务推荐工具</span>
+                        <Link prefetch={false} href="/find" className="font-medium text-primary">
+                          帮我选工具 →
                         </Link>
                       </div>
                     </div>
@@ -203,8 +204,6 @@ export default function HomePage() {
           content: (
             <div className="home-metrics">
               <div className="hidden text-xs leading-6 text-muted-foreground sm:block">
-                一份持续整理的
-                <br />
                 <span className="font-medium text-foreground">AI 使用指南</span>
               </div>
               {counts.map((m) => (
@@ -219,15 +218,15 @@ export default function HomePage() {
         {
           id: 'start',
           content: (
-            <Section
-              title="从这里，开启你的 AI 能力成长"
-              description="精选资源与实用工具，帮你把 AI 用到真实的学习和工作场景中。"
-              className="home-growth"
-            >
+            <Section title="学用法、看案例、选工具" className="home-growth">
               <div className="grid gap-4 md:grid-cols-3">
                 {startingPoints.map(({ icon: Icon, ...item }) => (
                   <ModuleSection key={item.href} id={moduleForPath(item.href) ?? 'knowledge'}>
-                    <Link href={item.href} className={`entry-card entry-${item.tone}`}>
+                    <Link
+                      prefetch={false}
+                      href={item.href}
+                      className={`entry-card entry-${item.tone}`}
+                    >
                       <span className="entry-icon">
                         <Icon className="h-5 w-5" />
                       </span>
@@ -258,11 +257,10 @@ export default function HomePage() {
           content: (
             <ModuleSection id="guides">
               <Section
-                title="慢慢学，也能走得很远"
-                description="分阶段学习，进度自动保留在本机。"
-                eyebrow="学习路径"
+                title="学习路径"
+                description="选择适合自己的路线，进度会自动保存。"
                 action={
-                  <Link href="/paths" className="section-link">
+                  <Link prefetch={false} href="/paths" className="section-link">
                     所有学习路径
                     <ArrowUpRight className="h-4 w-4" />
                   </Link>
@@ -270,7 +268,12 @@ export default function HomePage() {
               >
                 <div className="grid gap-4 md:grid-cols-2">
                   {paths.map((p, i) => (
-                    <Link key={p.id} href={`/paths/${p.id}`} className="learning-card">
+                    <Link
+                      prefetch={false}
+                      key={p.id}
+                      href={`/paths/${p.id}`}
+                      className="learning-card"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-primary">
                           PATH {String(i + 1).padStart(2, '0')}
@@ -296,10 +299,9 @@ export default function HomePage() {
             <ModuleSection id="news">
               <Section
                 title="AI 实时资讯"
-                description="新模型、新功能和工具变化，一眼掌握。"
-                eyebrow="关注新消息"
+                description="查看新模型和新功能的官方消息。"
                 action={
-                  <Link href="/updates" className="section-link">
+                  <Link prefetch={false} href="/updates" className="section-link">
                     查看 AI 实时资讯
                     <ArrowUpRight className="h-4 w-4" />
                   </Link>

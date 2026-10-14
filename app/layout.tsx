@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <ThemeScript />
         <style>{'.design-brief,.design-new-home,.design-brand,.template-only{display:none}'}</style>
-        <script src="/design/runtime-v2.js?rev=20261014-brand-reset" defer />
+        <script src="/design/runtime-v2.js?rev=20261014-shared-load" defer />
         <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOTSTRAP }} />
         {/* 禁用 JS 时撤销进场动画的初始隐藏状态，确保内容永远可见 */}
         <noscript>

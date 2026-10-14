@@ -432,7 +432,7 @@ export function AssistantPanel({
           <AssistantAvatar state={state} />
           <div>
             <strong>
-              小芽 <span>· 你的学习搭子</span>
+              小芽 <span>· 站内助手</span>
             </strong>
             <p aria-live="polite">
               {busy

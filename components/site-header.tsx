@@ -57,6 +57,7 @@ export function SiteHeader() {
       <div className="container flex h-[72px] items-center gap-3 xl:gap-4">
         <Link
           href="/"
+          prefetch={false}
           className="flex shrink-0 items-center gap-2 font-semibold"
           aria-label={`${siteConfig.name} 首页`}
         >
@@ -68,6 +69,7 @@ export function SiteHeader() {
 
         <Link
           href="/"
+          prefetch={false}
           aria-label="返回首页"
           aria-current={pathname === '/' ? 'page' : undefined}
           className={cn(
@@ -113,6 +115,7 @@ export function SiteHeader() {
           {pathEnabled(config, '/saved') && (
             <Link
               href="/saved"
+              prefetch={false}
               title="我的学习夹"
               aria-label="打开我的学习夹"
               className="hidden h-9 w-9 items-center justify-center rounded-xl border text-muted-foreground hover:bg-accent xl:inline-flex"
@@ -126,6 +129,7 @@ export function SiteHeader() {
           {pathEnabled(config, '/find') && (
             <Link
               href="/find"
+              prefetch={false}
               className={cn(
                 'hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors md:inline-flex',
                 pathname.startsWith('/find')
@@ -169,6 +173,7 @@ export function SiteHeader() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
+                      prefetch={false}
                       onClick={() => setMenuOpen(false)}
                       aria-current={isActive(item.href) ? 'page' : undefined}
                       className={cn(
@@ -188,6 +193,7 @@ export function SiteHeader() {
                         pathEnabled(config, child.href) && (
                           <Link
                             key={child.href}
+                            prefetch={false}
                             href={child.href}
                             className="mobile-menu-child"
                             onClick={() => setMenuOpen(false)}
@@ -211,6 +217,7 @@ export function SiteHeader() {
                       <li key={item.href}>
                         <Link
                           href={item.href}
+                          prefetch={false}
                           onClick={() => setMenuOpen(false)}
                           aria-current={isChildActive(item.href) ? 'page' : undefined}
                           className={cn(

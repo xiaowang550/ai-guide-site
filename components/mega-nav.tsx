@@ -145,6 +145,7 @@ export function MegaNav() {
                 </button>
               ) : (
                 <Link
+                  prefetch={false}
                   href={item.href}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
@@ -178,6 +179,7 @@ export function MegaNav() {
                   >
                     {item.href !== '#more-navigation' && (
                       <Link
+                        prefetch={false}
                         href={item.href}
                         onClick={() => setOpenKey(null)}
                         className="flex items-center justify-between rounded-xl px-3 py-3 text-sm font-semibold hover:bg-accent/60"
@@ -192,6 +194,7 @@ export function MegaNav() {
                       {children.map((c) => (
                         <li key={c.href}>
                           <Link
+                            prefetch={false}
                             href={c.href}
                             aria-current={isActive(c.href) ? 'page' : undefined}
                             className={cn(

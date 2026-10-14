@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import type { NewsItem } from '@/lib/news/types'
 import { useNews } from './use-news'
@@ -7,9 +8,28 @@ import { newsDisplay } from '@/lib/news/display'
 
 /** 首页只加载短消息卡片，完整资讯筛选在资讯页加载。两处沿用同一个实时数据源。 */
 export function NewsPreview({ initial }: { initial: NewsItem[] }) {
-  const { feed, error, loading } = useNews(initial, undefined, 4)
+  const element = useRef<HTMLDivElement>(null)
+  const [near, setNear] = useState(false)
+  useEffect(() => {
+    if (!element.current || !('IntersectionObserver' in window)) {
+      setNear(true)
+      return
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '300px' },
+    )
+    observer.observe(element.current)
+    return () => observer.disconnect()
+  }, [])
+  const { feed, error, loading } = useNews(initial, undefined, 4, near)
   return (
-    <div>
+    <div ref={element}>
       {error && (
         <p className="mb-4 text-sm text-muted-foreground" role="status">
           {error}
@@ -58,7 +78,7 @@ export function NewsPreview({ initial }: { initial: NewsItem[] }) {
           {loading ? '正在读取消息…' : '暂时没有消息，稍后再来看看。'}
         </p>
       )}
-      <Link href="/updates" className="section-link mt-5">
+      <Link href="/updates" prefetch={false} className="section-link mt-5">
         更多 AI 资讯 →
       </Link>
     </div>

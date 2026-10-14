@@ -88,7 +88,7 @@ function TaskPicker({ prefix }: { prefix: string }) {
             ))}
           </ol>
           <ModuleSection id="finder">
-            <Link href={task.href} className="template-action">
+            <Link prefetch={false} href={task.href} className="template-action">
               {task.action}
               <ArrowUpRight size={18} />
             </Link>
@@ -108,7 +108,7 @@ function ResourceList({
       <section className="template-resource-list">
         <div className="template-section-title">
           <h2>{kind === 'tools' ? '工具速览' : '从这些练习开始'}</h2>
-          <Link href={`/${kind}/`}>
+          <Link prefetch={false} href={`/${kind}/`}>
             全部
             <ArrowUpRight size={15} />
           </Link>
@@ -117,7 +117,12 @@ function ResourceList({
           ? tools
               .filter((t) => ['chatgpt', 'deepseek', 'kimi', 'doubao'].includes(t.id))
               .map((tool) => (
-                <Link className="template-resource-row" href={`/tools/${tool.id}/`} key={tool.id}>
+                <Link
+                  prefetch={false}
+                  className="template-resource-row"
+                  href={`/tools/${tool.id}/`}
+                  key={tool.id}
+                >
                   <ToolLogo src={tool.logo} alt="" size={38} />
                   <span>
                     <strong>{tool.name}</strong>
@@ -127,7 +132,12 @@ function ResourceList({
                 </Link>
               ))
           : guides.slice(0, 3).map((guide, i) => (
-              <Link className="template-resource-row" href={`/guides/${guide.id}/`} key={guide.id}>
+              <Link
+                prefetch={false}
+                className="template-resource-row"
+                href={`/guides/${guide.id}/`}
+                key={guide.id}
+              >
                 <span className="template-index">0{i + 1}</span>
                 <span>
                   <strong>{guide.title}</strong>
@@ -168,7 +178,7 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
           <div>
             <p className="template-overline">你的 AI 工作空间</p>
             <h1>今天，做点什么？</h1>
-            <p>找工具，学方法，完成一件事。</p>
+            <p>写作、读资料、做汇报，按任务找工具。</p>
           </div>
           <span className="desk-status">
             <i /> 随时开始
@@ -184,7 +194,7 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
             <TaskPicker prefix="desk" />
           </div>
           <ModuleSection id="beginner">
-            <Link href="/start/" className="desk-practice">
+            <Link prefetch={false} href="/start/" className="desk-practice">
               <span className="template-overline">第一次用 AI</span>
               <h2>
                 跟小芽
@@ -209,20 +219,20 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
             <span /> 知芽探索
           </p>
           <h1>
-            你的下一步，
+            选好工具，
             <br />
-            <em>可以用 AI。</em>
+            <em>开始动手。</em>
           </h1>
-          <p>选一件事，马上开始。</p>
+          <p>写作、读资料、做汇报。</p>
           <div className="orbit-hero-links">
             <ModuleSection id="beginner">
-              <Link href="/start/" className="template-action">
+              <Link prefetch={false} href="/start/" className="template-action">
                 跟小芽练习
                 <ArrowUpRight size={18} />
               </Link>
             </ModuleSection>
             <ModuleSection id="tools">
-              <Link href="/tools/">
+              <Link prefetch={false} href="/tools/">
                 探索工具库
                 <ArrowRight size={17} />
               </Link>
@@ -250,17 +260,16 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
         <section className="template-case-shelf">
           <div className="template-section-title">
             <div>
-              <p className="template-overline">真实任务，动手练习</p>
-              <h2>把方法用到工作里</h2>
+              <h2>工作案例</h2>
             </div>
-            <Link href="/cases/">
+            <Link prefetch={false} href="/cases/">
               浏览案例
               <ArrowUpRight size={16} />
             </Link>
           </div>
           <div className="template-case-links">
             {cases.slice(0, 3).map((item, i) => (
-              <Link href={`/cases/${item.id}/`} key={item.id}>
+              <Link prefetch={false} href={`/cases/${item.id}/`} key={item.id}>
                 <span className="template-case-symbol">
                   {i === 0 ? <FileText /> : i === 1 ? <Layers /> : <BookOpen />}
                 </span>
@@ -276,11 +285,11 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
         </section>
       </ModuleSection>
       <ModuleSection id="news">
-        <Link href="/updates/" className="template-news-link">
+        <Link prefetch={false} href="/updates/" className="template-news-link">
           <span>
             <Check size={17} /> 关注 AI 新变化
           </span>
-          <strong>消息与来源，一起看。</strong>
+          <strong>查看官方消息</strong>
           <ArrowUpRight size={22} />
         </Link>
       </ModuleSection>

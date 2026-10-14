@@ -20,15 +20,15 @@ export function ReferenceArt({ home = false, small = false }: { home?: boolean; 
       />
       {home && (
         <>
-          <Link href="/paths" className="art-chip art-chip-one">
+          <Link prefetch={false} href="/paths" className="art-chip art-chip-one">
             <GraduationCap size={22} />
             学习路径
           </Link>
-          <Link href="/tools" className="art-chip art-chip-two">
+          <Link prefetch={false} href="/tools" className="art-chip art-chip-two">
             <LayoutGrid size={22} />
             工具推荐
           </Link>
-          <Link href="/guides" className="art-chip art-chip-three">
+          <Link prefetch={false} href="/guides" className="art-chip art-chip-three">
             <FileText size={22} />
             内容整理
           </Link>
@@ -46,7 +46,7 @@ export function LearningEntries() {
         ['/paths/workplace-30d', '我想提升工作效率', '写作、表格、汇报和日常办公'],
         ['/learn/advanced', '我想深入学习与实践', '模型、Agent 与自动化工作流'],
       ].map(([href, title, description]) => (
-        <Link key={href} href={href}>
+        <Link prefetch={false} key={href} href={href}>
           <BookOpen size={22} />
           <span>
             <strong>{title}</strong>

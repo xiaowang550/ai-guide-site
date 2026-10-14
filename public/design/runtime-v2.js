@@ -37,12 +37,36 @@
   try {
     apply(valid(preview) ? preview : localStorage.getItem('zhiya:design:v1'))
   } catch (_) {}
-  fetch('/api/site', { cache: 'no-store', credentials: 'same-origin' })
-    .then(function (r) {
-      if (!r.ok) throw Error('config')
-      return r.json()
-    })
+  function readSite() {
+    if (window.__zhiyaSiteFlight) return window.__zhiyaSiteFlight.promise
+    var controller = new AbortController()
+    var timer = setTimeout(function () {
+      controller.abort()
+    }, 8000)
+    var flight = {
+      pending: true,
+      promise: fetch('/api/site', {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        signal: controller.signal,
+      })
+        .then(function (r) {
+          return r.ok ? r.json() : null
+        })
+        .catch(function () {
+          return null
+        })
+        .finally(function () {
+          clearTimeout(timer)
+          flight.pending = false
+        }),
+    }
+    window.__zhiyaSiteFlight = flight
+    return flight.promise
+  }
+  readSite()
     .then(function (c) {
+      if (!c) return
       var id = (c.features && c.features.design) || 'classic'
       if (!valid(id)) return
       try {

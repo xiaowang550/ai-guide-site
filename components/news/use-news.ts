@@ -8,7 +8,7 @@ import {
   type NewsItem,
 } from '@/lib/news/types'
 
-export function useNews(initial: NewsItem[] = [], tool?: string, limit = 60) {
+export function useNews(initial: NewsItem[] = [], tool?: string, limit = 60, enabled = true) {
   const [feed, setFeed] = useState<NewsFeed>({
     items: initial,
     lastFetchedAt: null,
@@ -19,6 +19,7 @@ export function useNews(initial: NewsItem[] = [], tool?: string, limit = 60) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   useEffect(() => {
+    if (!enabled) return
     let active = true,
       busy = false
     let controller: AbortController | null = null
@@ -61,6 +62,6 @@ export function useNews(initial: NewsItem[] = [], tool?: string, limit = 60) {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', visible)
     }
-  }, [tool, limit])
+  }, [tool, limit, enabled])
   return { feed, error, loading }
 }

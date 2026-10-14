@@ -40,7 +40,7 @@ export function WeeklyRecommendations({ entries }: { entries: WeeklyEntry[] }) {
                 {entry.kind === '工具' && <LiveHotBadge id={entry.id} />}
               </div>
               <h3>
-                <Link href={entry.href}>
+                <Link prefetch={false} href={entry.href}>
                   {entry.title}
                   <span className="absolute inset-0" aria-hidden />
                 </Link>
@@ -78,7 +78,9 @@ export function WeeklyRecommendations({ entries }: { entries: WeeklyEntry[] }) {
       <LiveTrendSource />
       <p className="weekly-footnote">
         推荐为本站编辑精选；工具实测注明榜单，热门标记仅表示使用热度。
-        <Link href="/tools">查看全部工具 →</Link>
+        <Link prefetch={false} href="/tools">
+          查看全部工具 →
+        </Link>
       </p>
     </section>
   )

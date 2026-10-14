@@ -288,7 +288,7 @@ export function AssistantBubble({
       >
         ×
       </button>
-      <strong>{hello ? '我是小芽，你的 AI 学习搭子' : '小芽轻轻说'}</strong>
+      <strong>{hello ? '我是小芽' : '小芽'}</strong>
       <p>{text}</p>
       {hello && <span>点击我聊天 · 按住我拖动</span>}
     </div>

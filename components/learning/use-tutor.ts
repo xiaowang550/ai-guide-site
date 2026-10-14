@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { runAssistant } from '@/lib/assistant-client'
 import type { ModelCatalog } from '@/lib/assistant-models'
-export function useTutor() {
+export function useTutor(enabled = true) {
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null),
     [model, setModel] = useState(''),
     [busy, setBusy] = useState(false),
@@ -13,6 +13,7 @@ export function useTutor() {
     quickChoice = useRef(''),
     pathname = usePathname()
   useEffect(() => {
+    if (!enabled) return
     let alive = true
     const catalogAbort = new AbortController()
     const timeout = setTimeout(() => catalogAbort.abort(), 12000)
@@ -47,7 +48,7 @@ export function useTutor() {
       catalogAbort.abort()
       controller.current?.abort()
     }
-  }, [])
+  }, [enabled])
   useEffect(() => {
     if (!busy) return
     const timer = setInterval(() => setElapsed((seconds) => seconds + 1), 1000)

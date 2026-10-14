@@ -88,11 +88,12 @@ describe('顶栏排版', () => {
   })
 
   it('「帮我选」是实心 CTA 且在右侧（研究：2/7 站有实心 CTA，全部在最右端）', () => {
-    expect(header, '帮我选应使用实心底色 bg-primary').toMatch(/href="\/find"[\s\S]{0,300}bg-primary/)
     // 位置：CTA 容器必须在搜索容器之后（DOM 顺序即视觉从左到右）
     const ctaAt = header.indexOf('href="/find"')
     const searchAt = header.indexOf('<CommandSearch')
     expect(ctaAt, '找不到帮我选入口').toBeGreaterThan(-1)
+    const cta = header.slice(ctaAt, header.indexOf('</Link>', ctaAt))
+    expect(cta, '帮我选应使用实心底色 bg-primary').toContain('bg-primary')
     expect(searchAt, '找不到搜索框').toBeGreaterThan(-1)
     expect(ctaAt, 'CTA 应该在搜索框右侧').toBeGreaterThan(searchAt)
   })

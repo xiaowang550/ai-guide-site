@@ -27,7 +27,11 @@ export function FooterLinks() {
               .filter((item) => pathEnabled(config, item.href))
               .map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-muted-foreground hover:text-foreground">
+                  <Link
+                    prefetch={false}
+                    href={item.href}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
                     {item.label}
                   </Link>
                 </li>

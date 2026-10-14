@@ -5,6 +5,7 @@ import { DEFAULT_SITE_CONFIG, MODULE_POLL_MS, type PublicSiteConfig } from '@/li
 import { SiteContext } from './site-module-context'
 import { SITE_SYNC_CHANNEL } from '@/lib/site-modules'
 import { type SiteLayout } from '@/lib/site-layout'
+import { loadPublicSite } from '@/lib/public-site-client'
 import dynamic from 'next/dynamic'
 const PreviewControls = dynamic(
   () => import('./module-preview-controls').then((m) => m.PreviewControls),
@@ -23,25 +24,35 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
     [ready, setReady] = useState(false),
     [preview, setPreview] = useState(false)
   const active = useRef(true),
-    previewMode = useRef(false)
+    previewMode = useRef(false),
+    firstPublicRefresh = useRef(true),
+    refreshing = useRef(false)
   const draftLayout = useRef<SiteLayout | null>(null)
   const refresh = useCallback(async () => {
+    if (refreshing.current) return
+    refreshing.current = true
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
     try {
-      const response = await fetch(previewMode.current ? '/api/admin/modules' : '/api/site', {
-        cache: 'no-store',
-        credentials: 'same-origin',
-      })
-      if (!response.ok) {
-        if (previewMode.current) {
+      let next: PublicSiteConfig | null
+      if (previewMode.current) {
+        const response = await fetch('/api/admin/modules', {
+          cache: 'no-store',
+          credentials: 'same-origin',
+          signal: controller.signal,
+        })
+        if (!response.ok) {
           previewMode.current = false
           setPreview(false)
-          const publicResponse = await fetch('/api/site', { cache: 'no-store' })
-          if (publicResponse.ok && active.current) setConfig(await publicResponse.json())
+          next = await loadPublicSite()
+        } else {
+          next = (await response.json()) as PublicSiteConfig
         }
-        return
+      } else {
+        next = await loadPublicSite(firstPublicRefresh.current)
+        firstPublicRefresh.current = false
       }
-      const next = (await response.json()) as PublicSiteConfig
-      if (active.current) {
+      if (next && active.current) {
         setConfig(
           draftLayout.current && previewMode.current
             ? { ...next, layout: draftLayout.current }
@@ -52,6 +63,9 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       }
     } catch {
       /* 保留最近一次成功的配置，网络恢复后重试。 */
+    } finally {
+      clearTimeout(timeout)
+      refreshing.current = false
     }
   }, [])
   useEffect(() => {

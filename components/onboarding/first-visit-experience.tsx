@@ -21,13 +21,13 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
     content = useRef<HTMLDivElement>(null),
     title = useRef<HTMLHeadingElement>(null)
   const router = useRouter(),
-    tutor = useTutor(),
     { config } = useSiteModules()
   const [step, setStep] = useState<'choose' | 'practice' | 'map'>('choose'),
     [task, setTask] = useState<BeginnerTaskId>('todo'),
     [today, setToday] = useState(true),
     [evidence, setEvidence] = useState<BeginnerEvidence | null>(null),
     [copied, setCopied] = useState('')
+  const tutor = useTutor(step === 'practice')
   useEffect(() => {
     const element = dialog.current,
       viewport = window.visualViewport

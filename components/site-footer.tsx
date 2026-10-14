@@ -12,7 +12,7 @@ export function SiteFooter() {
           <div>
             <p className="text-sm font-semibold">{siteConfig.name}</p>
             <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-              用清晰的能力地图和实用方法， 把 AI 变成日常学习与工作里顺手的工具。
+              找 AI 工具，看教程和工作案例。
             </p>
             <p className="mt-3 text-xs text-muted-foreground">
               全站数据最后更新于 {updated.slice(0, 10)} · 资讯定期同步，价格与版本以官方为准
