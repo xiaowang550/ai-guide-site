@@ -265,18 +265,20 @@ export function BeginnerTaskPractice({
         )}
       </div>
       <p className="beginner-caption">
-        {tutor.busy && tutor.elapsed >= 8
-          ? '还在等待？可以停止，先用教学示例继续练。'
-          : tutor.ready
-            ? '点击主按钮会由 AI 处理你的材料。'
-            : 'AI 连接尚未就绪，教学示例可以直接练，不用等待。'}
+        {tutor.busy && !draftIncomplete
+          ? '小芽正在解释这一步，你的草稿会保留。'
+          : tutor.busy && tutor.elapsed >= 8
+            ? '还在等待？可以停止，先用教学示例继续练。'
+            : tutor.ready
+              ? '点击主按钮会由 AI 处理你的材料。'
+              : 'AI 连接尚未就绪，教学示例可以直接练，不用等待。'}
       </p>
-      {tutor.busy && tutor.elapsed >= 8 && (
+      {tutor.busy && draftIncomplete && tutor.elapsed >= 8 && (
         <button type="button" onClick={continueWithExample}>
           不等待，先试教学示例
         </button>
       )}
-      {tutor.error && (kind !== 'example' || !output) && (
+      {tutor.error && (draftIncomplete || !output) && (
         <div className="beginner-error" role="status">
           <p>{tutor.error}</p>
           <button type="button" disabled={tutor.busy} onClick={() => void generate(true)}>
