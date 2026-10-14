@@ -196,7 +196,7 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
                 开始练习
                 <Play size={17} />
               </span>
-              <small>对话 · 作图 · 识图 · 语音</small>
+              <small>改材料 · 做草稿 · 检查结果</small>
             </Link>
           </ModuleSection>
           <ResourceList kind="tools" tools={tools} guides={guides} />

@@ -135,9 +135,9 @@ export default function HomePage() {
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                       </ModuleSection>
-                      <ModuleSection id="guides">
-                        <Link className="home-button home-button-secondary" href="/guides">
-                          先看看使用方法
+                      <ModuleSection id="beginner">
+                        <Link className="home-button home-button-secondary" href="/start">
+                          第一次用？从这里开始
                           <BookOpen className="h-4 w-4" />
                         </Link>
                       </ModuleSection>

@@ -1,344 +1,258 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, ArrowRight, ArrowDown, Sparkles, LoaderCircle, Send } from 'lucide-react'
+import { X, ArrowRight, ArrowLeft, Check, Copy, BookOpen, Layers, Compass } from 'lucide-react'
 import { useTutor } from '@/components/learning/use-tutor'
+import { BeginnerTaskPractice } from '@/components/learning/beginner-task-practice'
+import {
+  beginnerTasks,
+  beginnerTask,
+  type BeginnerTaskId,
+  type BeginnerEvidence,
+} from '@/lib/beginner-tasks'
+import { readLocal, saveLocal, rookieProgress, ROOKIE_KEY } from '@/lib/onboarding-state'
+import { copyText } from '@/lib/copy-text'
+import { useSiteModules } from '@/components/site-module-context'
+import { pathEnabled } from '@/lib/site-modules'
 import './onboarding.css'
 
-const FIRST_MESSAGE = '你好！我是 AI 新手，请推荐一个今天就能用上的 AI 小技巧。'
-const EXAMPLE =
-  '你可以让 AI 把一段杂乱的笔记整理成待办清单。试着告诉它：“把下面的笔记整理成三条待办，每条写清要做什么。”发出消息后，先检查结果，再修改使用。'
-const QUICK_TASKS = [
-  {
-    label: '整理待办',
-    prompt:
-      '请把这段练习笔记整理成三条待办，80 字以内：周五下午四点开教研会，每位老师带一个案例，会议室要提前确认。不确定的信息标【待核对】。',
-  },
-  {
-    label: '起草通知',
-    prompt:
-      '请写一段 80 字以内的教研通知：本周五下午四点，学校会议室，每位老师带一个备课案例。不要新增具体日期或联系人。',
-  },
-  {
-    label: '学习作图',
-    prompt:
-      '我要画一株教室窗边的小绿植。请给一条 60 字以内的作图描述，含主体、场景和风格。只写提示词，不声称已生成图片。',
-  },
-]
-type Stage = 'input' | 'send' | 'answer' | 'choose'
-
 export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) => void }) {
-  const dialog = useRef<HTMLDialogElement>(null)
-  const input = useRef<HTMLTextAreaElement>(null)
-  const request = useRef({ id: 0 })
-  const router = useRouter()
-  const tutor = useTutor()
-  const [stage, setStage] = useState<Stage>('input')
-  const [today, setToday] = useState(false)
-  const [prompt, setPrompt] = useState(FIRST_MESSAGE)
-  const [answer, setAnswer] = useState('')
-  const [kind, setKind] = useState('')
-  const [skipped, setSkipped] = useState(false)
-
+  const dialog = useRef<HTMLDialogElement>(null),
+    content = useRef<HTMLDivElement>(null),
+    title = useRef<HTMLHeadingElement>(null)
+  const router = useRouter(),
+    tutor = useTutor(),
+    { config } = useSiteModules()
+  const [step, setStep] = useState<'choose' | 'practice' | 'map'>('choose'),
+    [task, setTask] = useState<BeginnerTaskId>('todo'),
+    [today, setToday] = useState(true),
+    [evidence, setEvidence] = useState<BeginnerEvidence | null>(null),
+    [copied, setCopied] = useState('')
   useEffect(() => {
-    const element = dialog.current
-    const activeRequest = request.current
-    const viewport = window.visualViewport
-    function fitViewport() {
+    const element = dialog.current,
+      viewport = window.visualViewport
+    function fit() {
       if (!element) return
-      const height = viewport?.height ?? window.innerHeight
-      const width = viewport?.width ?? window.innerWidth
-      element.style.setProperty('--intro-height', `${height}px`)
-      element.style.setProperty('--intro-width', `${width}px`)
-      element.style.setProperty('--intro-top', `${(viewport?.offsetTop ?? 0) + height / 2}px`)
-      element.style.setProperty('--intro-left', `${(viewport?.offsetLeft ?? 0) + width / 2}px`)
+      const height = viewport?.height ?? innerHeight,
+        width = viewport?.width ?? innerWidth
+      element.style.setProperty('--intro-height', height + 'px')
+      element.style.setProperty('--intro-width', width + 'px')
+      element.style.setProperty('--intro-top', (viewport?.offsetTop ?? 0) + height / 2 + 'px')
+      element.style.setProperty('--intro-left', (viewport?.offsetLeft ?? 0) + width / 2 + 'px')
     }
-    fitViewport()
-    viewport?.addEventListener('resize', fitViewport)
-    viewport?.addEventListener('scroll', fitViewport)
-    window.addEventListener('resize', fitViewport)
+    fit()
+    viewport?.addEventListener('resize', fit)
+    viewport?.addEventListener('scroll', fit)
+    window.addEventListener('resize', fit)
     if (element && !element.open) element.showModal()
     return () => {
-      activeRequest.id++
-      viewport?.removeEventListener('resize', fitViewport)
-      viewport?.removeEventListener('scroll', fitViewport)
-      window.removeEventListener('resize', fitViewport)
+      viewport?.removeEventListener('resize', fit)
+      viewport?.removeEventListener('scroll', fit)
+      window.removeEventListener('resize', fit)
       element?.close()
     }
   }, [])
-
-  function chooseRoute(skip = false) {
-    request.current.id++
+  useEffect(() => {
+    content.current?.scrollTo({ top: 0 })
+    title.current?.focus()
+  }, [step])
+  function close() {
     tutor.stop()
-    setSkipped(skip)
-    setStage('choose')
+    onClose(today)
   }
   function finish(path: string) {
-    request.current.id++
     tutor.stop()
     onClose(today)
-    router.push(path)
+    const url = new URL(path, location.href),
+      preview = new URLSearchParams(location.search).get('design-preview')
+    if (preview) url.searchParams.set('design-preview', preview)
+    router.push(url.pathname + url.search)
   }
-  function skipOrClose() {
-    request.current.id++
-    tutor.stop()
-    onClose(today)
+  function complete(value: BeginnerEvidence) {
+    setEvidence(value)
+    const progress = rookieProgress(readLocal(ROOKIE_KEY, {}))
+    saveLocal(ROOKIE_KEY, { stage: 1, done: [...new Set([...progress.done, 0])] })
+    setStep('map')
   }
-  async function generate() {
-    if (stage === 'choose' || !tutor.ready || tutor.busy || !prompt.trim()) return
-    const id = ++request.current.id
-    setAnswer('')
-    setKind('正在回答…')
-    try {
-      await tutor.run(prompt, (text) => {
-        if (id === request.current.id) setAnswer((previous) => previous + text)
-      })
-      if (id === request.current.id) {
-        setKind('实时 AI 回答')
-        setStage('answer')
-      }
-    } catch {
-      if (id === request.current.id) {
-        setKind('回答未完成')
-        setStage('answer')
-      }
-    }
-  }
-  function example() {
-    request.current.id++
-    tutor.stop()
-    setAnswer(EXAMPLE)
-    setKind('教学示例 · 未调用模型')
-    setStage('answer')
-  }
-  const guide = tutor.busy
-    ? '正在回答，文字会一点点出现。随时可以点 × 跳过。'
-    : tutor.error && !answer
-      ? '暂未收到完整回答。可以换个模型、查看示例，或跳过练习。'
-      : stage === 'input'
-        ? '① 点下面的输入框。直接用这句话，或者改成你想问的内容。'
-        : stage === 'send'
-          ? '② 点亮起的“发送消息”，把这句话交给 AI。'
-          : '③ 看看 AI 的回答，再选择适合你的学习路线。'
-
+  const current = beginnerTask(task)
   return (
     <dialog
       ref={dialog}
       className="first-visit-dialog"
-      aria-label="新手动手指引"
-      onCancel={(event) => {
-        event.preventDefault()
-        skipOrClose()
+      aria-labelledby="intro-title"
+      onCancel={(e) => {
+        e.preventDefault()
+        close()
       }}
     >
-      <style>{`.intro-task-chips{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.intro-task-chips button{border:1px solid hsl(var(--border));border-radius:20px;background:hsl(var(--accent));color:hsl(var(--foreground));padding:8px 14px;min-height:44px}.intro-task-chips button:focus-visible{outline:2px solid hsl(var(--primary));outline-offset:3px}`}</style>
-      <style>{`.intro-scene{display:flex;align-items:center;gap:16px;border-radius:12px;background:hsl(var(--accent));overflow:hidden;margin:12px 0}.intro-scene img{width:96px;height:72px;object-fit:cover}.intro-scene p{font-size:14px;line-height:1.7;margin:0;padding:8px 12px 8px 0}`}</style>
       <header>
-        <span className="intro-mark">
-          <Sparkles size={20} />
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element -- Existing optimized local mascot. */}
+        <img
+          className="intro-sprout"
+          src="/brand/desk-sprout-v2.webp"
+          width="48"
+          height="48"
+          alt=""
+        />
         <div>
-          <small>{stage === 'choose' ? '按你的起点出发' : '小芽带你试一次 · 约 1 分钟'}</small>
-          <h2>{stage === 'choose' ? '选一条适合你的学习路线' : '欢迎，先和 AI 聊一句吧'}</h2>
+          <small>小芽带你上手</small>
+          <h2 id="intro-title" ref={title} tabIndex={-1}>
+            {step === 'choose'
+              ? '先试一件小事'
+              : step === 'practice'
+                ? '动手：' + current.label
+                : '接下来，去哪里？'}
+          </h2>
         </div>
-        <button type="button" aria-label="关闭新手指引" onClick={skipOrClose}>
+        <button type="button" aria-label="关闭新手指引" onClick={close}>
           <X size={20} />
         </button>
       </header>
-      <div className="intro-content">
-        {stage === 'choose' ? (
-          <>
-            <p className="intro-muted">
-              {skipped ? '已跳过快速练习。' : '第一步就这么简单。'}之后随时可以在“教程”里继续学。
-            </p>
-            <div className="intro-choices">
-              <button onClick={() => finish('/start/')}>
-                <span aria-hidden="true">🌱</span>
-                <h3>我是新手，零基础</h3>
-                <p>从对话、图片到语音，小芽手把手带你练习。</p>
-                <strong>
-                  进入零基础教程 <ArrowRight size={16} />
-                </strong>
-              </button>
-              <button onClick={() => finish('/')}>
-                <span aria-hidden="true">🧭</span>
-                <h3>我了解过一些 AI 知识</h3>
-                <p>直接浏览工具、教程和案例，按需要探索。</p>
-                <strong>
-                  进入首页 <ArrowRight size={16} />
-                </strong>
-              </button>
-            </div>
-          </>
-        ) : (
+      <ol className="intro-progress" aria-label="上手进度">
+        {['选一件事', '亲手试试', '找到入口'].map((label, i) => (
+          <li
+            key={label}
+            aria-current={['choose', 'practice', 'map'][i] === step ? 'step' : undefined}
+          >
+            <span>{i + 1}</span>
+            {label}
+          </li>
+        ))}
+      </ol>
+      <div className="intro-content" ref={content}>
+        {step === 'choose' && (
           <>
             <p className="intro-purpose-line">
-              <span>找 AI 工具、学方法、完成教学和工作任务。</span>无需注册，打开就能学。
+              <strong>AI 可以帮你写草稿、整理信息。</strong>
+              <br />
+              在这里先练一次，再找适合自己的工具。
             </p>
-            <div className="intro-scene">
-              {/* eslint-disable-next-line @next/next/no-img-element -- Optimized local teaching scene. */}
-              <img
-                src="/images/cases/campus-notice.webp"
-                alt="把零散资料整理成通知的场景插画"
-                width="96"
-                height="72"
-              />
-              <p>
-                <strong>一段材料 → 一份短草稿 → 你来核对</strong>
-                <br />
-                选一件小事，试着把要求说清楚。
-              </p>
-            </div>
-            <div className="intro-guide" role="status">
-              <span>{guide}</span>
-              {stage !== 'answer' && !tutor.busy && <ArrowDown size={18} aria-hidden="true" />}
-            </div>
-            <div className="intro-task-chips" aria-label="选择一个小任务">
-              {QUICK_TASKS.map((task) => (
+            <div className="intro-task-cards">
+              {beginnerTasks.map((t) => (
                 <button
-                  key={task.label}
-                  disabled={tutor.busy}
+                  type="button"
+                  key={t.id}
                   onClick={() => {
-                    setPrompt(task.prompt)
-                    setAnswer('')
-                    setStage('send')
-                    tutor.setError('')
-                    input.current?.focus()
+                    setTask(t.id)
+                    setStep('practice')
                   }}
                 >
-                  {task.label}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Reuse locally generated work scenes. */}
+                  <img src={'/images/cases/' + t.cover + '.webp'} alt="" width="160" height="100" />
+                  <span>
+                    <strong>{t.label}</strong>
+                    <small>{t.benefit}</small>
+                    <b>
+                      试一试 <ArrowRight size={15} />
+                    </b>
+                  </span>
                 </button>
               ))}
             </div>
-            <label className="intro-input-label" data-spotlight={stage === 'input'}>
-              你发给 AI 的话
-              <textarea
-                ref={input}
-                aria-label="第一条对话消息"
-                aria-describedby="intro-prompt-help"
-                value={prompt}
-                maxLength={1000}
-                disabled={tutor.busy}
-                onFocus={() => {
-                  if (stage === 'input') setStage('send')
-                }}
-                onChange={(event) => {
-                  setPrompt(event.target.value)
-                  setAnswer('')
-                  tutor.setError('')
-                  setStage('send')
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-                    event.preventDefault()
-                    void generate()
-                  }
-                }}
-              />
-            </label>
-            <p id="intro-prompt-help" className="intro-muted">
-              “提示词”就是你发给 AI 的要求，像平时聊天一样写。
-            </p>
-            <div className="intro-actions">
-              <button
-                className="intro-primary"
-                data-spotlight={stage === 'send' && !tutor.busy}
-                disabled={!tutor.ready || tutor.busy || !prompt.trim()}
-                onClick={() => void generate()}
-              >
-                {tutor.busy ? (
-                  <LoaderCircle size={16} className="intro-spin" />
-                ) : (
-                  <Send size={16} />
-                )}
-                {tutor.busy
-                  ? `正在回答 · ${tutor.elapsed} 秒`
-                  : tutor.error
-                    ? '重试发送'
-                    : '发送消息'}
-              </button>
-              {tutor.busy && <button onClick={tutor.stop}>停止生成</button>}
-              {stage === 'input' && (
-                <button onClick={() => input.current?.focus()}>直接用这句话</button>
-              )}
+            <p className="intro-muted">不知道选哪项？先试“整理待办”。材料已经准备好了。</p>
+          </>
+        )}
+        {step === 'practice' && (
+          <>
+            <button
+              type="button"
+              className="intro-back"
+              disabled={tutor.busy}
+              onClick={() => {
+                tutor.stop()
+                setStep('choose')
+              }}
+            >
+              <ArrowLeft size={15} />
+              换一件事
+            </button>
+            <BeginnerTaskPractice
+              key={task}
+              taskId={task}
+              tutor={tutor}
+              onComplete={complete}
+              completeLabel="做完了，看看网站怎么用"
+            />
+          </>
+        )}
+        {step === 'map' && (
+          <>
+            <div className="intro-success">
+              <Check size={22} />
+              <div>
+                <strong>你已经做出了第一份草稿。</strong>
+                <p>可以复制到聊天、笔记或文档，核对后再用。</p>
+              </div>
             </div>
-            <small className="intro-muted">
-              {tutor.ready
-                ? `免费体验 · ${tutor.current?.name} · 点击发送才会调用模型。`
-                : '免费 AI 连接暂不可用。可以先看对话示例，或跳过练习。'}
-            </small>
-            {answer && (
-              <article className="intro-output" aria-label="AI 对话回答">
-                <small>{kind}</small>
-                <p>{answer}</p>
-              </article>
-            )}
-            {tutor.error && (
-              <div className="intro-status">
-                <p role="status">{tutor.error}</p>
-                <label className="intro-input-label">
-                  换一个免费模型试试
-                  <select
-                    aria-label="更换体验免费模型"
-                    value={tutor.model}
-                    disabled={tutor.busy}
-                    onChange={(event) => {
-                      tutor.setModel(event.target.value)
-                      tutor.setError('')
-                      setAnswer('')
-                      setStage('send')
-                    }}
-                  >
-                    {tutor.catalog?.models
-                      .filter(
-                        (model) => model.available && tutor.catalog?.connected[model.provider],
-                      )
-                      .map((model) => (
-                        <option key={model.id} value={model.id}>
-                          {model.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
+            {evidence && (
+              <div className="intro-keepsake">
+                <small>{evidence.kind === 'example' ? '本次教学示例' : '本次 AI 草稿'}</small>
+                <p>{evidence.output}</p>
+                <button
+                  type="button"
+                  onClick={async () =>
+                    setCopied((await copyText(evidence.output)) ? '已复制' : '请选中文字手动复制')
+                  }
+                >
+                  <Copy size={15} />
+                  {copied || '复制这份草稿'}
+                </button>
               </div>
             )}
-            {!tutor.busy && (
-              <button className="intro-example" onClick={example}>
-                先看对话示例
+            {pathEnabled(config, '/start') && (
+              <button
+                type="button"
+                className="intro-primary intro-next-practice"
+                onClick={() => finish('/start/?task=' + task + '&from=intro')}
+              >
+                继续：学会把要求说清楚
+                <ArrowRight size={17} />
               </button>
             )}
-            {tutor.busy && tutor.elapsed >= 12 && (
-              <p className="intro-muted" role="status">
-                当前免费通道等待较久。可以停止后看示例，或者直接选择学习路线。
-              </p>
-            )}
-            {stage === 'answer' && answer && (
-              <p className="intro-muted intro-takeaway">
-                可以继续追问、补充要求。使用前先核对；页面上的小芽也能陪你练习。
-              </p>
-            )}
+            <h3 className="intro-map-title">以后按需要，选这些入口</h3>
+            <div className="intro-site-map">
+              {[
+                {
+                  href: '/tools/',
+                  name: '找工具',
+                  note: '我知道要做什么，想选一个 AI 工具。',
+                  icon: Layers,
+                },
+                {
+                  href: '/guides/',
+                  name: '跟着学',
+                  note: '我不会操作，想照着步骤练。',
+                  icon: BookOpen,
+                },
+                {
+                  href: '/cases/',
+                  name: '看例子',
+                  note: '我想知道别人怎样把 AI 用在工作里。',
+                  icon: Compass,
+                },
+              ]
+                .filter((e) => pathEnabled(config, e.href))
+                .map((e) => (
+                  <button type="button" key={e.href} onClick={() => finish(e.href)}>
+                    <e.icon size={22} />
+                    <strong>{e.name}</strong>
+                    <small>{e.note}</small>
+                    <ArrowRight size={16} />
+                  </button>
+                ))}
+            </div>
+            <p className="intro-muted">没听懂的地方，可以点页面上的小芽继续问。</p>
           </>
         )}
       </div>
       <footer>
         <label>
-          <input
-            type="checkbox"
-            checked={today}
-            onChange={(event) => setToday(event.target.checked)}
-          />
-          今天不再弹出
+          <input type="checkbox" checked={today} onChange={(e) => setToday(e.target.checked)} />
+          今天不再提示
         </label>
-        {stage !== 'choose' &&
-          (stage === 'answer' && answer && !tutor.busy ? (
-            <button className="intro-primary" onClick={() => chooseRoute()}>
-              选择我的学习路线 <ArrowRight size={16} />
-            </button>
-          ) : (
-            <button onClick={() => chooseRoute(true)}>
-              跳过，选择学习路线 <ArrowRight size={16} />
-            </button>
-          ))}
+        <button type="button" onClick={close}>
+          {step === 'map' ? '先自己逛逛' : '稍后再试'}
+        </button>
       </footer>
     </dialog>
   )

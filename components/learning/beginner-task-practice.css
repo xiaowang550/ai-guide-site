@@ -1,0 +1,261 @@
+.beginner-practice {
+  min-width: 0;
+}
+.beginner-help {
+  border-top: 1px solid hsl(var(--border));
+  margin-top: 20px;
+  padding-top: 8px;
+  font-size: 14px;
+}
+.beginner-help summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  color: hsl(var(--primary));
+}
+.beginner-help-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.beginner-help form {
+  display: flex;
+  gap: 8px;
+}
+.beginner-help form input {
+  flex: 1;
+  min-width: 0;
+}
+.beginner-help form button {
+  flex: none;
+}
+.beginner-help-answer {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  padding: 12px;
+  border-radius: 10px;
+  background: hsl(var(--accent));
+  margin: 12px 0;
+}
+.beginner-now {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 20px;
+  padding: 13px 16px;
+  border-left: 3px solid hsl(var(--primary));
+  background: hsl(var(--accent));
+  border-radius: 0 12px 12px 0;
+}
+.beginner-now > span {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.beginner-now > strong {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.beginner-material label {
+  display: grid;
+  gap: 9px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.beginner-practice textarea,
+.beginner-practice input,
+.beginner-practice select {
+  width: 100%;
+  min-width: 0;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  background: hsl(var(--background));
+  padding: 12px;
+  font: inherit;
+  line-height: 1.7;
+}
+.beginner-material textarea {
+  min-height: 115px;
+  resize: vertical;
+  font-weight: 400;
+  font-size: 16px;
+}
+.beginner-material-help {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0 16px;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.beginner-material-help button {
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  flex: none;
+}
+.beginner-requirements {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.beginner-submit,
+.beginner-result-actions,
+.beginner-task-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 16px 0 8px;
+}
+.beginner-practice button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 11px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.beginner-practice button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.beginner-practice button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+.beginner-practice .beginner-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: transparent;
+  font-weight: 600;
+}
+.beginner-caption {
+  font-size: 12px;
+  line-height: 1.7;
+  color: hsl(var(--muted-foreground));
+}
+.beginner-prompt,
+.beginner-model {
+  font-size: 13px;
+  margin: 14px 0;
+  color: hsl(var(--muted-foreground));
+}
+.beginner-prompt summary,
+.beginner-model summary {
+  cursor: pointer;
+  padding: 10px 0;
+  min-height: 44px;
+}
+.beginner-prompt p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+  padding: 12px;
+  background: hsl(var(--muted));
+  border-radius: 10px;
+}
+.beginner-prompt small {
+  display: block;
+  margin-top: 8px;
+}
+.beginner-result {
+  margin: 20px 0 0;
+  padding: 18px;
+  border: 1px solid hsl(var(--primary) / 0.25);
+  border-radius: 15px;
+  background: hsl(var(--card));
+}
+.beginner-result header {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.beginner-result header span {
+  font-size: 12px;
+  color: hsl(var(--primary));
+}
+.beginner-result header strong {
+  font-size: 16px;
+}
+.beginner-result textarea {
+  min-height: 145px;
+  resize: vertical;
+  font-size: 16px;
+}
+.beginner-review {
+  margin-top: 20px;
+  border: 0;
+  padding: 0;
+}
+.beginner-review legend {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+.beginner-review button {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+  margin: 8px 0;
+  background: hsl(var(--background));
+}
+.beginner-review [aria-pressed='true'],
+.beginner-task-tabs [aria-pressed='true'] {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+.beginner-feedback,
+.beginner-error {
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+.beginner-continue {
+  width: 100%;
+  margin-top: 12px;
+}
+.beginner-spin {
+  animation: beginner-spin 1s linear infinite;
+}
+@keyframes beginner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 600px) {
+  .beginner-requirements {
+    grid-template-columns: 1fr;
+  }
+  .beginner-material-help {
+    display: grid;
+    justify-content: start;
+  }
+  .beginner-material-help button {
+    justify-self: start;
+  }
+  .beginner-result {
+    padding: 14px;
+  }
+  .beginner-submit > .beginner-primary {
+    flex: 1;
+  }
+  .beginner-result-actions button {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .beginner-spin {
+    animation: none;
+  }
+}

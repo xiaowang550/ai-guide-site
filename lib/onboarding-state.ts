@@ -1,6 +1,13 @@
 // Do not inherit permanent completion or snooze flags from the old walkthrough.
 export const INTRO_KEY = 'ai-map:intro:v3'
 export const ROOKIE_KEY = 'ai-map:rookie:v1'
+export const CORE_ROOKIE_STAGES = [0, 1, 5] as const
+export function rookieCoreDone(done: number[]) {
+  return CORE_ROOKIE_STAGES.every((stage) => done.includes(stage))
+}
+export function nextRookieStage(stage: number) {
+  return stage === 1 ? 5 : Math.min(stage + 1, 5)
+}
 export function localDay(now = new Date()) {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 }
