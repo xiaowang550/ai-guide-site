@@ -21,6 +21,7 @@
     root.style.colorScheme = root.classList.contains('dark') ? 'dark' : 'light'
     if (id === 'classic') {
       root.dataset.design = id
+      document.getElementById('design-sheet')?.remove()
       return
     }
     var sheet = document.getElementById('design-sheet')

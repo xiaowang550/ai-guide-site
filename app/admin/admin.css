@@ -24,7 +24,7 @@
   font-size: 14px;
   font-weight: 600;
 }
-.admin-brand > span {
+.admin-brand > span:not(.design-brand) {
   display: flex;
   width: 38px;
   height: 38px;

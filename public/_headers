@@ -25,6 +25,10 @@
   Cache-Control: no-cache
   Service-Worker-Allowed: /
 
+# 模板切换脚本与样式随发布更新，刷新时重新验证
+/design/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 # 静态资源（带内容 hash）可以永久缓存。
 # 文件名变了内容一定变，所以不存在「缓存了旧内容」的问题。
 /_next/static/*
