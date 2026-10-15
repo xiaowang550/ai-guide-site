@@ -259,3 +259,34 @@
     animation: none;
   }
 }
+
+.beginner-followup {
+  margin: 16px 0;
+  padding: 14px;
+  background: hsl(var(--muted) / 0.4);
+  border-radius: 12px;
+}
+.beginner-followup label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.beginner-followup > div {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.beginner-followup input {
+  min-width: 0;
+  flex: 1;
+}
+.beginner-followup button {
+  flex-shrink: 0;
+  border: 1px solid hsl(var(--border));
+}
+@media (max-width: 600px) {
+  .beginner-followup > div {
+    flex-direction: column;
+  }
+}

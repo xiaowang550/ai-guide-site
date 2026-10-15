@@ -1,6 +1,7 @@
 // Do not inherit permanent completion or snooze flags from the old walkthrough.
 export const INTRO_KEY = 'ai-map:intro:v3'
 export const ROOKIE_KEY = 'ai-map:rookie:v1'
+export const EXPERIENCE_KEY = 'zhiya:experience:v1'
 export const CORE_ROOKIE_STAGES = [0, 1, 5] as const
 export function rookieCoreDone(done: number[]) {
   return CORE_ROOKIE_STAGES.every((stage) => done.includes(stage))

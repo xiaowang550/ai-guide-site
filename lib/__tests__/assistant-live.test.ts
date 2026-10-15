@@ -30,7 +30,9 @@ async function fixture(
   env.env.ASSISTANT_FETCH = fetcher as typeof fetch
   env.env.AI_CREDENTIALS_KEY = 'test-encryption-key-with-at-least-32-characters'
   // Existing interaction cases start with a previously verified test model.
-  await env.db.exec('CREATE TABLE IF NOT EXISTS assistant_store(id TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL)')
+  await env.db.exec(
+    'CREATE TABLE IF NOT EXISTS assistant_store(id TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL)',
+  )
   await env.db.run('INSERT INTO assistant_store VALUES(?,?,?)', [
     'health:' + MODEL.id,
     JSON.stringify({
@@ -181,7 +183,7 @@ describe('助手私有配置与公开推理', () => {
       message.messages[0].content,
     )
   })
-  it('练习模式优先低延迟、限制短回答、关闭思考且保留零价保护', async () => {
+  it('练习模式优先低延迟，允许一般知识回答，不把空站内资料当成知识限制', async () => {
     const { env, fetcher } = await fixture()
     env.env.OPENROUTER_API_KEY = KEY
     const result = await request(env, 'POST', '/api/assistant/chat', {
@@ -191,15 +193,16 @@ describe('助手私有配置与公开推理', () => {
     expect(result.status).toBe(200)
     const call = fetcher.mock.calls.find(([url]) => String(url).endsWith('/chat/completions'))!
     const payload = JSON.parse(String(call[1]?.body))
-    expect(payload.max_tokens).toBe(700)
+    expect(payload.max_tokens).toBe(1600)
     expect(payload.provider).toEqual({
       max_price: { prompt: 0, completion: 0 },
       allow_fallbacks: true,
       sort: 'latency',
     })
     expect(payload.reasoning).toBeUndefined()
-    expect(payload.messages[0].content).toContain('未知事实用【待核对】')
-    expect(payload.messages[0].content).toContain('站内公开资料：[]')
+    expect(payload.messages[0].content).toContain('可以运用一般知识回答')
+    expect(payload.messages[0].content).toContain('不需要检索本站')
+    expect(payload.messages[0].content).not.toContain('站内公开资料：[]')
     expect(
       (await request(env, 'POST', '/api/assistant/chat', { ...message, mode: 'paid' })).status,
     ).toBe(400)

@@ -5,6 +5,7 @@ import { runAssistant } from '@/lib/assistant-client'
 import type { ModelCatalog } from '@/lib/assistant-models'
 export function useTutor(enabled = true) {
   const [catalog, setCatalog] = useState<ModelCatalog | null>(null),
+    [loading, setLoading] = useState(enabled),
     [model, setModel] = useState(''),
     [busy, setBusy] = useState(false),
     [elapsed, setElapsed] = useState(0),
@@ -14,6 +15,7 @@ export function useTutor(enabled = true) {
     pathname = usePathname()
   useEffect(() => {
     if (!enabled) return
+    setLoading(true)
     let alive = true
     const catalogAbort = new AbortController()
     const timeout = setTimeout(() => catalogAbort.abort(), 12000)
@@ -24,16 +26,8 @@ export function useTutor(enabled = true) {
         if (!alive) return
         setCatalog(value)
         const usable = value.models.filter((m) => m.available && value.connected[m.provider])
-        const quick =
-          (
-            usable.find((m) => m.id === 'apodex/apodex-1.1-mini:free') ??
-            usable.find((m) => m.id === 'inclusionai/ling-3.1-flash') ??
-            usable.find((m) => m.id.includes('inkling-small')) ??
-            usable.find((m) => m.id === 'liquid/lfm-2.5-2.6b:free') ??
-            usable.find((m) => m.id !== 'openrouter/free' && !m.reasoning) ??
-            usable.find((m) => m.id !== 'openrouter/free') ??
-            usable[0]
-          )?.id ?? ''
+        // The service orders verified models by measured first-token latency.
+        const quick = usable[0]?.id ?? ''
         quickChoice.current = quick
         setModel(quick)
       })
@@ -41,7 +35,10 @@ export function useTutor(enabled = true) {
         if (alive)
           setError(catalogAbort.signal.aborted ? '连接准备超时，可以先做示例练习。' : e.message)
       })
-      .finally(() => clearTimeout(timeout))
+      .finally(() => {
+        clearTimeout(timeout)
+        if (alive) setLoading(false)
+      })
     return () => {
       alive = false
       clearTimeout(timeout)
@@ -101,6 +98,7 @@ export function useTutor(enabled = true) {
   }
   return {
     catalog,
+    loading,
     model,
     setModel,
     resetQuickModel: () => {

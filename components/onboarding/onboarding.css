@@ -364,3 +364,201 @@ body:has(.first-visit-dialog[open]) {
     transform: none;
   }
 }
+
+.intro-levels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.intro-levels > button {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  padding: 20px;
+  margin: 0;
+  width: auto;
+}
+.intro-levels > button:hover {
+  border-color: hsl(var(--primary));
+  background: hsl(var(--accent));
+}
+.intro-levels strong {
+  font-size: 18px;
+}
+.intro-levels span {
+  font-size: 14px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+}
+.intro-levels b {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+  color: hsl(var(--primary));
+}
+.intro-keepsake summary {
+  cursor: pointer;
+  font-size: 14px;
+  min-height: 28px;
+}
+.experienced-guide {
+  position: fixed;
+  z-index: 75;
+  left: max(24px, env(safe-area-inset-left));
+  bottom: max(24px, env(safe-area-inset-bottom));
+  width: min(390px, calc(100vw - 32px));
+  color: hsl(var(--foreground));
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  box-shadow: 0 10px 45px #142b2420;
+  overflow: hidden;
+}
+.experienced-guide header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.experienced-guide button {
+  min-height: 44px;
+  padding: 10px;
+  border-radius: 9px;
+  font-size: 14px;
+}
+.experienced-guide header button:first-child {
+  text-align: left;
+  font-weight: 600;
+  flex: 1;
+}
+.experienced-guide button:focus-visible,
+.experienced-guide input:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+.experienced-guide button:disabled {
+  opacity: 0.5;
+}
+.experienced-guide-body {
+  padding: 16px;
+  max-height: 55vh;
+  max-height: 55dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.experienced-guide h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.experienced-guide p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: hsl(var(--muted-foreground));
+  margin: 0 0 14px;
+}
+.experienced-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid hsl(var(--border));
+  margin-top: 10px;
+  text-align: left;
+}
+.experienced-entry > span {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+.experienced-entry small {
+  font-size: 12px;
+  line-height: 1.6;
+  color: hsl(var(--muted-foreground));
+}
+.experienced-entry:hover {
+  background: hsl(var(--accent));
+}
+.experienced-guide .intro-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 0;
+  margin-bottom: 8px;
+}
+.experienced-guide .intro-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+}
+.experienced-tool-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.experienced-tool-options label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.experienced-guide input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: hsl(var(--primary));
+}
+.experienced-guide form > label {
+  font-size: 15px;
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.experienced-guide form > input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 9px;
+  background: hsl(var(--background));
+  padding: 10px;
+  font-size: 16px;
+}
+.experienced-keywords {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.experienced-keywords [aria-pressed='true'] {
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
+}
+@media (max-width: 600px) {
+  .intro-task-cards {
+    grid-template-columns: 1fr;
+  }
+  .intro-levels {
+    grid-template-columns: 1fr;
+  }
+  .experienced-guide {
+    left: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+@media (min-width: 601px) {
+  .intro-task-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

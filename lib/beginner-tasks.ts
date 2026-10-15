@@ -2,6 +2,16 @@ export const BEGINNER_TASK_KEY = 'zhiya:beginner-task:v1'
 export const BEGINNER_RESULT_KEY = 'zhiya:beginner-result:v1'
 export const beginnerTasks = [
   {
+    id: 'ask',
+    label: '直接问 AI',
+    benefit: '问攻略、做计划，或者问你自己的问题',
+    cover: 'document-review',
+    action: '发送给 AI',
+    material: '请给我一份北京三天的旅游攻略。第一次去，主要乘地铁，希望行程轻松一些。',
+    recipient: '自己',
+    question: '攻略里的票价或开放时间没有核实，你会怎么做？',
+  },
+  {
     id: 'message',
     label: '写一条消息',
     benefit: '把已有信息写成能发出去的草稿',
@@ -41,6 +51,15 @@ export type BeginnerDraft = {
   format: BeginnerFormat
 }
 export type BeginnerEvidence = BeginnerDraft & { output: string; kind: 'ai' | 'example' }
+/** Recognize explicit first-person requests; an ordinary notice starting with 请 stays material. */
+export function beginnerDirectQuestion(draft: BeginnerDraft) {
+  return (
+    draft.task === 'ask' ||
+    /^(?:你好[，,！!。\s]*)?(?:请)?(?:给我|帮我|为我|我想|我打算|我准备|能不能|可以帮我|怎么|如何|什么是|为什么)/.test(
+      draft.material.trim(),
+    )
+  )
+}
 export function beginnerEvidence(value: unknown): BeginnerEvidence | null {
   if (!value || typeof value !== 'object') return null
   const v = value as Partial<BeginnerEvidence>
@@ -49,7 +68,7 @@ export function beginnerEvidence(value: unknown): BeginnerEvidence | null {
   return { ...beginnerDraft(v), output: v.output.slice(0, 5000), kind: v.kind! }
 }
 export function beginnerTask(id: unknown) {
-  return beginnerTasks.find((t) => t.id === id) ?? beginnerTasks[0]
+  return beginnerTasks.find((t) => t.id === id) ?? beginnerTasks.find((t) => t.id === 'message')!
 }
 export function beginnerDraft(value: unknown): BeginnerDraft {
   const v = value && typeof value === 'object' ? (value as Partial<BeginnerDraft>) : {}
@@ -63,12 +82,24 @@ export function beginnerDraft(value: unknown): BeginnerDraft {
 }
 export function beginnerPrompt(draft: BeginnerDraft) {
   const task = beginnerTask(draft.task)
+  const direct = beginnerDirectQuestion(draft)
   const format =
     draft.format === 'list'
       ? '逐条列出，最多五条'
       : draft.format === 'sections'
         ? '分成【内容】【要做的事】【待确认】三部分'
-        : '用简短、容易读懂的中文，120字以内'
+        : direct
+          ? '用容易读懂的中文，先给具体方案，400字以内'
+          : '用简短、容易读懂的中文，120字以内'
+  if (direct)
+    return (
+      '请直接回答下面的问题或完成这个请求。可以使用一般知识，未给出的条件采用合理假设并简短说明。不要把问题当作原文做摘要，也不要以本站没有资料为由拒绝回答。涉及实时票价、开放时间等请提醒核对官方信息，不假装已经联网。给' +
+      (draft.recipient.trim() || '我') +
+      '看。' +
+      format +
+      '。\n我的问题：\n' +
+      draft.material.trim()
+    )
   return (
     '请' +
     task.action +
@@ -83,6 +114,12 @@ export function beginnerPrompt(draft: BeginnerDraft) {
 /** Teaching layout only: retains supplied facts and is always labelled as an example. */
 export function beginnerExample(draft: BeginnerDraft) {
   const text = draft.material.trim()
+  if (beginnerDirectQuestion(draft))
+    return (
+      '你的问题：\n' +
+      text +
+      '\n\n可以这样补充要求：\n说明天数、预算或使用对象，再写清希望的格式。\n\n这是提问练习示例，没有生成真实答案。点击“发送给 AI”获取回答。'
+    )
   const parts = text
     .split(draft.task === 'read' ? /[。，；;\n]/ : /[。；;\n]/)
     .map((p) => p.trim())

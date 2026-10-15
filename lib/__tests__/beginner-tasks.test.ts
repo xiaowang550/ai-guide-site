@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { beginnerDraft, beginnerEvidence, beginnerExample, beginnerPrompt } from '../beginner-tasks'
+import {
+  beginnerDraft,
+  beginnerEvidence,
+  beginnerExample,
+  beginnerPrompt,
+  beginnerDirectQuestion,
+} from '../beginner-tasks'
 import { rookieCoreDone, rookieProgress, nextRookieStage } from '../onboarding-state'
 
 describe('新手任务与基础练习进度', () => {
@@ -38,6 +44,18 @@ describe('新手任务与基础练习进度', () => {
     expect(output).toContain('2. 带两本书')
     expect(output).not.toContain('会议室')
     expect(output).not.toContain('周五')
+  })
+  it('读懂材料中输入北京攻略请求时按直接提问处理，普通通知仍整理原文', () => {
+    const travel = beginnerDraft({ task: 'read', material: '你好，请给我一份北京旅游的攻略' })
+    expect(beginnerDirectQuestion(travel)).toBe(true)
+    expect(beginnerPrompt(travel)).toContain('我的问题：\n你好，请给我一份北京旅游的攻略')
+    expect(beginnerPrompt(travel)).not.toContain('只使用下面的材料')
+    expect(beginnerPrompt(travel)).toContain('可以使用一般知识')
+    expect(beginnerDirectQuestion(beginnerDraft({ task: 'read' }))).toBe(false)
+    expect(beginnerDirectQuestion(beginnerDraft({ task: 'ask', material: '北京三天攻略' }))).toBe(
+      true,
+    )
+    expect(beginnerExample(travel)).toContain('没有生成真实答案')
   })
   it('基础练习可独立完成，旧六步进度仍保留，选学内容不制造已完成记录', () => {
     expect(nextRookieStage(0)).toBe(1)

@@ -171,11 +171,14 @@ export function RookieLab() {
   }, [stage])
   const imagePrompt = `请生成一张教学配图：主体是${subject}，位于${scene}，风格为${style}，柔和浅色，横向画面，主体清楚，背景简洁，不添加文字或标志。`
   useEffect(() => {
+    const query = new URLSearchParams(location.search)
     const progress = rookieProgress(readLocal(ROOKIE_KEY, {}), rookieLessons.length)
     setStage(progress.stage)
     setDone(progress.done)
     setFinished(
-      rookieCoreDone(progress.done) && CORE_ROOKIE_STAGES.some((i) => i === progress.stage),
+      query.get('from') !== 'intro' &&
+        rookieCoreDone(progress.done) &&
+        CORE_ROOKIE_STAGES.some((i) => i === progress.stage),
     )
     const last = beginnerEvidence(readLocal(BEGINNER_RESULT_KEY, null))
     if (last) {
@@ -186,7 +189,6 @@ export function RookieLab() {
         ),
       )
     }
-    const query = new URLSearchParams(location.search)
     const saved = beginnerDraft(readLocal(BEGINNER_TASK_KEY, {}))
     const selected = query.get('task')
     setStarterTask(

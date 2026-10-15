@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, ArrowRight, ArrowLeft, Check, Copy, BookOpen, Layers, Compass } from 'lucide-react'
+import { X, ArrowRight, ArrowLeft, Check, Copy, Sprout, Compass } from 'lucide-react'
 import { useTutor } from '@/components/learning/use-tutor'
 import { BeginnerTaskPractice } from '@/components/learning/beginner-task-practice'
 import {
@@ -10,7 +10,13 @@ import {
   type BeginnerTaskId,
   type BeginnerEvidence,
 } from '@/lib/beginner-tasks'
-import { readLocal, saveLocal, rookieProgress, ROOKIE_KEY } from '@/lib/onboarding-state'
+import {
+  readLocal,
+  saveLocal,
+  rookieProgress,
+  ROOKIE_KEY,
+  EXPERIENCE_KEY,
+} from '@/lib/onboarding-state'
 import { copyText } from '@/lib/copy-text'
 import { useSiteModules } from '@/components/site-module-context'
 import { pathEnabled } from '@/lib/site-modules'
@@ -74,6 +80,14 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
     saveLocal(ROOKIE_KEY, { stage: 1, done: [...new Set([...progress.done, 0])] })
     setStep('map')
   }
+  function chooseLevel(level: 'beginner' | 'experienced') {
+    saveLocal(EXPERIENCE_KEY, { level })
+    if (level === 'beginner') finish('/start/?task=' + task + '&from=intro')
+    else {
+      finish('/?guide=experienced')
+      window.dispatchEvent(new Event('zhiya:experienced-guide'))
+    }
+  }
   const current = beginnerTask(task)
   return (
     <dialog
@@ -101,7 +115,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
               ? '先试一件小事'
               : step === 'practice'
                 ? '动手：' + current.label
-                : '接下来，去哪里？'}
+                : '接下来，按你的基础继续'}
           </h2>
         </div>
         <button type="button" aria-label="关闭新手指引" onClick={close}>
@@ -109,7 +123,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
         </button>
       </header>
       <ol className="intro-progress" aria-label="上手进度">
-        {['选一件事', '亲手试试', '找到入口'].map((label, i) => (
+        {['选一件事', '亲手试试', '选学习方式'].map((label, i) => (
           <li
             key={label}
             aria-current={['choose', 'practice', 'map'][i] === step ? 'step' : undefined}
@@ -123,7 +137,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
         {step === 'choose' && (
           <>
             <p className="intro-purpose-line">
-              <strong>AI 可以帮你写草稿、整理信息。</strong>
+              <strong>写消息、做计划，先让 AI 帮你一次。</strong>
               <br />
               在这里先练一次，再找适合自己的工具。
             </p>
@@ -171,7 +185,7 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
               taskId={task}
               tutor={tutor}
               onComplete={complete}
-              completeLabel="做完了，看看网站怎么用"
+              completeLabel="做完了，选择接下来的用法"
             />
           </>
         )}
@@ -180,12 +194,17 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
             <div className="intro-success">
               <Check size={22} />
               <div>
-                <strong>你已经做出了第一份草稿。</strong>
-                <p>可以复制到聊天、笔记或文档，核对后再用。</p>
+                <strong>
+                  {evidence?.kind === 'example'
+                    ? '你已完成一次示例练习。'
+                    : '你已完成一次 AI 对话。'}
+                </strong>
+                <p>接下来想一步步学，还是自己探索？</p>
               </div>
             </div>
             {evidence && (
-              <div className="intro-keepsake">
+              <details className="intro-keepsake">
+                <summary>保留刚才的{evidence.kind === 'example' ? '示例' : '回答'}</summary>
                 <small>{evidence.kind === 'example' ? '本次教学示例' : '本次 AI 草稿'}</small>
                 <p>{evidence.output}</p>
                 <button
@@ -197,49 +216,27 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
                   <Copy size={15} />
                   {copied || '复制这份草稿'}
                 </button>
-              </div>
+              </details>
             )}
-            {pathEnabled(config, '/start') && (
-              <button
-                type="button"
-                className="intro-primary intro-next-practice"
-                onClick={() => finish('/start/?task=' + task + '&from=intro')}
-              >
-                继续：学会把要求说清楚
-                <ArrowRight size={17} />
+            <div className="intro-levels" aria-label="选择你的使用基础">
+              {pathEnabled(config, '/start') && (
+                <button className="intro-next-practice" onClick={() => chooseLevel('beginner')}>
+                  <Sprout size={25} />
+                  <strong>我是零基础</strong>
+                  <span>继续一对一：提问、追问、检查回答。</span>
+                  <b>
+                    带着刚才的内容继续练 <ArrowRight size={16} />
+                  </b>
+                </button>
+              )}
+              <button onClick={() => chooseLevel('experienced')}>
+                <Compass size={25} />
+                <strong>我有一些基础</strong>
+                <span>回首页，试试选工具、做对比、找案例。</span>
+                <b>
+                  回首页，边用边了解 <ArrowRight size={16} />
+                </b>
               </button>
-            )}
-            <h3 className="intro-map-title">以后按需要，选这些入口</h3>
-            <div className="intro-site-map">
-              {[
-                {
-                  href: '/tools/',
-                  name: '找工具',
-                  note: '我知道要做什么，想选一个 AI 工具。',
-                  icon: Layers,
-                },
-                {
-                  href: '/guides/',
-                  name: '跟着学',
-                  note: '我不会操作，想照着步骤练。',
-                  icon: BookOpen,
-                },
-                {
-                  href: '/cases/',
-                  name: '看例子',
-                  note: '我想知道别人怎样把 AI 用在工作里。',
-                  icon: Compass,
-                },
-              ]
-                .filter((e) => pathEnabled(config, e.href))
-                .map((e) => (
-                  <button type="button" key={e.href} onClick={() => finish(e.href)}>
-                    <e.icon size={22} />
-                    <strong>{e.name}</strong>
-                    <small>{e.note}</small>
-                    <ArrowRight size={16} />
-                  </button>
-                ))}
             </div>
             <p className="intro-muted">没听懂的地方，可以点页面上的小芽继续问。</p>
           </>

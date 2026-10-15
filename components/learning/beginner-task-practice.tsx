@@ -5,6 +5,8 @@ import {
   beginnerDraft,
   beginnerExample,
   beginnerPrompt,
+  beginnerDirectQuestion,
+  beginnerEvidence,
   beginnerTask,
   beginnerTasks,
   BEGINNER_TASK_KEY,
@@ -44,14 +46,31 @@ export function BeginnerTaskPractice({
     [refined, setRefined] = useState(false),
     [draftIncomplete, setDraftIncomplete] = useState(false),
     [question, setQuestion] = useState(''),
+    [followup, setFollowup] = useState(''),
     [help, setHelp] = useState('')
   const request = useRef(0),
+    conversation = useRef<{ role: string; content: string }[]>([]),
     result = useRef<HTMLElement>(null)
   const task = beginnerTask(draft.task)
+  const direct = beginnerDirectQuestion(draft)
+  const action = direct ? '发送给 AI' : task.action
   useEffect(() => {
     const saved = beginnerDraft(readLocal(BEGINNER_TASK_KEY, {}))
-    setDraft(taskId && saved.task !== taskId ? beginnerDraft({ task: taskId }) : saved)
-  }, [taskId])
+    const next = taskId && saved.task !== taskId ? beginnerDraft({ task: taskId }) : saved
+    setDraft(next)
+    const last = beginnerEvidence(readLocal(BEGINNER_RESULT_KEY, null))
+    if (level === 'refine' && last && last.task === next.task && last.material === next.material) {
+      setOutput(last.output)
+      setKind(last.kind)
+      conversation.current =
+        last.kind === 'ai'
+          ? [
+              { role: 'user', content: beginnerPrompt(last) },
+              { role: 'assistant', content: last.output },
+            ]
+          : []
+    }
+  }, [taskId, level])
   useEffect(
     () => () => {
       request.current++
@@ -61,13 +80,17 @@ export function BeginnerTaskPractice({
   function update(next: Partial<BeginnerDraft>) {
     request.current++
     tutor.stop()
-    setDraft((v) => ({ ...v, ...next }))
+    const value = { ...draft, ...next }
+    setDraft(value)
+    saveLocal(BEGINNER_TASK_KEY, value)
+    conversation.current = []
     setOutput('')
     setAnswer('')
     setNotice('')
     setRefined(false)
     setDraftIncomplete(false)
     setHelp('')
+    setFollowup('')
   }
   function choose(id: BeginnerTaskId) {
     update(beginnerDraft({ task: id }))
@@ -81,7 +104,7 @@ export function BeginnerTaskPractice({
       }),
     )
   }
-  async function generate(example = false, shorter = false) {
+  async function generate(example = false, shorter = false, revision = '') {
     if (tutor.busy || !draft.material.trim()) return
     const id = ++request.current,
       previous = output
@@ -92,31 +115,53 @@ export function BeginnerTaskPractice({
     setKind(example ? 'example' : 'ai')
     setDraftIncomplete(!example)
     if (example) {
+      conversation.current = []
       tutor.setError('')
       setOutput(beginnerExample(shorter ? { ...draft, format: 'list' } : draft))
       showResult()
       return
     }
+    const prompt =
+      revision ||
+      (shorter
+        ? '请把上面的回答改成几条简短要点，保留原意，不编造已经核实的信息。'
+        : beginnerPrompt(draft))
+    const history =
+      shorter || revision
+        ? conversation.current.length
+          ? conversation.current
+          : [
+              { role: 'user', content: beginnerPrompt(draft) },
+              { role: 'assistant', content: previous },
+            ]
+        : []
+    let received = ''
     try {
       await tutor.run(
-        shorter
-          ? '请把这份草稿改成几条简短要点，保留原有事实，不补充新信息。'
-          : beginnerPrompt(draft),
+        prompt,
         (text) => {
-          if (id === request.current) setOutput((old) => old + text)
+          if (id === request.current) {
+            received += text
+            setOutput(received)
+          }
         },
-        shorter
-          ? {
-              history: [
-                { role: 'user', content: beginnerPrompt(draft) },
-                { role: 'assistant', content: previous },
-              ],
-            }
-          : undefined,
+        { history },
       )
-      if (id === request.current) setDraftIncomplete(false)
+      if (id === request.current) {
+        setDraftIncomplete(false)
+        setFollowup('')
+        conversation.current = [
+          ...history,
+          { role: 'user', content: prompt },
+          { role: 'assistant', content: received },
+        ].slice(-6)
+      }
     } catch {
-      /* The tutor exposes retryable errors without erasing partial text. */
+      if (id === request.current && !received && previous && (shorter || revision)) {
+        setOutput(previous)
+        setDraftIncomplete(false)
+        setNotice('这次没有收到新回答，上一份内容已保留。可以重试。')
+      }
     }
     if (id === request.current) showResult()
   }
@@ -129,6 +174,7 @@ export function BeginnerTaskPractice({
   function continueWithExample() {
     request.current++
     tutor.stop()
+    conversation.current = []
     setKind('example')
     setDraftIncomplete(false)
     setAnswer('')
@@ -160,7 +206,7 @@ export function BeginnerTaskPractice({
   }
   return (
     <section className="beginner-practice" aria-label="动手完成一个小任务">
-      {level === 'independent' && (
+      {
         <div className="beginner-task-tabs" aria-label="选择自己的任务">
           {beginnerTasks.map((t) => (
             <button
@@ -168,26 +214,35 @@ export function BeginnerTaskPractice({
               type="button"
               aria-pressed={draft.task === t.id}
               disabled={tutor.busy}
-              onClick={() => choose(t.id)}
+              onClick={() => {
+                if (t.id === 'ask' && draft.material !== task.material) {
+                  update({ task: 'ask' })
+                  onTaskChange?.('ask')
+                } else choose(t.id)
+              }}
             >
               {t.label}
             </button>
           ))}
         </div>
-      )}
+      }
       <div className="beginner-now">
         <span>现在做什么</span>
         <strong>
-          {output
-            ? '对照原文，检查草稿'
-            : level === 'refine'
-              ? '加上对象和格式，再试一次'
-              : '改一句下面的材料，然后点按钮'}
+          {level === 'refine'
+            ? '补充一个要求，看看回答怎么变'
+            : output
+              ? direct
+                ? '看看回答，再补充你的要求'
+                : '对照原文，检查草稿'
+              : direct
+                ? '写下你的问题，然后发送'
+                : '改一句下面的材料，然后点按钮'}
         </strong>
       </div>
       <div className="beginner-material">
         <label>
-          你要交给 AI 的材料
+          {direct ? '你想问什么？' : '你要交给 AI 的材料'}
           <textarea
             aria-label="练习材料"
             maxLength={1200}
@@ -197,7 +252,11 @@ export function BeginnerTaskPractice({
           />
         </label>
         <div className="beginner-material-help">
-          <span>可以改成自己的事，也可以使用这段练习材料。</span>
+          <span>
+            {direct
+              ? '直接写你的问题；天数、预算等条件越清楚，回答越合用。'
+              : '粘贴已有内容来整理。想问攻略或做计划，也可以选“直接问 AI”。'}
+          </span>
           <button
             type="button"
             disabled={tutor.busy}
@@ -238,30 +297,28 @@ export function BeginnerTaskPractice({
         <button
           type="button"
           className="beginner-primary"
-          disabled={tutor.busy || !draft.material.trim()}
-          onClick={() => void generate(!tutor.ready)}
+          disabled={tutor.busy || !tutor.ready || !draft.material.trim()}
+          onClick={() => void generate()}
         >
           {tutor.busy ? <LoaderCircle size={17} className="beginner-spin" /> : <Send size={17} />}
           {tutor.busy
             ? '正在回答 · ' + tutor.elapsed + ' 秒'
-            : tutor.ready
-              ? task.action
-              : '试做教学示例'}
+            : tutor.loading
+              ? '正在连接 AI…'
+              : action}
         </button>
         {tutor.busy ? (
           <button type="button" onClick={tutor.stop}>
             停止
           </button>
         ) : (
-          tutor.ready && (
-            <button
-              type="button"
-              onClick={() => void generate(true)}
-              disabled={!draft.material.trim()}
-            >
-              先试教学示例
-            </button>
-          )
+          <button
+            type="button"
+            onClick={() => void generate(true)}
+            disabled={!draft.material.trim()}
+          >
+            先试教学示例
+          </button>
         )}
       </div>
       <p className="beginner-caption">
@@ -270,8 +327,12 @@ export function BeginnerTaskPractice({
           : tutor.busy && tutor.elapsed >= 8
             ? '还在等待？可以停止，先用教学示例继续练。'
             : tutor.ready
-              ? '点击主按钮会由 AI 处理你的材料。'
-              : 'AI 连接尚未就绪，教学示例可以直接练，不用等待。'}
+              ? direct
+                ? '连接真实 AI 回答；本次没有联网查询。'
+                : '由真实 AI 处理你填写的内容。'
+              : tutor.loading
+                ? '正在连接模型，也可以先试教学示例。'
+                : 'AI 连接尚未就绪，教学示例可以直接练，不用等待。'}
       </p>
       {tutor.busy && draftIncomplete && tutor.elapsed >= 8 && (
         <button type="button" onClick={continueWithExample}>
@@ -294,8 +355,10 @@ export function BeginnerTaskPractice({
       {output && (
         <article className="beginner-result" ref={result}>
           <header>
-            <span>{kind === 'example' ? '教学示例 · 按材料排版，未调用 AI' : 'AI 生成的草稿'}</span>
-            <strong>这是草稿，你可以直接改。</strong>
+            <span>
+              {kind === 'example' ? '教学示例 · 未调用 AI' : direct ? 'AI 的回答' : 'AI 生成的草稿'}
+            </span>
+            <strong>{direct ? '可以继续追问，让回答更合用。' : '这是草稿，你可以直接改。'}</strong>
           </header>
           <textarea
             aria-label="我的任务草稿"
@@ -304,6 +367,8 @@ export function BeginnerTaskPractice({
             disabled={tutor.busy}
             onChange={(e) => {
               setOutput(e.target.value)
+              const last = conversation.current.at(-1)
+              if (last?.role === 'assistant') last.content = e.target.value
               setAnswer('')
               setNotice('')
             }}
@@ -337,8 +402,38 @@ export function BeginnerTaskPractice({
               复制草稿
             </button>
           </div>
+          {kind === 'ai' && !draftIncomplete && (
+            <form
+              className="beginner-followup"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (followup.trim()) void generate(false, false, followup.trim())
+              }}
+            >
+              <label htmlFor={'beginner-followup-' + level}>继续告诉 AI 你想怎么改</label>
+              <div>
+                <input
+                  id={'beginner-followup-' + level}
+                  value={followup}
+                  maxLength={500}
+                  disabled={tutor.busy}
+                  onChange={(e) => setFollowup(e.target.value)}
+                  placeholder={
+                    direct
+                      ? '例如：带着老人出行，每天少走一点路'
+                      : '例如：语气自然一点，保留时间和地点'
+                  }
+                />
+                <button type="submit" disabled={tutor.busy || !followup.trim()}>
+                  继续对话
+                </button>
+              </div>
+            </form>
+          )}
           <fieldset className="beginner-review" disabled={tutor.busy}>
-            <legend>{task.question}</legend>
+            <legend>
+              {direct ? '回答里的价格、时间等信息还没核实，你会怎么做？' : task.question}
+            </legend>
             <button
               type="button"
               aria-pressed={answer === 'check'}
@@ -357,7 +452,9 @@ export function BeginnerTaskPractice({
           {answer && (
             <p className="beginner-feedback" role="status">
               {answer === 'check'
-                ? '对。AI 能帮你起草，事实还需要你确认。再看一眼时间、地点和名字。'
+                ? direct
+                  ? '对。方案可以参考，票价、开放时间等要以官方信息为准。'
+                  : '对。AI 能帮你起草，事实还需要你确认。再看一眼时间、地点和名字。'
                 : '再看一下原始材料：没有提供的信息，AI 也可能写错。请先核对。'}
             </p>
           )}
@@ -443,6 +540,7 @@ export function BeginnerTaskPractice({
             tutor.setError('')
             setOutput('')
             setAnswer('')
+            conversation.current = []
           }}
         >
           <option value="" disabled>
