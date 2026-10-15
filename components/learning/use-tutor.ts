@@ -86,9 +86,11 @@ export function useTutor(enabled = true) {
     } catch (e) {
       const message = abort.signal.aborted
         ? '已停止，收到的文字保留在这里。'
-        : e instanceof Error
-          ? e.message
-          : '暂时没有收到回答，请重试。'
+        : e instanceof TypeError
+          ? '没有连上模型，请重试，也可以在下方设置里换一个免费模型。'
+          : e instanceof Error
+            ? e.message
+            : '暂时没有收到回答，请重试。'
       setError(message)
       throw new Error(message)
     } finally {
