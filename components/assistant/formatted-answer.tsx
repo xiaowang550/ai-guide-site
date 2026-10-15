@@ -35,9 +35,6 @@ export function EditableAnswer({
     field.current.style.height = 'auto'
     field.current.style.height = Math.max(160, field.current.scrollHeight) + 'px'
   }, [editing, value])
-  useEffect(() => {
-    if (editing) field.current?.focus({ preventScroll: true })
-  }, [editing])
   return (
     <div className="answer-result">
       <div className="answer-view-controls">
@@ -45,7 +42,10 @@ export function EditableAnswer({
           type="button"
           aria-pressed={editing}
           disabled={busy}
-          onClick={() => setEditing(!editing)}
+          onClick={() => {
+            setEditing(!editing)
+            if (!editing) requestAnimationFrame(() => field.current?.focus({ preventScroll: true }))
+          }}
         >
           {editing ? '返回阅读' : '编辑文字'}
         </button>
