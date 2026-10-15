@@ -1,5 +1,5 @@
 /* Public reading cache only. Authenticated pages and API responses never enter it. */
-const CACHE_VERSION = 'v7'
+const CACHE_VERSION = 'v8'
 const STATIC_CACHE = `ai-map-static-${CACHE_VERSION}`
 const PAGES_CACHE = `ai-map-pages-${CACHE_VERSION}`
 const OFFLINE_URL = '/offline/'
@@ -86,6 +86,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/api/') ||
     url.pathname === '/admin' ||
     url.pathname.startsWith('/admin/') ||
+    /^\/freshness(?:\/|$)/.test(url.pathname) ||
     /^\/edu(?:\/|\.|$)/.test(url.pathname) ||
     /^\/school(?:\/|$)/.test(url.pathname) ||
     url.searchParams.has('admin-preview') ||

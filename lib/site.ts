@@ -143,7 +143,6 @@ export const megaNav: readonly NavItem[] = [
     label: 'AI 资讯',
     hint: '新模型、新功能与最新消息',
     children: [
-      { href: '/freshness', label: '内容复核状态', hint: '资料更新时间与待复核内容' },
       { href: '/saved', label: '我的学习夹', hint: '收藏实用方法，回到最近看过的内容' },
       { href: '/about', label: '我们怎么打分', hint: '评分方法、可信度、以及我们不做的事' },
     ],

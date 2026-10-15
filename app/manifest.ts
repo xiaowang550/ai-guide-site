@@ -36,7 +36,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       { name: '场景决策器', url: '/find' },
       { name: '工具库', url: '/tools' },
-      { name: '数据保鲜看板', url: '/freshness' },
+      { name: '学习夹', url: '/saved' },
     ],
   }
 }

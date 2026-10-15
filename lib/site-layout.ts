@@ -15,6 +15,7 @@ export function navigationCandidates(modules: SiteModule[]) {
       .filter(
         (module) =>
           module.id !== 'school' &&
+          module.id !== 'home' &&
           module.audience !== 'school' &&
           (module.kind === 'builtin' || module.navigation),
       )

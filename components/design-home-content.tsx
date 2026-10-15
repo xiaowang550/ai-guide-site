@@ -12,6 +12,7 @@ import {
   Compass,
 } from 'lucide-react'
 import { ModuleSection } from './module-visibility'
+import { RegionSlot } from './page-regions'
 import type { TemplateHomeData } from './template-entry'
 import { ToolLogo } from './tool-logo'
 
@@ -46,56 +47,58 @@ const tasks = [
 ]
 function TaskPicker({ prefix }: { prefix: string }) {
   return (
-    <section className="template-task-picker" data-task-workspace aria-label="选择任务">
-      <div className="template-tabs" role="tablist" aria-label="任务类型">
-        {tasks.map((task, i) => (
-          <button
-            key={task.id}
-            type="button"
-            role="tab"
-            id={`${prefix}-${task.id}-tab`}
-            aria-controls={`${prefix}-${task.id}`}
-            aria-selected={i === 0}
-            tabIndex={i === 0 ? 0 : -1}
-            data-template-tab={task.id}
-          >
-            {task.name}
-          </button>
-        ))}
-      </div>
-      {tasks.map((task, i) => (
-        <div
-          key={task.id}
-          className="template-task-panel"
-          role="tabpanel"
-          id={`${prefix}-${task.id}`}
-          aria-labelledby={`${prefix}-${task.id}-tab`}
-          data-template-panel={task.id}
-          hidden={i !== 0}
-          tabIndex={0}
-        >
-          <div>
-            <p className="template-overline">这次要完成</p>
-            <h3>{task.title}</h3>
-            <p>{task.description}</p>
-          </div>
-          <ol>
-            {task.steps.map((step, index) => (
-              <li key={step}>
-                <span>{index + 1}</span>
-                {step}
-              </li>
-            ))}
-          </ol>
-          <ModuleSection id="finder">
-            <Link prefetch={false} href={task.href} className="template-action">
-              {task.action}
-              <ArrowUpRight size={18} />
-            </Link>
-          </ModuleSection>
+    <RegionSlot moduleId="home" id="tasks">
+      <section className="template-task-picker" data-task-workspace aria-label="选择任务">
+        <div className="template-tabs" role="tablist" aria-label="任务类型">
+          {tasks.map((task, i) => (
+            <button
+              key={task.id}
+              type="button"
+              role="tab"
+              id={`${prefix}-${task.id}-tab`}
+              aria-controls={`${prefix}-${task.id}`}
+              aria-selected={i === 0}
+              tabIndex={i === 0 ? 0 : -1}
+              data-template-tab={task.id}
+            >
+              {task.name}
+            </button>
+          ))}
         </div>
-      ))}
-    </section>
+        {tasks.map((task, i) => (
+          <div
+            key={task.id}
+            className="template-task-panel"
+            role="tabpanel"
+            id={`${prefix}-${task.id}`}
+            aria-labelledby={`${prefix}-${task.id}-tab`}
+            data-template-panel={task.id}
+            hidden={i !== 0}
+            tabIndex={0}
+          >
+            <div>
+              <p className="template-overline">这次要完成</p>
+              <h3>{task.title}</h3>
+              <p>{task.description}</p>
+            </div>
+            <ol>
+              {task.steps.map((step, index) => (
+                <li key={step}>
+                  <span>{index + 1}</span>
+                  {step}
+                </li>
+              ))}
+            </ol>
+            <ModuleSection id="finder">
+              <Link prefetch={false} href={task.href} className="template-action">
+                {task.action}
+                <ArrowUpRight size={18} />
+              </Link>
+            </ModuleSection>
+          </div>
+        ))}
+      </section>
+    </RegionSlot>
   )
 }
 function ResourceList({
@@ -105,48 +108,50 @@ function ResourceList({
 }: { kind: 'tools' | 'guides' } & Pick<TemplateHomeData, 'tools' | 'guides'>) {
   return (
     <ModuleSection id={kind}>
-      <section className="template-resource-list">
-        <div className="template-section-title">
-          <h2>{kind === 'tools' ? '工具速览' : '从这些练习开始'}</h2>
-          <Link prefetch={false} href={`/${kind}/`}>
-            全部
-            <ArrowUpRight size={15} />
-          </Link>
-        </div>
-        {kind === 'tools'
-          ? tools
-              .filter((t) => ['chatgpt', 'deepseek', 'kimi', 'doubao'].includes(t.id))
-              .map((tool) => (
+      <RegionSlot moduleId="home" id={kind}>
+        <section className="template-resource-list">
+          <div className="template-section-title">
+            <h2>{kind === 'tools' ? '工具速览' : '从这些练习开始'}</h2>
+            <Link prefetch={false} href={`/${kind}/`}>
+              全部
+              <ArrowUpRight size={15} />
+            </Link>
+          </div>
+          {kind === 'tools'
+            ? tools
+                .filter((t) => ['chatgpt', 'deepseek', 'kimi', 'doubao'].includes(t.id))
+                .map((tool) => (
+                  <Link
+                    prefetch={false}
+                    className="template-resource-row"
+                    href={`/tools/${tool.id}/`}
+                    key={tool.id}
+                  >
+                    <ToolLogo src={tool.logo} alt="" size={38} />
+                    <span>
+                      <strong>{tool.name}</strong>
+                      <small>{tool.tagline}</small>
+                    </span>
+                    <ArrowUpRight size={17} />
+                  </Link>
+                ))
+            : guides.slice(0, 3).map((guide, i) => (
                 <Link
                   prefetch={false}
                   className="template-resource-row"
-                  href={`/tools/${tool.id}/`}
-                  key={tool.id}
+                  href={`/guides/${guide.id}/`}
+                  key={guide.id}
                 >
-                  <ToolLogo src={tool.logo} alt="" size={38} />
+                  <span className="template-index">0{i + 1}</span>
                   <span>
-                    <strong>{tool.name}</strong>
-                    <small>{tool.tagline}</small>
+                    <strong>{guide.title}</strong>
+                    <small>{guide.durationMin} 分钟 · 动手练习</small>
                   </span>
                   <ArrowUpRight size={17} />
                 </Link>
-              ))
-          : guides.slice(0, 3).map((guide, i) => (
-              <Link
-                prefetch={false}
-                className="template-resource-row"
-                href={`/guides/${guide.id}/`}
-                key={guide.id}
-              >
-                <span className="template-index">0{i + 1}</span>
-                <span>
-                  <strong>{guide.title}</strong>
-                  <small>{guide.durationMin} 分钟 · 动手练习</small>
-                </span>
-                <ArrowUpRight size={17} />
-              </Link>
-            ))}
-      </section>
+              ))}
+        </section>
+      </RegionSlot>
     </ModuleSection>
   )
 }
@@ -285,13 +290,15 @@ export function DesignHomeContent({ tools, guides, cases }: TemplateHomeData) {
         </section>
       </ModuleSection>
       <ModuleSection id="news">
-        <Link prefetch={false} href="/updates/" className="template-news-link">
-          <span>
-            <Check size={17} /> 关注 AI 新变化
-          </span>
-          <strong>查看官方消息</strong>
-          <ArrowUpRight size={22} />
-        </Link>
+        <RegionSlot moduleId="home" id="news">
+          <Link prefetch={false} href="/updates/" className="template-news-link">
+            <span>
+              <Check size={17} /> 关注 AI 新变化
+            </span>
+            <strong>查看官方消息</strong>
+            <ArrowUpRight size={22} />
+          </Link>
+        </RegionSlot>
       </ModuleSection>
     </div>
   )

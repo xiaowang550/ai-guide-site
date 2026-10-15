@@ -130,7 +130,7 @@ describe('answer（回答生成）', () => {
   it('保鲜回答给出看板入口与依据', () => {
     const a = answer('数据多久没更新了', index, NOW)
     expect(a.intent).toBe('freshness')
-    expect(a.links.some((l) => l.href === '/freshness')).toBe(true)
+    expect(a.links.some((l) => l.href === '/updates')).toBe(true)
     expect(a.basis).toContain('保鲜引擎')
   })
 

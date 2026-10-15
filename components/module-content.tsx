@@ -28,45 +28,47 @@ export function CustomModuleContent({ module }: { module: SiteModule }) {
             : 'space-y-3'
         }
       >
-        {module.blocks.map((block, i) =>
-          module.kind === 'faq' ? (
-            <details className="rounded-2xl border bg-card p-5" key={i}>
-              <summary className="cursor-pointer font-medium">{block.title}</summary>
-              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted-foreground">
-                {block.text}
-              </p>
-              {block.href && (
-                <Link href={block.href} className="mt-3 inline-flex text-sm text-primary">
-                  查看资料 →
-                </Link>
-              )}
-            </details>
-          ) : (
-            <article className="rounded-2xl border bg-card p-6" key={i}>
-              <div className="flex items-start gap-3">
-                {module.kind === 'steps' && (
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-primary">
-                    {i + 1}
-                  </span>
+        {module.blocks
+          .filter((block) => block.enabled !== false)
+          .map((block, i) =>
+            module.kind === 'faq' ? (
+              <details className="rounded-2xl border bg-card p-5" key={block.id ?? i}>
+                <summary className="cursor-pointer font-medium">{block.title}</summary>
+                <p className="mt-4 whitespace-pre-line text-sm leading-7 text-muted-foreground">
+                  {block.text}
+                </p>
+                {block.href && (
+                  <Link href={block.href} className="mt-3 inline-flex text-sm text-primary">
+                    查看资料 →
+                  </Link>
                 )}
-                <div>
-                  <h3 className="font-semibold">{block.title}</h3>
-                  <p className="mt-3 whitespace-pre-line text-sm leading-7 text-muted-foreground">
-                    {block.text}
-                  </p>
-                  {block.href && (
-                    <Link
-                      href={block.href}
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary"
-                    >
-                      查看资料 <ArrowRight className="h-4 w-4" />
-                    </Link>
+              </details>
+            ) : (
+              <article className="rounded-2xl border bg-card p-6" key={block.id ?? i}>
+                <div className="flex items-start gap-3">
+                  {module.kind === 'steps' && (
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-primary">
+                      {i + 1}
+                    </span>
                   )}
+                  <div>
+                    <h3 className="font-semibold">{block.title}</h3>
+                    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-muted-foreground">
+                      {block.text}
+                    </p>
+                    {block.href && (
+                      <Link
+                        href={block.href}
+                        className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-primary"
+                      >
+                        查看资料 <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </article>
-          ),
-        )}
+              </article>
+            ),
+          )}
       </div>
     </section>
   )

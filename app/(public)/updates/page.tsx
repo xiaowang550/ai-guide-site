@@ -1,3 +1,4 @@
+import { PageRegions } from '@/components/page-regions'
 import '@/app/styles/reference-hero.css'
 import type { Metadata } from 'next'
 import { ReferenceArt } from '@/components/reference-art'
@@ -13,19 +14,29 @@ export const metadata: Metadata = {
 }
 export default function NewsPage() {
   return (
-    <div className="news-page container">
-      <NewsBoard
-        initial={seedNewsItems()}
-        hero={
-          <div className="news-hero">
-            <div>
-              <h1>AI 实时资讯</h1>
-              <p>最新消息，简短看懂。找到与你的学习、教学和工作有关的变化。</p>
+    <PageRegions
+      moduleId="news"
+      sections={[
+        {
+          id: 'content',
+          content: (
+            <div className="news-page container">
+              <NewsBoard
+                initial={seedNewsItems()}
+                hero={
+                  <div className="news-hero">
+                    <div>
+                      <h1>AI 实时资讯</h1>
+                      <p>最新消息，简短看懂。找到与你的学习、教学和工作有关的变化。</p>
+                    </div>
+                    <ReferenceArt />
+                  </div>
+                }
+              />
             </div>
-            <ReferenceArt />
-          </div>
-        }
-      />
-    </div>
+          ),
+        },
+      ]}
+    />
   )
 }

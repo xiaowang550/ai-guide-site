@@ -41,6 +41,7 @@ describe('管理数据不进入离线缓存', () => {
       '/api/content/published',
       '/admin',
       '/admin/',
+      '/freshness/',
       '/edu/',
       '/edu/toolkits/highschool-ai.txt',
       '/school/login/',
@@ -135,7 +136,7 @@ describe('离线资源与版本切换', () => {
   it('仅清理本站旧缓存，保留其他应用缓存', async () => {
     const sw = worker()
     await sw.run('activate')
-    expect(sw.removed).toEqual(['ai-map-pages-v6'])
+    expect(sw.removed).toEqual(['ai-map-pages-v6', 'ai-map-static-v7'])
   })
   it('补齐已加载资源时只接受本站静态脚本和品牌图片', async () => {
     const sw = worker()

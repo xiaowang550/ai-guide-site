@@ -546,7 +546,7 @@ function answerFreshness(
       '如果你发现某条明显过时，提交勘误最快，我们会在 7 天内核对并记进更新雷达。',
     ],
     links: [
-      { href: '/freshness', label: '数据保鲜看板', hint: '全站复核状态与待办清单' },
+      { href: '/updates', label: 'AI 实时资讯', hint: '查看官方消息与发布时间' },
       { href: '/about#errata', label: '提交勘误' },
       { href: '/updates', label: '更新雷达' },
     ],

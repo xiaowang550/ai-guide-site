@@ -4,6 +4,7 @@ import { Plus, Eye, Save, ArrowUpRight, ArrowUp, ArrowDown, Trash2 } from 'lucid
 import { apiGet, apiSend } from './api-client'
 import { notifySiteChange } from '@/lib/site-sync'
 import { LayoutEditor } from './layout-editor'
+import { PageContentEditor } from './page-content-editor'
 import { type SiteLayout } from '@/lib/site-layout'
 import {
   moduleHref,
@@ -166,6 +167,7 @@ export function ModulesView({ audience = 'public' }: { audience?: 'public' | 'sc
       )}
       {config && audience === 'public' && (
         <LayoutEditor
+          navigationOnly
           config={config}
           busy={busy}
           onPreview={previewLayout}
@@ -173,6 +175,23 @@ export function ModulesView({ audience = 'public' }: { audience?: 'public' | 'sc
             act(
               () => apiSend('/api/admin/layout', 'PATCH', body),
               '布局已保存，预览立即更新，访客页面最多约 5 秒自动同步。',
+            )
+          }
+        />
+      )}
+      {config && (
+        <PageContentEditor
+          config={config}
+          audience={audience}
+          busy={busy}
+          onPreview={(href) => {
+            setPreviewPath(href)
+            setFrameKey((key) => key + 1)
+          }}
+          onSave={(id, version, regions) =>
+            act(
+              () => apiSend(`/api/admin/modules/${id}`, 'PATCH', { version, regions }),
+              '页面内容已保存，已打开的网站会自动同步。',
             )
           }
         />
@@ -196,7 +215,7 @@ export function ModulesView({ audience = 'public' }: { audience?: 'public' | 'sc
                     role="switch"
                     aria-checked={module.enabled}
                     aria-label={`${module.title}${audience === 'school' ? '学校端' : '公开'}开关`}
-                    disabled={busy}
+                    disabled={busy || module.id === 'home'}
                     onClick={() =>
                       void act(
                         () =>

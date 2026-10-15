@@ -131,7 +131,7 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
     expect(
       graph.files.length,
       `依赖链有 ${graph.files.length} 个文件：\n${graph.files.join('\n')}`,
-    ).toBeLessThanOrEqual(51) // 新增外部模型流水线与公网地址校验；完整内容数据仍禁止进入服务依赖。
+    ).toBeLessThanOrEqual(52) // 页面区块注册表用于校验可编辑内容；完整内容数据仍禁止进入服务依赖。
     expect(
       graph.files.some((f) => /data[/\\](?:tools|index)\.ts$/.test(f)),
       'Functions 不该依赖完整工具评分和前端聚合索引',

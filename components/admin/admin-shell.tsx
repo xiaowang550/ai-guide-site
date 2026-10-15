@@ -93,7 +93,12 @@ const TABS: { key: TabKey; label: string; hint: string; icon: typeof Activity }[
     label: '更新雷达（保留）',
     hint: '原站内变更日志，暂不公开',
   },
-  { key: 'review', icon: ClipboardCheck, label: '复核待办', hint: '按新鲜度与依据完整度自动生成' },
+  {
+    key: 'review',
+    icon: ClipboardCheck,
+    label: '内容复核',
+    hint: '更新时间、超期内容与处理记录，仅管理员可见',
+  },
   { key: 'schools', icon: BookOpen, label: '试点与推广', hint: '保留的私人模块，公开入口已关闭' },
   {
     key: 'briefings',
@@ -146,6 +151,8 @@ export function AdminShell() {
   }, [])
 
   useEffect(() => {
+    const initial = new URLSearchParams(location.search).get('tab')
+    if (initial && TABS.some((item) => item.key === initial)) setTab(initial as TabKey)
     // 任何接口返回 401 都跳回登录态，而不是让当前面板静默失败
     setUnauthorizedHandler(() => {
       setSession({ authenticated: false })

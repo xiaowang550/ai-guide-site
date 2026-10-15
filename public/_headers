@@ -75,6 +75,9 @@
   X-Robots-Tag: noindex, nofollow
 /admin/*
   Cache-Control: no-store
+/freshness/*
+  Cache-Control: no-store
+  X-Robots-Tag: noindex, nofollow
 /saved/*
   Cache-Control: public, max-age=0, must-revalidate
 /modules/*

@@ -93,6 +93,9 @@ html:is([data-design='studio'], [data-design='editorial'])
   ) {
   display: none;
 }
+html:is([data-design='studio'], [data-design='editorial']) .home-layout > [data-region-edited='true'] {
+  display: block;
+}
 html:is([data-design='studio'], [data-design='editorial']) .design-brand {
   display: inline-flex;
   align-items: center;

@@ -1,48 +1,53 @@
 import { ScrollSidebar } from '@/components/scroll-sidebar'
 import Link from 'next/link'
 import { ArrowRight, BookOpen, Lightbulb, Map, Sparkles } from 'lucide-react'
+import { RegionSlot } from './page-regions'
 
 export function ExplorationAside({ tools = false }: { tools?: boolean }) {
   return (
     <ScrollSidebar className="exploration-aside">
-      <section className="reference-panel">
-        <h2>
-          <Lightbulb size={24} />
-          {tools ? '如何选工具' : '从这里继续学习'}
-        </h2>
-        {tools ? (
-          <ol className="selection-steps">
-            {[
-              ['明确你的目标', '先选任务：写作、作图、资料整理或编程。'],
-              ['看看关键能力', '只比较与你的任务有关的维度。'],
-              ['确认使用条件', '核对免费额度、平台与地区限制。'],
-              ['试用，再组合', '用一份小材料验证，别急着一次选定。'],
-            ].map(([title, text], i) => (
-              <li key={title}>
-                <b>{i + 1}</b>
-                <span>
-                  <strong>{title}</strong>
-                  <p>{text}</p>
-                </span>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <>
-            <p className="text-sm text-muted-foreground">学习进度保存在当前浏览器，随时接着学。</p>
-            <Link href="/saved" className="aside-link">
-              <BookOpen size={22} />
-              打开我的学习夹
-              <ArrowRight size={18} />
-            </Link>
-            <Link href="/paths" className="aside-link">
-              <Map size={22} />
-              选择学习路径
-              <ArrowRight size={18} />
-            </Link>
-          </>
-        )}
-      </section>
+      <RegionSlot moduleId={tools ? 'tools' : 'knowledge'} id="selection">
+        <section className="reference-panel">
+          <h2>
+            <Lightbulb size={24} />
+            {tools ? '如何选工具' : '从这里继续学习'}
+          </h2>
+          {tools ? (
+            <ol className="selection-steps">
+              {[
+                ['明确你的目标', '先选任务：写作、作图、资料整理或编程。'],
+                ['看看关键能力', '只比较与你的任务有关的维度。'],
+                ['确认使用条件', '核对免费额度、平台与地区限制。'],
+                ['试用，再组合', '用一份小材料验证，别急着一次选定。'],
+              ].map(([title, text], i) => (
+                <li key={title}>
+                  <b>{i + 1}</b>
+                  <span>
+                    <strong>{title}</strong>
+                    <p>{text}</p>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                学习进度保存在当前浏览器，随时接着学。
+              </p>
+              <Link href="/saved" className="aside-link">
+                <BookOpen size={22} />
+                打开我的学习夹
+                <ArrowRight size={18} />
+              </Link>
+              <Link href="/paths" className="aside-link">
+                <Map size={22} />
+                选择学习路径
+                <ArrowRight size={18} />
+              </Link>
+            </>
+          )}
+        </section>
+      </RegionSlot>
       <section className="reference-panel">
         <h2>
           <Sparkles size={24} />

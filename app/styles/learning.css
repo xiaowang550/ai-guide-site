@@ -2,6 +2,7 @@
   background: hsl(var(--muted) / 0.32);
   transition: border-color .18s, box-shadow .18s, background-color .18s;
 }
+.managed-region-content { width: min(100%, 1440px); margin: 1.5rem auto; padding: 16px; }
 .header-search:hover {
   border-color: hsl(var(--primary) / 0.3);
 }

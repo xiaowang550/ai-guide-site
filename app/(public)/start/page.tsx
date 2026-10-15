@@ -1,3 +1,4 @@
+import { PageRegions, RegionSlot } from '@/components/page-regions'
 import type { Metadata } from 'next'
 import '@/app/styles/reference-hero.css'
 import { PageHeader } from '@/components/page-header'
@@ -11,18 +12,32 @@ export const metadata: Metadata = {
 export default function StartPage() {
   return (
     <>
-      <PageHeader
-        title="零基础一对一"
-        description="选一件事，跟着做。学会写要求、改草稿，再按需要试图片和语音。"
-        breadcrumbs={[
-          { label: '首页', href: '/' },
-          { label: '教程', href: '/guides/' },
-          { label: '零基础一对一' },
+      <RegionSlot moduleId="beginner" id="header">
+        <PageHeader
+          title="零基础一对一"
+          description="选一件事，跟着做。学会写要求、改草稿，再按需要试图片和语音。"
+          breadcrumbs={[
+            { label: '首页', href: '/' },
+            { label: '教程', href: '/guides/' },
+            { label: '零基础一对一' },
+          ]}
+        />
+      </RegionSlot>
+      <PageRegions
+        moduleId="beginner"
+        sections={[
+          {
+            id: 'practice',
+            content: (
+              <>
+                <div className="container">
+                  <RookieLab />
+                </div>
+              </>
+            ),
+          },
         ]}
       />
-      <div className="container">
-        <RookieLab />
-      </div>
     </>
   )
 }

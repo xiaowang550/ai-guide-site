@@ -18,9 +18,20 @@ export const MODULE_POLL_MS = 5000
 export const SITE_SYNC_CHANNEL = 'ai-map:site-config'
 export type ModuleKind = 'builtin' | 'cards' | 'steps' | 'faq' | 'links'
 export interface ModuleBlock {
+  id?: string
+  enabled?: boolean
   title: string
   text: string
   href?: string
+}
+export interface PageRegion {
+  id: string
+  title: string
+  description: string
+  kind: 'native' | Exclude<ModuleKind, 'builtin'>
+  enabled: boolean
+  deleted?: boolean
+  blocks?: ModuleBlock[]
 }
 export interface SiteModule {
   audience?: 'public' | 'school'
@@ -33,6 +44,7 @@ export interface SiteModule {
   navigation: boolean
   order: number
   blocks: ModuleBlock[]
+  regions?: PageRegion[]
   version: number
   updatedAt: string
 }
@@ -43,6 +55,19 @@ export interface PublicSiteConfig {
   layout: SiteLayout
 }
 export const builtinModules: SiteModule[] = [
+  {
+    id: 'home',
+    title: '首页',
+    description: '首页区块与内容',
+    kind: 'builtin',
+    enabled: true,
+    home: false,
+    navigation: false,
+    order: 0,
+    blocks: [],
+    version: 1,
+    updatedAt: '',
+  },
   {
     id: 'beginner',
     title: '零基础一对一',
@@ -217,6 +242,7 @@ export function moduleHref(module: SiteModule): string {
   if (module.kind !== 'builtin' && moduleAudience(module) === 'school')
     return `/edu/modules/?id=${encodeURIComponent(module.id)}`
   const routes: Record<string, string> = {
+    home: '/',
     beginner: '/start',
     saved: '/saved',
     knowledge: '/learn',

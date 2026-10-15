@@ -16,11 +16,13 @@ export function LayoutEditor({
   busy,
   onSave,
   onPreview,
+  navigationOnly = false,
 }: {
   config: PublicSiteConfig
   busy: boolean
   onSave: (body: Record<string, unknown>) => Promise<boolean>
   onPreview: (layout: SiteLayout) => void
+  navigationOnly?: boolean
 }) {
   const [draft, setDraft] = useState(() => layoutOf(config))
   const [announcement, setAnnouncement] = useState('')
@@ -96,9 +98,11 @@ export function LayoutEditor({
     <section className="admin-card layout-editor p-5" aria-label="DIY 导航与首页布局">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="font-semibold">DIY 导航与首页布局</h2>
+          <h2 className="font-semibold">{navigationOnly ? '导航布局' : 'DIY 导航与首页布局'}</h2>
           <p className="mt-2 text-xs leading-6 text-muted-foreground">
-            拖动左侧手柄，或用箭头换位置。调整时预览跟随，保存后公开站自动同步。两处顺序互不影响。
+            {navigationOnly
+              ? '拖动手柄或用箭头调整导航。页面内部内容在下方管理。'
+              : '拖动手柄或用箭头调整，保存后同步到网站。'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -138,92 +142,97 @@ export function LayoutEditor({
           </button>
         </div>
       </div>
-      <div className="layout-boards">
-        {(['navigation', 'home'] as const).map((scope) => {
-          const order = orderedIds(draft[scope], candidates[scope])
-          const hidden = scope === 'navigation' ? draft.hiddenNavigation : draft.hiddenHome
-          return (
-            <div key={scope} className="layout-board">
-              <h3>{scope === 'navigation' ? '导航从左到右' : '首页从上到下'}</h3>
-              <p className="intro-muted">
-                {scope === 'navigation'
-                  ? '桌面、手机菜单和页脚使用同一顺序。'
-                  : '新建首页模块也能放到这些位置中。'}
-              </p>
-              <ol
-                className="layout-list"
-                aria-label={scope === 'navigation' ? '导航位置列表' : '首页模块位置列表'}
-              >
-                {order.map((id, index) => (
-                  <li
-                    key={id}
-                    data-layout-row={id}
-                    data-scope={scope}
-                    data-dragging={dragging === id}
-                    data-hidden={hidden.includes(id)}
-                  >
-                    <button
-                      className="layout-handle"
-                      type="button"
-                      aria-label={`拖动${candidates[scope].find((item) => item.id === id)?.title}`}
-                      disabled={busy}
-                      onPointerDown={(event) => {
-                        if (event.button !== 0) return
-                        event.preventDefault()
-                        drag.current = {
-                          scope,
-                          id,
-                          x: event.clientX,
-                          y: event.clientY,
-                          moved: false,
-                        }
-                        event.currentTarget.setPointerCapture(event.pointerId)
-                      }}
-                      onPointerMove={pointerMove}
-                      onPointerUp={finishDrag}
-                      onPointerCancel={finishDrag}
-                      onLostPointerCapture={finishDrag}
+      <div
+        className="layout-boards"
+        style={navigationOnly ? { gridTemplateColumns: 'minmax(0, 1fr)' } : undefined}
+      >
+        {(['navigation', 'home'] as const)
+          .filter((scope) => !navigationOnly || scope === 'navigation')
+          .map((scope) => {
+            const order = orderedIds(draft[scope], candidates[scope])
+            const hidden = scope === 'navigation' ? draft.hiddenNavigation : draft.hiddenHome
+            return (
+              <div key={scope} className="layout-board">
+                <h3>{scope === 'navigation' ? '导航从左到右' : '首页从上到下'}</h3>
+                <p className="intro-muted">
+                  {scope === 'navigation'
+                    ? '桌面、手机菜单和页脚使用同一顺序。'
+                    : '新建首页模块也能放到这些位置中。'}
+                </p>
+                <ol
+                  className="layout-list"
+                  aria-label={scope === 'navigation' ? '导航位置列表' : '首页模块位置列表'}
+                >
+                  {order.map((id, index) => (
+                    <li
+                      key={id}
+                      data-layout-row={id}
+                      data-scope={scope}
+                      data-dragging={dragging === id}
+                      data-hidden={hidden.includes(id)}
                     >
-                      <GripVertical size={18} />
-                    </button>
-                    <span className="layout-row-title">
-                      {candidates[scope].find((item) => item.id === id)?.title}
-                      {config.modules.some((module) => module.id === id && !module.enabled) && (
-                        <small>栏目已关闭</small>
-                      )}
-                    </span>
-                    <label className="layout-visible">
-                      <input
-                        aria-label={`${scope === 'navigation' ? '导航' : '首页'}显示${candidates[scope].find((item) => item.id === id)?.title}`}
-                        type="checkbox"
-                        checked={!hidden.includes(id)}
-                        disabled={busy || id === 'home'}
-                        onChange={(event) => toggle(scope, id, event.target.checked)}
-                      />
-                      <span>显示</span>
-                    </label>
-                    <button
-                      className="layout-arrow"
-                      aria-label={`上移${candidates[scope].find((item) => item.id === id)?.title}`}
-                      disabled={busy || index === 0}
-                      onClick={() => arrow(scope, id, -1)}
-                    >
-                      <ArrowUp size={16} />
-                    </button>
-                    <button
-                      className="layout-arrow"
-                      aria-label={`下移${candidates[scope].find((item) => item.id === id)?.title}`}
-                      disabled={busy || index === order.length - 1}
-                      onClick={() => arrow(scope, id, 1)}
-                    >
-                      <ArrowDown size={16} />
-                    </button>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )
-        })}
+                      <button
+                        className="layout-handle"
+                        type="button"
+                        aria-label={`拖动${candidates[scope].find((item) => item.id === id)?.title}`}
+                        disabled={busy}
+                        onPointerDown={(event) => {
+                          if (event.button !== 0) return
+                          event.preventDefault()
+                          drag.current = {
+                            scope,
+                            id,
+                            x: event.clientX,
+                            y: event.clientY,
+                            moved: false,
+                          }
+                          event.currentTarget.setPointerCapture(event.pointerId)
+                        }}
+                        onPointerMove={pointerMove}
+                        onPointerUp={finishDrag}
+                        onPointerCancel={finishDrag}
+                        onLostPointerCapture={finishDrag}
+                      >
+                        <GripVertical size={18} />
+                      </button>
+                      <span className="layout-row-title">
+                        {candidates[scope].find((item) => item.id === id)?.title}
+                        {config.modules.some((module) => module.id === id && !module.enabled) && (
+                          <small>栏目已关闭</small>
+                        )}
+                      </span>
+                      <label className="layout-visible">
+                        <input
+                          aria-label={`${scope === 'navigation' ? '导航' : '首页'}显示${candidates[scope].find((item) => item.id === id)?.title}`}
+                          type="checkbox"
+                          checked={!hidden.includes(id)}
+                          disabled={busy || id === 'home'}
+                          onChange={(event) => toggle(scope, id, event.target.checked)}
+                        />
+                        <span>显示</span>
+                      </label>
+                      <button
+                        className="layout-arrow"
+                        aria-label={`上移${candidates[scope].find((item) => item.id === id)?.title}`}
+                        disabled={busy || index === 0}
+                        onClick={() => arrow(scope, id, -1)}
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        className="layout-arrow"
+                        aria-label={`下移${candidates[scope].find((item) => item.id === id)?.title}`}
+                        disabled={busy || index === order.length - 1}
+                        onClick={() => arrow(scope, id, 1)}
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )
+          })}
       </div>
       <p className="mt-3 text-xs text-muted-foreground" role="status">
         {dirty ? announcement || '有未保存的布局调整。' : '当前布局已保存。'}

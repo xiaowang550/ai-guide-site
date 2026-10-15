@@ -1,3 +1,4 @@
+import { PageRegions } from '@/components/page-regions'
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/page-header'
 import { LibraryPanel } from '@/components/learning/library-panel'
@@ -8,13 +9,23 @@ export const metadata: Metadata = {
 }
 export default function SavedPage() {
   return (
-    <>
-      <PageHeader
-        title="我的学习夹"
-        description="用得上的先留住，下次接着看。无需登录，收藏和最近浏览保存在这台设备上。"
-        breadcrumbs={[{ label: '首页', href: '/' }, { label: '学习夹' }]}
-      />
-      <LibraryPanel />
-    </>
+    <PageRegions
+      moduleId="saved"
+      sections={[
+        {
+          id: 'content',
+          content: (
+            <>
+              <PageHeader
+                title="我的学习夹"
+                description="用得上的先留住，下次接着看。无需登录，收藏和最近浏览保存在这台设备上。"
+                breadcrumbs={[{ label: '首页', href: '/' }, { label: '学习夹' }]}
+              />
+              <LibraryPanel />
+            </>
+          ),
+        },
+      ]}
+    />
   )
 }

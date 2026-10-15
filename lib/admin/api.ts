@@ -105,6 +105,7 @@ import {
   listTasks,
   resolveTask,
   reviewSummary,
+  reviewOverview,
 } from './review.ts'
 import {
   fail,
@@ -1206,11 +1207,12 @@ async function handleUpdateFeedback(
 
 async function handleListReview(ctx: RouteCtx): Promise<Response> {
   const status = ctx.url.searchParams.get('status')
-  const [tasks, summary] = await Promise.all([
+  const [tasks, summary, overview] = await Promise.all([
     listTasks(ctx.db, { status: status || undefined }),
     reviewSummary(ctx.db),
+    reviewOverview(ctx.db),
   ])
-  return json({ tasks, summary })
+  return json({ tasks, summary, overview })
 }
 
 async function handleCreateReview(ctx: RouteCtx): Promise<Response> {

@@ -1,4 +1,5 @@
 import type { Db } from '../db/types.ts'
+import { PAGE_REGIONS } from '../module-registry.ts'
 
 import {
   builtinModules,
@@ -21,7 +22,7 @@ export async function ensureModules(db: Db) {
   try {
     if (
       await db.first(
-        "SELECT id FROM site_features WHERE id=1 AND EXISTS(SELECT 1 FROM site_modules WHERE id='saved') AND EXISTS(SELECT 1 FROM site_modules WHERE id='beginner') AND EXISTS(SELECT 1 FROM site_layout WHERE id=1)",
+        "SELECT id FROM site_features WHERE id=1 AND EXISTS(SELECT 1 FROM site_modules WHERE id='saved') AND EXISTS(SELECT 1 FROM site_modules WHERE id='beginner') AND EXISTS(SELECT 1 FROM site_modules WHERE id='home') AND EXISTS(SELECT 1 FROM site_layout WHERE id=1)",
       )
     )
       return
@@ -66,6 +67,43 @@ export async function readSiteConfig(
           : module.enabled && moduleAudience(module) === audience),
     )
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    .map((module) =>
+      privateView
+        ? module
+        : {
+            ...module,
+            blocks: module.blocks.filter((block) => block.enabled !== false),
+            ...(module.regions
+              ? {
+                  regions: !module.enabled
+                    ? []
+                    : module.regions.flatMap((region) => {
+                        if (!region.enabled || region.deleted)
+                          return region.kind === 'native'
+                            ? [
+                                {
+                                  id: region.id,
+                                  title: '隐藏区块',
+                                  description: '',
+                                  kind: 'native' as const,
+                                  enabled: false,
+                                  deleted: region.deleted,
+                                },
+                              ]
+                            : []
+                        return [
+                          {
+                            ...region,
+                            ...(region.blocks
+                              ? { blocks: region.blocks.filter((block) => block.enabled !== false) }
+                              : {}),
+                          },
+                        ]
+                      }),
+                }
+              : {}),
+          },
+    )
   const layout = JSON.parse(layoutRow?.data ?? JSON.stringify(DEFAULT_LAYOUT)) as SiteLayout
   // 草稿模块的布局 ID 与内容一样仅供管理员读取。
   const navigationIds = new Set([
@@ -179,6 +217,7 @@ export async function saveSiteModule(
           'navigation',
           'order',
           'blocks',
+          'regions',
           'version',
         ].includes(key),
     )
@@ -214,9 +253,9 @@ export async function saveSiteModule(
     throw new ModuleInputError('请选择大众端或学校端。')
   if (
     previous?.kind === 'builtin' &&
-    Object.keys(input).some((key) => !['enabled', 'version', 'order'].includes(key))
+    Object.keys(input).some((key) => !['enabled', 'version', 'order', 'regions'].includes(key))
   )
-    throw new ModuleInputError('内置栏目可以开关和排序；内容通过对应编辑功能管理。')
+    throw new ModuleInputError('内置栏目的基本信息不可更改，请在页面内容中编辑区块。')
   if (
     !['builtin', 'cards', 'steps', 'faq', 'links'].includes(next.kind) ||
     (previous?.kind !== 'builtin' && next.kind === 'builtin')
@@ -232,6 +271,8 @@ export async function saveSiteModule(
     throw new ModuleInputError('标题需为 1–60 字，简介最多 240 字。')
   if (['enabled', 'home', 'navigation'].some((key) => typeof next[key as 'enabled'] !== 'boolean'))
     throw new ModuleInputError('开关值必须是布尔值。')
+  if (next.id === 'home' && !next.enabled)
+    throw new ModuleInputError('首页需要保留，可以在页面内容中隐藏具体区块。')
   if (!Number.isInteger(next.order) || next.order < 0 || next.order > 999)
     throw new ModuleInputError('排序范围为 0–999。')
   if (!Array.isArray(next.blocks) || next.blocks.length > 12)
@@ -239,7 +280,10 @@ export async function saveSiteModule(
   for (const block of next.blocks) {
     check(block)
     if (
-      Object.keys(block).some((key) => !['title', 'text', 'href'].includes(key)) ||
+      Object.keys(block).some((key) => !['id', 'enabled', 'title', 'text', 'href'].includes(key)) ||
+      (block.id !== undefined &&
+        (typeof block.id !== 'string' || !/^[a-zA-Z0-9-]{1,80}$/.test(block.id))) ||
+      (block.enabled !== undefined && typeof block.enabled !== 'boolean') ||
       typeof block.title !== 'string' ||
       !block.title.trim() ||
       block.title.length > 100 ||
@@ -252,6 +296,75 @@ export async function saveSiteModule(
   }
   if (next.kind !== 'builtin' && next.enabled && !next.blocks.length)
     throw new ModuleInputError('先添加至少一项内容，再公开模块。')
+  if (next.regions !== undefined) {
+    if (!Array.isArray(next.regions) || next.regions.length > 40)
+      throw new ModuleInputError('每个页面最多 40 个区块。')
+    const ids = new Set<string>()
+    for (const region of next.regions) {
+      check(region)
+      const native = PAGE_REGIONS[next.id]?.find((definition) => definition.id === region.id)
+      if (native && region.kind !== 'native')
+        throw new ModuleInputError('功能区不能改成普通内容，请另外新增区块。')
+      if (region.kind === 'native' && !native)
+        throw new ModuleInputError('这个页面没有对应的内置区块。')
+      if (region.kind === 'native' && region.blocks !== undefined && !native?.items)
+        throw new ModuleInputError('功能区保留原有操作；请新建内容区块，或使用对应的资料编辑器。')
+      if (
+        Object.keys(region).some(
+          (key) =>
+            !['id', 'title', 'description', 'kind', 'enabled', 'deleted', 'blocks'].includes(key),
+        ) ||
+        typeof region.id !== 'string' ||
+        !/^[a-zA-Z0-9-]{1,80}$/.test(region.id) ||
+        ids.has(region.id) ||
+        typeof region.title !== 'string' ||
+        !region.title.trim() ||
+        region.title.length > 100 ||
+        typeof region.description !== 'string' ||
+        region.description.length > 240 ||
+        !['native', 'cards', 'steps', 'faq', 'links'].includes(region.kind as string) ||
+        typeof region.enabled !== 'boolean' ||
+        (region.deleted !== undefined && typeof region.deleted !== 'boolean')
+      )
+        throw new ModuleInputError('区块字段无效，区块标识不能重复。')
+      ids.add(region.id)
+      if (region.blocks !== undefined) {
+        if (!Array.isArray(region.blocks) || region.blocks.length > 30)
+          throw new ModuleInputError('每个区块最多 30 项内容。')
+        const blockIds = new Set<string>()
+        for (const block of region.blocks) {
+          check(block)
+          if (
+            Object.keys(block).some(
+              (key) => !['id', 'title', 'text', 'href', 'enabled'].includes(key),
+            ) ||
+            typeof block.id !== 'string' ||
+            !/^[a-zA-Z0-9-]{1,80}$/.test(block.id) ||
+            blockIds.has(block.id) ||
+            typeof block.title !== 'string' ||
+            !block.title.trim() ||
+            block.title.length > 100 ||
+            typeof block.text !== 'string' ||
+            block.text.length > 2500 ||
+            (block.enabled !== undefined && typeof block.enabled !== 'boolean') ||
+            (block.href !== undefined &&
+              (typeof block.href !== 'string' ||
+                block.href.length > 500 ||
+                !safeModuleLink(block.href)))
+          )
+            throw new ModuleInputError('内容项需有唯一标识和标题，链接只支持站内地址或 HTTPS。')
+          blockIds.add(block.id)
+        }
+      }
+      if (
+        region.kind !== 'native' &&
+        (!region.blocks?.length || region.blocks.every((b) => b.enabled === false)) &&
+        region.enabled &&
+        !region.deleted
+      )
+        throw new ModuleInputError('先添加至少一项可见内容，再公开区块。')
+    }
+  }
   next.id = previous?.id ?? next.id
   next.title = next.title.trim()
   next.version = (previous?.version ?? 0) + 1

@@ -26,6 +26,31 @@ import { listItems, getPublishedData } from './content.ts'
  */
 export const TOOL_FRESHNESS = { fresh: 30, warn: 90, stale: 180 } as const
 
+/** Private status uses published content; fetching a source never resets a review date. */
+export async function reviewOverview(db: Db) {
+  const items = (await listItems(db, 'tool')).filter((item) => item.published_version !== null)
+  const records = items.map((item) => {
+    const date = item.published_at
+    const age = date ? daysSince(date, new Date()) : Infinity
+    return {
+      id: item.id,
+      title: item.published_title ?? item.slug,
+      updatedAt: date,
+      ageDays: Number.isFinite(age) ? Math.max(0, age) : null,
+      status: age > TOOL_FRESHNESS.stale ? 'stale' : age > TOOL_FRESHNESS.fresh ? 'aging' : 'fresh',
+    }
+  })
+  return {
+    total: records.length,
+    fresh: records.filter((r) => r.status === 'fresh').length,
+    aging: records.filter((r) => r.status === 'aging').length,
+    stale: records.filter((r) => r.status === 'stale').length,
+    checkedAt: new Date().toISOString(),
+    thresholds: TOOL_FRESHNESS,
+    items: records.sort((a, b) => (b.ageDays ?? Infinity) - (a.ageDays ?? Infinity)),
+  }
+}
+
 export type ReviewSeverity = 'low' | 'normal' | 'high'
 
 export const REVIEW_SEVERITY_LABELS: Record<ReviewSeverity, string> = {
@@ -80,7 +105,17 @@ function plusDays(days: number, now: Date): string {
  */
 export async function regenerateAutoTasks(db: Db, now = new Date()): Promise<RegenerateResult> {
   const items = await listItems(db, 'tool')
-  const wanted = new Map<string, { itemId: string; kind: string; title: string; detail: string; severity: ReviewSeverity; due: string }>()
+  const wanted = new Map<
+    string,
+    {
+      itemId: string
+      kind: string
+      title: string
+      detail: string
+      severity: ReviewSeverity
+      due: string
+    }
+  >()
 
   for (const item of items) {
     if (!item.published_version || !item.published_at) continue
@@ -119,7 +154,7 @@ export async function regenerateAutoTasks(db: Db, now = new Date()): Promise<Reg
   }
 
   const existingAuto = await db.all<{ id: string; status: string }>(
-    "SELECT id, status FROM review_tasks WHERE kind IN ('freshness', 'evidence')"
+    "SELECT id, status FROM review_tasks WHERE kind IN ('freshness', 'evidence')",
   )
   const existingMap = new Map(existingAuto.map((r) => [toText(r.id), toText(r.status)]))
 
@@ -137,14 +172,14 @@ export async function regenerateAutoTasks(db: Db, now = new Date()): Promise<Reg
       await db.run(
         `UPDATE review_tasks SET title = ?, detail = ?, severity = ?, due_date = ?, updated_at = ?
           WHERE id = ? AND status = 'open'`,
-        [w.title, w.detail, w.severity, w.due, nowIsoStr, id]
+        [w.title, w.detail, w.severity, w.due, nowIsoStr, id],
       )
       updated++
     } else {
       await db.run(
         `INSERT INTO review_tasks (id, item_id, kind, title, detail, severity, due_date, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
-        [id, w.itemId, w.kind, w.title, w.detail, w.severity, w.due, nowIsoStr, nowIsoStr]
+        [id, w.itemId, w.kind, w.title, w.detail, w.severity, w.due, nowIsoStr, nowIsoStr],
       )
       created++
     }
@@ -156,7 +191,7 @@ export async function regenerateAutoTasks(db: Db, now = new Date()): Promise<Reg
       `UPDATE review_tasks SET status = 'dismissed', resolved_at = ?, updated_at = ?,
               detail = COALESCE(detail, '') || '（复核后数据已更新，自动关闭）'
         WHERE id = ?`,
-      [nowIsoStr, nowIsoStr, id]
+      [nowIsoStr, nowIsoStr, id],
     )
     closed++
   }
@@ -189,21 +224,26 @@ export function countEvidenceGaps(data: Record<string, unknown>): number {
 
 export async function listTasks(
   db: Db,
-  opts: { status?: string; limit?: number } = {}
+  opts: { status?: string; limit?: number } = {},
 ): Promise<ReviewTask[]> {
   const limit = Math.min(Math.max(opts.limit ?? 200, 1), 500)
   const sql = opts.status
     ? 'SELECT * FROM review_tasks WHERE status = ? ORDER BY CASE severity WHEN ? THEN 0 WHEN ? THEN 1 ELSE 2 END, due_date IS NULL, due_date LIMIT ?'
     : "SELECT * FROM review_tasks WHERE status = 'open' ORDER BY CASE severity WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END, due_date IS NULL, due_date LIMIT ?"
-  const params = opts.status
-    ? [opts.status, 'high', 'normal', limit]
-    : [limit]
+  const params = opts.status ? [opts.status, 'high', 'normal', limit] : [limit]
   return db.all<ReviewTask>(sql, params)
 }
 
 export async function createManualTask(
   db: Db,
-  params: { title: string; detail?: string; itemId?: string; severity?: string; dueDate?: string; actor: string }
+  params: {
+    title: string
+    detail?: string
+    itemId?: string
+    severity?: string
+    dueDate?: string
+    actor: string
+  },
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   const title = params.title?.trim()
   if (!title) return { ok: false, error: '标题不能为空' }
@@ -225,16 +265,18 @@ export async function createManualTask(
       params.dueDate ?? null,
       nowIso(),
       nowIso(),
-    ]
+    ],
   )
   return { ok: true, id }
 }
 
 export async function resolveTask(
   db: Db,
-  params: { id: string; status: 'done' | 'dismissed' | 'open'; actor: string; note?: string }
+  params: { id: string; status: 'done' | 'dismissed' | 'open'; actor: string; note?: string },
 ): Promise<{ ok: boolean; error?: string }> {
-  const task = await db.first<{ id: string }>('SELECT id FROM review_tasks WHERE id = ?', [params.id])
+  const task = await db.first<{ id: string }>('SELECT id FROM review_tasks WHERE id = ?', [
+    params.id,
+  ])
   if (!task) return { ok: false, error: '待办不存在' }
   const open = params.status === 'open'
   await db.batch([
@@ -255,7 +297,13 @@ export async function resolveTask(
     },
     {
       sql: 'INSERT INTO audit_log (at, actor, action, target, detail) VALUES (?, ?, ?, ?, ?)',
-      params: [nowIso(), params.actor, 'review.resolve', params.id, JSON.stringify({ status: params.status })],
+      params: [
+        nowIso(),
+        params.actor,
+        'review.resolve',
+        params.id,
+        JSON.stringify({ status: params.status }),
+      ],
     },
   ])
   return { ok: true }
@@ -270,7 +318,7 @@ export interface ReviewSummary {
 
 export async function reviewSummary(db: Db): Promise<ReviewSummary> {
   const rows = await db.all<{ kind: string; severity: string; due_date: string | null }>(
-    "SELECT kind, severity, due_date FROM review_tasks WHERE status = 'open'"
+    "SELECT kind, severity, due_date FROM review_tasks WHERE status = 'open'",
   )
   const today = new Date().toISOString().slice(0, 10)
   const byKind: Record<string, number> = {}

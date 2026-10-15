@@ -24,6 +24,7 @@ import { WeeklyRecommendations, type WeeklyEntry } from '@/components/weekly-rec
 import { Section } from '@/components/page-header'
 import { ReferenceArt } from '@/components/reference-art'
 import { DesignHome } from '@/components/design-home'
+import { RegionSlot } from '@/components/page-regions'
 
 export const metadata: Metadata = {
   description: '用清晰的能力地图、实用教程和场景决策器，找到适合你的 AI 工具。',
@@ -155,44 +156,46 @@ export default function HomePage() {
                   </div>
                   <ReferenceArt home />
                   <ModuleSection id="finder">
-                    <div className="hero-workbench">
-                      <div className="mb-7 flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-sm font-semibold">
-                          <span className="hero-small-icon">
-                            <Sparkles className="h-4 w-4" />
+                    <RegionSlot moduleId="home" id="tasks">
+                      <div className="hero-workbench">
+                        <div className="mb-7 flex items-center justify-between">
+                          <span className="flex items-center gap-2 text-sm font-semibold">
+                            <span className="hero-small-icon">
+                              <Sparkles className="h-4 w-4" />
+                            </span>
+                            按任务选工具
                           </span>
-                          按任务选工具
-                        </span>
-                      </div>
-                      <p className="text-xl font-semibold tracking-tight">你想做什么？</p>
-                      <div className="mt-6 space-y-3">
-                        {tasks.map(({ title, icon: Icon, hint, task }) => (
-                          <Link
-                            prefetch={false}
-                            key={task}
-                            href={`/find?s=${task}`}
-                            className="hero-task"
-                          >
-                            <span className="hero-task-icon">
-                              <Icon className="h-4 w-4" />
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block text-sm font-medium">{title}</span>
-                              <span className="mt-1 block text-xs text-muted-foreground">
-                                {hint}
+                        </div>
+                        <p className="text-xl font-semibold tracking-tight">你想做什么？</p>
+                        <div className="mt-6 space-y-3">
+                          {tasks.map(({ title, icon: Icon, hint, task }) => (
+                            <Link
+                              prefetch={false}
+                              key={task}
+                              href={`/find?s=${task}`}
+                              className="hero-task"
+                            >
+                              <span className="hero-task-icon">
+                                <Icon className="h-4 w-4" />
                               </span>
-                            </span>
-                            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-medium">{title}</span>
+                                <span className="mt-1 block text-xs text-muted-foreground">
+                                  {hint}
+                                </span>
+                              </span>
+                              <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                            </Link>
+                          ))}
+                        </div>
+                        <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5 text-xs">
+                          <span className="text-muted-foreground">根据任务推荐工具</span>
+                          <Link prefetch={false} href="/find" className="font-medium text-primary">
+                            帮我选工具 →
                           </Link>
-                        ))}
+                        </div>
                       </div>
-                      <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5 text-xs">
-                        <span className="text-muted-foreground">根据任务推荐工具</span>
-                        <Link prefetch={false} href="/find" className="font-medium text-primary">
-                          帮我选工具 →
-                        </Link>
-                      </div>
-                    </div>
+                    </RegionSlot>
                   </ModuleSection>
                 </div>
               </section>
