@@ -28,6 +28,8 @@ import {
   type BeginnerEvidence,
 } from '@/lib/beginner-tasks'
 import { copyText } from '@/lib/copy-text'
+import { EditableAnswer, FormattedAnswer } from '@/components/assistant/formatted-answer'
+import { readableAnswer } from '@/lib/answer-text'
 import './rookie.css'
 
 interface Recognition {
@@ -394,13 +396,18 @@ export function RookieLab() {
           <article className="beginner-result">
             <strong>最近完成的草稿</strong>
             <small>{outputKinds[5]}</small>
-            <p>{outputs[5]}</p>
+            <FormattedAnswer text={outputs[5]} />
             <button
               type="button"
               className="home-button-secondary"
-              onClick={async () =>
+              onClick={async (e) =>
                 setNotice(
-                  (await copyText(outputs[5]))
+                  (await copyText(
+                    readableAnswer(
+                      e.currentTarget.closest('article')?.querySelector('.answer-body'),
+                      outputs[5],
+                    ),
+                  ))
                     ? '已复制，可以保存到笔记或文档。'
                     : '请选中文字手动复制。',
                 )
@@ -817,22 +824,26 @@ export function RookieLab() {
               {outputs[stage] && (
                 <article className="rookie-output">
                   <small>{outputKinds[stage] || '你手工录入的练习结果'}</small>
-                  <textarea
-                    aria-label="修改当前练习结果"
+                  <EditableAnswer
+                    label="修改当前练习结果"
                     value={outputs[stage]}
-                    disabled={tutor.busy}
-                    maxLength={5000}
-                    onChange={(e) => {
-                      setOutputs((old) => old.map((r, i) => (i === stage ? e.target.value : r)))
+                    busy={tutor.busy}
+                    onChange={(value) => {
+                      setOutputs((old) => old.map((r, i) => (i === stage ? value : r)))
                       setChecks([false, false])
                       setChecked(false)
                     }}
                   />
                   <button
                     disabled={tutor.busy}
-                    onClick={async () =>
+                    onClick={async (e) =>
                       setNotice(
-                        (await copyText(outputs[stage]))
+                        (await copyText(
+                          readableAnswer(
+                            e.currentTarget.closest('article')?.querySelector('.answer-body'),
+                            outputs[stage],
+                          ),
+                        ))
                           ? '练习成果已复制，可以保存。'
                           : '请选中文字手工复制。',
                       )
@@ -901,7 +912,11 @@ export function RookieLab() {
                   />
                   <button disabled={!tutor.ready || tutor.busy || !question.trim()}>问小芽</button>
                 </form>
-                {coaching && <p className="rookie-coach-answer">{coaching}</p>}
+                {coaching && (
+                  <div className="rookie-coach-answer">
+                    <FormattedAnswer text={coaching} />
+                  </div>
+                )}
               </section>
               {stage === 5 && (
                 <div className="rookie-quiz">

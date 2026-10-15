@@ -4,6 +4,8 @@ import type { CaseExercise } from '@/data/daily-cases'
 import { useTutor } from './use-tutor'
 import { domesticPracticeTools } from './practice-kit'
 import { copyText } from '@/lib/copy-text'
+import { EditableAnswer } from '@/components/assistant/formatted-answer'
+import { readableAnswer } from '@/lib/answer-text'
 import { casePracticeStyles } from './case-practice-styles'
 export function CasePractice({ exercise, title }: { exercise: CaseExercise; title: string }) {
   const tutor = useTutor(),
@@ -122,20 +124,19 @@ export function CasePractice({ exercise, title }: { exercise: CaseExercise; titl
           {tutor.elapsed >= 12 && tutor.busy && (
             <p role="status">通道等待较久，可以停止后换模型，或用外部工具完成。</p>
           )}
-          <label>
-            {kind || '粘贴外部回答，或手工完成练习草稿'}
-            <textarea
-              aria-label="案例草稿结果"
-              maxLength={5000}
-              disabled={tutor.busy}
+          <div>
+            <p>{kind || '粘贴外部回答，或手工完成练习草稿'}</p>
+            <EditableAnswer
+              label="案例草稿结果"
+              busy={tutor.busy}
               value={result}
-              onChange={(e) => {
-                setResult(e.target.value)
+              onChange={(value) => {
+                setResult(value)
                 setKind('你编辑的练习草稿')
                 invalidate()
               }}
             />
-          </label>
+          </div>
           <button
             disabled={tutor.busy}
             onClick={() => {
@@ -158,18 +159,17 @@ export function CasePractice({ exercise, title }: { exercise: CaseExercise; titl
             <summary>原始材料</summary>
             <p className="case-practice-text">{material}</p>
           </details>
-          <label>
-            {kind}
-            <textarea
-              aria-label="修改案例成果"
+          <div>
+            <p>{kind}</p>
+            <EditableAnswer
+              label="修改案例成果"
               value={result}
-              maxLength={5000}
-              onChange={(e) => {
-                setResult(e.target.value)
+              onChange={(value) => {
+                setResult(value)
                 invalidate()
               }}
             />
-          </label>
+          </div>
           <fieldset>
             <legend>逐项核对</legend>
             {exercise.checks.map((text, i) => (
@@ -187,7 +187,16 @@ export function CasePractice({ exercise, title }: { exercise: CaseExercise; titl
           </fieldset>
           <button
             disabled={!result.trim() || !checks.every(Boolean)}
-            onClick={() => void copy(result)}
+            onClick={(e) =>
+              void copy(
+                readableAnswer(
+                  e.currentTarget
+                    .closest('.case-practice-workbench')
+                    ?.querySelector('.answer-body'),
+                  result,
+                ),
+              )
+            }
           >
             确认核对，复制我的成果
           </button>

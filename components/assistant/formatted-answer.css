@@ -1,0 +1,201 @@
+.answer-body {
+  min-width: 0;
+  color: hsl(var(--foreground));
+  font-size: 15px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.answer-body > :first-child {
+  margin-top: 0;
+}
+.answer-body > :last-child {
+  margin-bottom: 0;
+}
+.answer-body p {
+  margin: 0 0 12px;
+  white-space: pre-line;
+}
+.answer-body h4 {
+  margin: 22px 0 8px;
+  font-size: 1.05em;
+  line-height: 1.65;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+.answer-body strong {
+  font-weight: 650;
+  color: inherit;
+}
+.answer-body ul,
+.answer-body ol {
+  margin: 8px 0 16px;
+  padding-left: 1.45em;
+}
+.answer-body ul {
+  list-style: disc;
+}
+.answer-body ol {
+  list-style: decimal;
+}
+.answer-body li {
+  padding-left: 3px;
+  margin: 5px 0;
+}
+.answer-body li::marker {
+  color: hsl(var(--muted-foreground));
+}
+.answer-body li > p {
+  margin: 3px 0;
+}
+.answer-body li > ul,
+.answer-body li > ol {
+  margin: 5px 0;
+}
+.answer-body blockquote {
+  border-left: 3px solid hsl(var(--border));
+  margin: 14px 0;
+  padding: 2px 0 2px 14px;
+  color: hsl(var(--muted-foreground));
+}
+.answer-body hr {
+  border: 0;
+  border-top: 1px solid hsl(var(--border));
+  margin: 18px 0;
+}
+.answer-body a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.answer-body code {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.88em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: hsl(var(--muted));
+}
+.answer-body pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 14px;
+  margin: 14px 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  background: hsl(var(--muted) / 0.5);
+  white-space: pre;
+  line-height: 1.6;
+  overscroll-behavior-x: contain;
+}
+.answer-body pre code {
+  padding: 0;
+  border: 0;
+  background: none;
+  overflow-wrap: normal;
+}
+.answer-table {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 14px 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  overscroll-behavior-x: contain;
+}
+.answer-table table {
+  width: 100%;
+  min-width: 320px;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  text-align: left;
+}
+.answer-table th {
+  background: hsl(var(--muted) / 0.55);
+  font-weight: 600;
+}
+.answer-table th,
+.answer-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  vertical-align: top;
+  min-width: 80px;
+}
+.answer-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.answer-table th:not(:last-child),
+.answer-table td:not(:last-child) {
+  border-right: 1px solid hsl(var(--border));
+}
+.answer-table:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+.answer-result {
+  min-width: 0;
+}
+.answer-view-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 8px;
+}
+.answer-result .answer-view-controls button {
+  margin: 0;
+  padding: 6px 10px;
+  min-height: 36px;
+  font-size: 13px;
+  color: hsl(var(--muted-foreground));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+}
+.answer-result .answer-view-controls button:hover {
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted));
+}
+.answer-result .answer-view-controls button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+.answer-result textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 12px;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1.85;
+  resize: none;
+  overflow-y: hidden;
+}
+.answer-loading {
+  padding: 8px 0;
+}
+.answer-loading span {
+  display: block;
+  height: 12px;
+  margin: 8px 0;
+  width: 86%;
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+.answer-loading span:last-child {
+  width: 62%;
+}
+@media (max-width: 600px) {
+  .answer-body {
+    font-size: 16px;
+  }
+  .answer-result .answer-view-controls button {
+    min-height: 44px;
+  }
+}
+.case-practice-workbench .answer-body a {
+  display: inline;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}

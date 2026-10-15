@@ -163,11 +163,15 @@
   margin-top: 8px;
 }
 .beginner-result {
+  scroll-margin-top: 100px;
   margin: 20px 0 0;
   padding: 18px;
   border: 1px solid hsl(var(--primary) / 0.25);
   border-radius: 15px;
   background: hsl(var(--card));
+}
+.first-visit-dialog .beginner-result {
+  scroll-margin-top: 12px;
 }
 .beginner-result header {
   display: grid;

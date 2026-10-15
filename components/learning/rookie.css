@@ -277,7 +277,7 @@
   font-size: 14px;
   color: hsl(var(--primary));
 }
-.rookie-output p,
+.rookie-output > p,
 .rookie-coach-answer {
   white-space: pre-wrap;
   overflow-wrap: anywhere;

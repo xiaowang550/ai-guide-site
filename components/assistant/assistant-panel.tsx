@@ -7,6 +7,8 @@ import { ArrowUp, Check, Copy, LoaderCircle, RotateCcw, Square, X } from 'lucide
 import type { AssistantToolsIndex } from '@/lib/assistant'
 import type { ModelCatalog } from '@/lib/assistant-models'
 import { runAssistant } from '@/lib/assistant-client'
+import { FormattedAnswer } from './formatted-answer'
+import { readableAnswer } from '@/lib/answer-text'
 import { copyText } from '@/lib/copy-text'
 import { computeDockPosition } from '@/lib/dock-position'
 import { toggleSaved, validLearningEntry, type LearningEntry } from '@/lib/learning/library'
@@ -499,10 +501,25 @@ export function AssistantPanel({
                     }
                   />
                   <div className="assistant-practice-result">
-                    {results[i] || '生成后，结果会出现在这里。'}
+                    {results[i] ? (
+                      <FormattedAnswer text={results[i]} />
+                    ) : (
+                      '生成后，结果会出现在这里。'
+                    )}
                   </div>
                   {results[i] && (
-                    <button type="button" onClick={() => void copy(results[i], 'practice-' + i)}>
+                    <button
+                      type="button"
+                      onClick={(e) =>
+                        void copy(
+                          readableAnswer(
+                            e.currentTarget.closest('section')?.querySelector('.answer-body'),
+                            results[i],
+                          ),
+                          'practice-' + i,
+                        )
+                      }
+                    >
                       {copied === 'practice-' + i ? '已复制' : '复制结果'}
                     </button>
                   )}
@@ -566,7 +583,15 @@ export function AssistantPanel({
                     {t.role === 'user' ? '你' : (t.model ?? '小芽')}
                   </div>
                   <div className="assistant-message">
-                    {t.text ||
+                    {(t.text ? (
+                      t.role === 'assistant' ? (
+                        <FormattedAnswer text={t.text} />
+                      ) : (
+                        t.text
+                      )
+                    ) : (
+                      ''
+                    )) ||
                       (!t.error && (
                         <span className="assistant-typing">
                           正在组织回答<span>•••</span>
@@ -611,7 +636,18 @@ export function AssistantPanel({
                     )}
                   {t.role === 'assistant' && t.text && (
                     <div className="assistant-message-actions">
-                      <button type="button" onClick={() => void copy(t.text, t.id)}>
+                      <button
+                        type="button"
+                        onClick={(e) =>
+                          void copy(
+                            readableAnswer(
+                              e.currentTarget.closest('article')?.querySelector('.answer-body'),
+                              t.text,
+                            ),
+                            t.id,
+                          )
+                        }
+                      >
                         {copied === t.id ? <Check size={13} /> : <Copy size={13} />}{' '}
                         {copied === t.id ? '已复制' : '复制'}
                       </button>

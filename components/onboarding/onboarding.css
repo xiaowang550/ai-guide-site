@@ -217,8 +217,6 @@ body:has(.first-visit-dialog[open]) {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   line-height: 1.8;
-  max-height: 130px;
-  overflow: auto;
   margin: 8px 0;
 }
 .intro-keepsake button {

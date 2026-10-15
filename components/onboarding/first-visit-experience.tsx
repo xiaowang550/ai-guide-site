@@ -18,6 +18,8 @@ import {
   EXPERIENCE_KEY,
 } from '@/lib/onboarding-state'
 import { copyText } from '@/lib/copy-text'
+import { FormattedAnswer } from '@/components/assistant/formatted-answer'
+import { readableAnswer } from '@/lib/answer-text'
 import { useSiteModules } from '@/components/site-module-context'
 import { pathEnabled } from '@/lib/site-modules'
 import './onboarding.css'
@@ -206,11 +208,20 @@ export function FirstVisitExperience({ onClose }: { onClose: (today: boolean) =>
               <details className="intro-keepsake">
                 <summary>保留刚才的{evidence.kind === 'example' ? '示例' : '回答'}</summary>
                 <small>{evidence.kind === 'example' ? '本次教学示例' : '本次 AI 草稿'}</small>
-                <p>{evidence.output}</p>
+                <FormattedAnswer text={evidence.output} />
                 <button
                   type="button"
-                  onClick={async () =>
-                    setCopied((await copyText(evidence.output)) ? '已复制' : '请选中文字手动复制')
+                  onClick={async (e) =>
+                    setCopied(
+                      (await copyText(
+                        readableAnswer(
+                          e.currentTarget.closest('details')?.querySelector('.answer-body'),
+                          evidence.output,
+                        ),
+                      ))
+                        ? '已复制'
+                        : '请选中文字手动复制',
+                    )
                   }
                 >
                   <Copy size={15} />

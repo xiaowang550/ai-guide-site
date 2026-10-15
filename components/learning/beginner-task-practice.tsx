@@ -17,6 +17,8 @@ import {
 } from '@/lib/beginner-tasks'
 import { readLocal, saveLocal } from '@/lib/onboarding-state'
 import { copyText } from '@/lib/copy-text'
+import { EditableAnswer, FormattedAnswer } from '@/components/assistant/formatted-answer'
+import { readableAnswer } from '@/lib/answer-text'
 import type { useTutor } from './use-tutor'
 import './beginner-task-practice.css'
 
@@ -99,7 +101,7 @@ export function BeginnerTaskPractice({
   function showResult() {
     requestAnimationFrame(() =>
       result.current?.scrollIntoView({
-        block: 'nearest',
+        block: 'start',
         behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
       }),
     )
@@ -358,17 +360,15 @@ export function BeginnerTaskPractice({
             <span>
               {kind === 'example' ? '教学示例 · 未调用 AI' : direct ? 'AI 的回答' : 'AI 生成的草稿'}
             </span>
-            <strong>{direct ? '可以继续追问，让回答更合用。' : '这是草稿，你可以直接改。'}</strong>
           </header>
-          <textarea
-            aria-label="我的任务草稿"
+          <EditableAnswer
+            label="我的任务草稿"
             value={output}
-            maxLength={5000}
-            disabled={tutor.busy}
-            onChange={(e) => {
-              setOutput(e.target.value)
+            busy={tutor.busy}
+            onChange={(value) => {
+              setOutput(value)
               const last = conversation.current.at(-1)
-              if (last?.role === 'assistant') last.content = e.target.value
+              if (last?.role === 'assistant') last.content = value
               setAnswer('')
               setNotice('')
             }}
@@ -390,16 +390,21 @@ export function BeginnerTaskPractice({
             <button
               type="button"
               disabled={tutor.busy || !output.trim()}
-              onClick={async () =>
+              onClick={async (e) =>
                 setNotice(
-                  (await copyText(output))
+                  (await copyText(
+                    readableAnswer(
+                      e.currentTarget.closest('article')?.querySelector('.answer-body'),
+                      output,
+                    ),
+                  ))
                     ? '已复制。可以粘贴到聊天、笔记或文档里。'
                     : '可以选中文字，手动复制。',
                 )
               }
             >
               <Copy size={16} />
-              复制草稿
+              复制文字
             </button>
           </div>
           {kind === 'ai' && !draftIncomplete && (
@@ -523,9 +528,9 @@ export function BeginnerTaskPractice({
           <button disabled={!tutor.ready || tutor.busy || !question.trim()}>问小芽</button>
         </form>
         {help && (
-          <p className="beginner-help-answer" role="status">
-            {help}
-          </p>
+          <div className="beginner-help-answer" role="status">
+            <FormattedAnswer text={help} />
+          </div>
         )}
       </details>
       <details className="beginner-model">
