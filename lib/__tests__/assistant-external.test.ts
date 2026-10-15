@@ -127,6 +127,10 @@ describe('外部模型接入', () => {
       model: good.id,
     })
     expect(tested.json.state).toBe('passed')
+    const probeCall = f.fetcher.mock.calls.find(([u]) => String(u).endsWith('/chat/completions'))!
+    expect(
+      JSON.parse(String(probeCall[1]?.body)).messages.map((m: { role: string }) => m.role),
+    ).toEqual(['system', 'user'])
     expect((await request(f.env, 'GET', '/api/assistant/models')).json.models).toEqual([])
     await request(f.env, 'POST', endpoint, {
       phase: 'publish',

@@ -426,6 +426,7 @@ async function probe(db: Db, env: ExternalEnv, body: Record<string, unknown>, re
         stream: true,
         max_tokens: 1024,
         messages: [
+          { role: 'system', content: '你是中文助手小芽，直接完成用户的要求。' },
           { role: 'user', content: '这是连接测试，请只回复四个汉字：连接正常。不要添加其他文字。' },
         ],
       }),
