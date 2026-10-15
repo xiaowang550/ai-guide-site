@@ -396,6 +396,11 @@ html[data-design='editorial'] .studio-only {
   color: hsl(var(--foreground));
   box-shadow: none;
 }
+.template-home-search input:focus,
+.template-home-search input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 .template-home-search button {
   display: grid;
   place-items: center;

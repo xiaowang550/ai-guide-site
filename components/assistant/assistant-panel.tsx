@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
@@ -99,6 +99,46 @@ export function AssistantPanel({
     if (open && !window.matchMedia('(pointer: coarse)').matches)
       input.current?.focus({ preventScroll: true })
   }, [open])
+  useLayoutEffect(() => {
+    const field = input.current
+    if (!open || !field || mode === 'practice') return
+    const footer = field.closest<HTMLElement>('.assistant-footer')
+    const fitMenu = () => {
+      if (!footer || !dialog.current) return
+      const space = footer.getBoundingClientRect().top - dialog.current.getBoundingClientRect().top
+      footer.style.setProperty('--assistant-menu-space', `${Math.max(0, space - 12)}px`)
+    }
+    const resize = () => {
+      // Reset before measuring so deleting text also shrinks the composer.
+      field.style.height = 'auto'
+      const height = window.visualViewport?.height ?? window.innerHeight
+      const limit = Math.min(144, Math.max(28, height * 0.22), height < 500 ? 72 : 144)
+      field.style.maxHeight = `${limit}px`
+      field.style.height = `${Math.min(field.scrollHeight, limit)}px`
+      field.style.overflowY = field.scrollHeight > limit ? 'auto' : 'hidden'
+      fitMenu()
+    }
+    resize()
+    let width = field.getBoundingClientRect().width
+    const observer = new ResizeObserver(() => {
+      const nextWidth = field.getBoundingClientRect().width
+      if (nextWidth !== width) {
+        width = nextWidth
+        resize()
+      }
+      fitMenu()
+    })
+    observer.observe(field)
+    if (footer) observer.observe(footer)
+    if (dialog.current) observer.observe(dialog.current)
+    window.visualViewport?.addEventListener('resize', resize)
+    window.addEventListener('resize', resize)
+    return () => {
+      observer.disconnect()
+      window.visualViewport?.removeEventListener('resize', resize)
+      window.removeEventListener('resize', resize)
+    }
+  }, [draft, mode, open])
   useEffect(() => {
     if (!open) return
     function place() {
@@ -698,10 +738,14 @@ export function AssistantPanel({
                 </div>
               )}
               {turns.map((t) => (
-                <article className={'assistant-turn ' + t.role} key={t.id}>
-                  <div className="assistant-turn-label">
-                    {t.role === 'user' ? '你' : (t.model ?? '小芽')}
-                  </div>
+                <article
+                  className={'assistant-turn ' + t.role}
+                  key={t.id}
+                  aria-label={t.role === 'user' ? '我的消息' : '小芽的回答'}
+                >
+                  {t.role === 'assistant' && (
+                    <div className="assistant-turn-label">{t.model ?? '小芽'}</div>
+                  )}
                   <div className="assistant-message">
                     {(t.text ? (
                       t.role === 'assistant' ? (
@@ -844,7 +888,7 @@ export function AssistantPanel({
                 ref={input}
                 value={draft}
                 maxLength={4000}
-                rows={2}
+                rows={1}
                 aria-label="问小芽"
                 placeholder={mode === 'search' ? '说说你想找什么…' : '输入任务，或粘贴一条提示词…'}
                 onChange={(e) => setDraft(e.target.value)}

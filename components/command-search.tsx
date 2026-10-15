@@ -132,6 +132,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
     router.push(href)
   }
   function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.nativeEvent.isComposing) return
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault()
       setOpen(true)
@@ -167,7 +168,7 @@ export function CommandSearch({ className }: { className?: string } = {}) {
           {...inputProps}
           onFocus={() => setOpen(true)}
           placeholder="搜索工具、教程…"
-          className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="search-field min-w-0 flex-1 bg-transparent text-xs placeholder:text-muted-foreground"
         />
         {query ? (
           <button
@@ -210,13 +211,13 @@ export function CommandSearch({ className }: { className?: string } = {}) {
               maxHeight: position.height,
             }}
           >
-            <div className="flex items-center gap-2 border-b px-4 py-3 sm:hidden">
+            <div className="search-mobile-field flex items-center gap-2 border-b px-4 py-3 sm:hidden">
               <Search className="h-4 w-4 text-muted-foreground" />
               <input
                 ref={mobileInput}
                 {...inputProps}
                 placeholder="搜索工具、教程…"
-                className="min-w-0 flex-1 bg-transparent text-sm outline-none focus-visible:ring-0"
+                className="search-field min-w-0 flex-1 bg-transparent text-sm"
               />
               <button type="button" onClick={close} aria-label="关闭搜索">
                 <X className="h-4 w-4" />
