@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowUp, Check, Copy, LoaderCircle, RotateCcw, Square, X } from 'lucide-react'
 import type { AssistantToolsIndex } from '@/lib/assistant'
 import type { ModelCatalog } from '@/lib/assistant-models'
+import { experimentModels, isClassificationOnlyReply } from '@/lib/assistant-models'
 import { runAssistant } from '@/lib/assistant-client'
 import { FormattedAnswer } from './formatted-answer'
 import { readableAnswer } from '@/lib/answer-text'
@@ -68,6 +69,13 @@ export function AssistantPanel({
     [copied, setCopied] = useState(''),
     [prompts, setPrompts] = useState([BASIC, IMPROVED]),
     [results, setResults] = useState(['', ''])
+  const [experimentSelected, setExperimentSelected] = useState('')
+  const [experimentReasoning, setExperimentReasoning] = useState<ReasoningChoice>('default')
+  const [resultStates, setResultStates] = useState<
+    ('idle' | 'queued' | 'running' | 'done' | 'error')[]
+  >(['idle', 'idle'])
+  const [resultErrors, setResultErrors] = useState(['', ''])
+  const [resultModels, setResultModels] = useState(['', ''])
   const pathname = usePathname()
   const state = mascotState({
     busy,
@@ -204,19 +212,41 @@ export function AssistantPanel({
     )
       feed.current.scrollTop = feed.current.scrollHeight
   }, [turns, busy])
-  const model = catalog?.models.find((m) => m.id === selected),
+  const fixedModels = experimentModels(catalog)
+  const activeSelected =
+    mode === 'practice'
+      ? fixedModels.some((m) => m.id === experimentSelected)
+        ? experimentSelected
+        : (fixedModels[0]?.id ?? '')
+      : selected
+  const experimentCatalog = catalog ? { ...catalog, models: fixedModels } : null
+  const model = catalog?.models.find((m) => m.id === activeSelected),
     ready =
-      !!model &&
+      !!model?.available &&
       !!catalog?.connected[model.provider] &&
       !!catalog?.enabled &&
       (!catalog?.stale || model.provider === 'opencode')
   function choose(id: string) {
+    if (mode === 'practice') {
+      setExperimentSelected(id)
+      clearExperiment()
+      setExperimentReasoning('default')
+      return
+    }
     setSelected(id)
     setReasoning('default')
     setNotice('')
     try {
       localStorage.setItem('ai-map:assistant-model:v1', id)
     } catch {}
+  }
+  function clearExperiment() {
+    setResults(['', ''])
+    setResultStates(['idle', 'idle'])
+    setResultErrors(['', ''])
+    setResultModels(['', ''])
+    setOutcome(null)
+    setNotice('')
   }
   async function generate(
     messages: { role: string; content: string }[],
@@ -226,8 +256,9 @@ export function AssistantPanel({
     const controller = new AbortController()
     abort.current = controller
     await runAssistant({
-      model: selected,
-      reasoning,
+      model: activeSelected,
+      reasoning: mode === 'practice' ? experimentReasoning : reasoning,
+      ...(mode === 'practice' ? { mode: 'experiment' as const } : {}),
       messages,
       page: pathname,
       signal: controller.signal,
@@ -324,30 +355,57 @@ export function AssistantPanel({
       input.current?.focus()
     }
   }
-  async function practice() {
-    if (busy) return
+  async function practice(only?: number) {
+    if (busy || !ready) return
+    const rounds = only === undefined ? [0, 1] : [only]
     setOutcome(null)
     setBusy(true)
-    setResults(['', ''])
+    setResults((old) => old.map((v, i) => (rounds.includes(i) ? '' : v)))
+    setResultErrors((old) => old.map((v, i) => (rounds.includes(i) ? '' : v)))
+    setResultModels((old) => old.map((v, i) => (rounds.includes(i) ? model!.name : v)))
+    setResultStates((old) => old.map((v, i) => (rounds.includes(i) ? 'queued' : v)))
     setNotice('')
+    let failed = false
     try {
-      for (let i = 0; i < 2; i++) {
+      for (const i of rounds) {
         let accumulated = ''
-        await generate([{ role: 'user', content: prompts[i] }], (text) => {
-          accumulated += text
-          setResults((old) => old.map((r, j) => (j === i ? accumulated : r)))
-        })
+        setResultStates((old) => old.map((v, j) => (j === i ? 'running' : v)))
+        try {
+          await generate(
+            [{ role: 'user', content: prompts[i] }],
+            (text) => {
+              accumulated += text
+              setResults((old) => old.map((r, j) => (j === i ? accumulated : r)))
+            },
+            (name) => setResultModels((old) => old.map((v, j) => (j === i ? name : v))),
+          )
+          setResultStates((old) => old.map((v, j) => (j === i ? 'done' : v)))
+        } catch (e) {
+          failed = true
+          const stopped = e instanceof Error && e.name === 'AbortError'
+          if (isClassificationOnlyReply(accumulated))
+            setResults((old) => old.map((v, j) => (j === i ? '' : v)))
+          setResultErrors((old) =>
+            old.map((v, j) =>
+              j === i
+                ? stopped
+                  ? '已停止。可以单独重新生成这一份。'
+                  : e instanceof TypeError
+                    ? '暂时没有连上模型，请重试。'
+                    : e instanceof Error
+                      ? e.message
+                      : '没有收到任务回答，请重试。'
+                : v,
+            ),
+          )
+          setResultStates((old) => old.map((v, j) => (j === i ? 'error' : v)))
+          if (stopped) {
+            setResultStates((old) => old.map((v) => (v === 'queued' ? 'idle' : v)))
+            break
+          }
+        }
       }
-      setOutcome('success')
-    } catch (e) {
-      setOutcome('confused')
-      setNotice(
-        e instanceof DOMException && e.name === 'AbortError'
-          ? '已停止，结果已保留。'
-          : e instanceof Error
-            ? e.message
-            : '生成暂时失败。',
-      )
+      setOutcome(failed ? 'confused' : 'success')
     } finally {
       setBusy(false)
       abort.current = null
@@ -484,7 +542,21 @@ export function AssistantPanel({
             <div className="assistant-practice">
               <span className="assistant-eyebrow">一件事，两种问法</span>
               <h2>说清楚，结果会怎样？</h2>
-              <p>用同一个模型，比较任务、背景和格式是否让回答更有用。</p>
+              <p>先试两种问法，再看哪份回答更合用。也可以换成你自己的任务。</p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setPrompts([BASIC, IMPROVED])
+                  clearExperiment()
+                }}
+              >
+                恢复通知示例
+              </button>
+              <small>两次使用同一个固定模型，分别回答，不带入聊天记录。</small>
+              {!fixedModels.length && (
+                <p role="status">暂时没有可用于对比的固定模型，请稍后再试。</p>
+              )}
               {['随口一问', '把要求说清楚'].map((title, i) => (
                 <section key={title}>
                   <label htmlFor={'practice-' + i}>
@@ -496,18 +568,42 @@ export function AssistantPanel({
                     value={prompts[i]}
                     maxLength={4000}
                     disabled={busy}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setPrompts((old) => old.map((v, j) => (i === j ? e.target.value : v)))
-                    }
+                      setResults((old) => old.map((v, j) => (i === j ? '' : v)))
+                      setResultStates((old) => old.map((v, j) => (i === j ? 'idle' : v)))
+                      setResultErrors((old) => old.map((v, j) => (i === j ? '' : v)))
+                      setResultModels((old) => old.map((v, j) => (i === j ? '' : v)))
+                      setOutcome(null)
+                    }}
                   />
+                  <div className="assistant-experiment-status" role="status">
+                    {resultStates[i] === 'running'
+                      ? '正在回答这一种问法…'
+                      : resultStates[i] === 'queued'
+                        ? '等待上一份完成…'
+                        : resultStates[i] === 'done'
+                          ? '已收到回答'
+                          : resultStates[i] === 'error'
+                            ? '这份回答未完成'
+                            : '尚未生成'}
+                    {resultModels[i] && <small>{resultModels[i]}</small>}
+                  </div>
                   <div className="assistant-practice-result">
                     {results[i] ? (
                       <FormattedAnswer text={results[i]} />
+                    ) : resultStates[i] === 'idle' ? (
+                      '回答会显示在这里。'
                     ) : (
-                      '生成后，结果会出现在这里。'
+                      ''
                     )}
                   </div>
-                  {results[i] && (
+                  {resultErrors[i] && (
+                    <p className="assistant-experiment-error" role="alert">
+                      {resultErrors[i]}
+                    </p>
+                  )}
+                  {resultStates[i] === 'done' && results[i] && (
                     <button
                       type="button"
                       onClick={(e) =>
@@ -523,10 +619,24 @@ export function AssistantPanel({
                       {copied === 'practice-' + i ? '已复制' : '复制结果'}
                     </button>
                   )}
+                  <button
+                    type="button"
+                    disabled={busy || !ready || !prompts[i].trim()}
+                    onClick={() => void practice(i)}
+                  >
+                    {resultStates[i] === 'idle' ? '只生成这一份' : '重新生成这一份'}
+                  </button>
+                  {prompts[i] === [BASIC, IMPROVED][i] && (
+                    <small className="assistant-experiment-observe">
+                      {i === 0
+                        ? '观察：没说清主题、对象和时间，它会先问什么？'
+                        : '核对：周五 16:00、学校会议室、每人带一个案例，是否都保留了？'}
+                    </small>
+                  )}
                 </section>
               ))}
               <p className="assistant-practice-tip">
-                看三件事：有没有编造？格式是否清楚？能不能直接修改使用？
+                选更合用的那份：信息准确吗？有没有漏掉要求？还有什么需要补充？
               </p>
               <button
                 type="button"
@@ -537,10 +647,10 @@ export function AssistantPanel({
                 {busy ? (
                   <>
                     <LoaderCircle size={16} className="assistant-spin" />
-                    正在生成两份结果…
+                    正在生成…
                   </>
                 ) : (
-                  '用当前模型分别生成'
+                  '生成两份，看看区别'
                 )}
               </button>
               <small>这会使用两次免费体验请求，结果均由模型实时生成。</small>
@@ -798,11 +908,19 @@ export function AssistantPanel({
             <div className="assistant-practice-controls">
               <ReasoningPicker
                 model={model}
-                value={reasoning}
-                onChange={setReasoning}
+                value={experimentReasoning}
+                onChange={(value) => {
+                  setExperimentReasoning(value)
+                  clearExperiment()
+                }}
                 busy={busy}
               />
-              <ModelPicker catalog={catalog} selected={selected} onChange={choose} busy={busy} />
+              <ModelPicker
+                catalog={experimentCatalog}
+                selected={activeSelected}
+                onChange={choose}
+                busy={busy}
+              />
               {busy && (
                 <button type="button" onClick={() => abort.current?.abort()}>
                   停止生成

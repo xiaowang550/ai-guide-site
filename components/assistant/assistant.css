@@ -83,6 +83,12 @@ body:has(.assistant-dialog[open]) { overflow: hidden; }
 .assistant-practice textarea { display:block; width:100%; min-height:100px; resize:vertical; background:hsl(var(--muted)/.5); border-radius:9px; padding:9px; font-size:14px; line-height:1.8; }
 .assistant-practice-result { margin-top:12px; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; line-height:1.9; }
 .assistant-practice section > button { color:hsl(var(--primary)); font-size:14px; margin-top:8px; }
+.assistant-practice section > button + button { margin-left:16px; }
+.assistant-experiment-status { display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:14px; color:hsl(var(--muted-foreground)); font-size:13px; }
+.assistant-experiment-status small { overflow-wrap:anywhere; }
+.assistant-experiment-error { color:hsl(var(--foreground)); background:hsl(var(--muted)); border-left:3px solid hsl(var(--primary)); padding:10px; margin:10px 0; line-height:1.7; font-size:14px; }
+.assistant-experiment-observe { display:block; color:hsl(var(--muted-foreground)); margin-top:12px; font-size:13px; line-height:1.7; }
+.assistant-practice > button:not(.assistant-primary) { color:hsl(var(--primary)); font-size:14px; }
 .assistant-practice .assistant-practice-tip { font-size:14px; padding:10px; border-radius:9px; background:hsl(var(--accent)); }
 .assistant-primary { display:flex; justify-content:center; align-items:center; gap:8px; width:100%; padding:12px; border-radius:12px; background:hsl(var(--primary)); color:hsl(var(--primary-foreground)); }
 .assistant-primary:disabled { opacity:.45; }

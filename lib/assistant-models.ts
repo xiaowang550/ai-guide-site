@@ -56,6 +56,34 @@ export interface ModelCatalog {
   defaultModel: string
   enabled: boolean
 }
+/** 审核分类器虽然输出文字，也不能替代写作、问答模型。 */
+export function isTaskModel(model: Pick<FreeModel, 'id' | 'name'>) {
+  return !/(?:^|[/:\s_-])(?:content[\s_-]*safety|moderation|(?:llama[\s_-]*)?guard(?:[-\s]?\d+)?|safeguard)(?:$|[/:\s_-])/i.test(
+    model.id + ' ' + model.name,
+  )
+}
+export function experimentModels(catalog: ModelCatalog | null): FreeModel[] {
+  return (catalog?.models ?? []).filter(
+    (m) =>
+      m.available && catalog?.connected[m.provider] && m.id !== 'openrouter/free' && isTaskModel(m),
+  )
+}
+/** 只识别纯审核标签，不把正常讨论审核概念的回答当作故障。 */
+export function isClassificationOnlyReply(text: string) {
+  const lines = text
+    .trim()
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const verdict = /^(?:User|Response|Assistant)\s+Safety:\s*(?:safe|unsafe)\.?$/i
+  return (
+    lines.length > 0 &&
+    lines.some((line) => verdict.test(line)) &&
+    lines.every(
+      (line) => verdict.test(line) || /^Safety Categories:\s*[A-Za-z0-9_, .-]*$/i.test(line),
+    )
+  )
+}
 export function reasoningSupport(raw: unknown): ReasoningSupport | undefined {
   if (!raw || typeof raw !== 'object') return undefined
   const value = raw as Record<string, unknown>
@@ -155,12 +183,17 @@ export function freeModels(value: unknown, now = Date.now()): FreeModel[] {
         ? { reasoningSupport: reasoningSupport(raw.reasoning) }
         : {}),
       tools: parameters.includes('tools'),
-      available: !audio && (architecture?.output_modalities?.includes('text') ?? false),
-      note: audio
-        ? '音频生成模型，暂不用于文字助手'
-        : id === 'openrouter/free'
-          ? '自动选择可用的免费模型'
-          : '输入与输出均为零价格',
+      available:
+        !audio &&
+        isTaskModel({ id, name }) &&
+        (architecture?.output_modalities?.includes('text') ?? false),
+      note: !isTaskModel({ id, name })
+        ? '审核分类专用，不用于写作和对话'
+        : audio
+          ? '音频生成模型，暂不用于文字助手'
+          : id === 'openrouter/free'
+            ? '自动选择可用的免费模型'
+            : '输入与输出均为零价格',
     })
   }
   return result.sort(

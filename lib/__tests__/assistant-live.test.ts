@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { freeModels } from '@/lib/assistant-models'
+import { freeModels, experimentModels, isClassificationOnlyReply } from '@/lib/assistant-models'
+import { runAssistant } from '@/lib/assistant-client'
 import { readSse } from '@/lib/assistant-stream'
 import { generationWatchdog, normalizeAssistantUrl } from '@/lib/assistant-upstream'
 import { makeTestEnv, request, login } from './helpers/admin-test-env'
@@ -78,6 +79,75 @@ describe('免费模型目录', () => {
     })[0]
     expect(m.available).toBe(false)
   })
+  it('审核分类器不作为任务模型，固定模型实验排除随机路由和未连接模型', () => {
+    const models = freeModels({
+      data: [
+        MODEL,
+        { ...MODEL, id: 'openrouter/free' },
+        { ...MODEL, id: 'nvidia/nemotron-3.5-content-safety:free' },
+        { ...MODEL, id: 'meta/llama-guard-4:free' },
+      ],
+    })
+    expect(
+      models
+        .filter((m) => m.available)
+        .map((m) => m.id)
+        .sort(),
+    ).toEqual(['openrouter/free', MODEL.id].sort())
+    const catalog = {
+      models,
+      connected: { openrouter: true, opencode: false },
+      checkedAt: '',
+      stale: false,
+      enabled: true,
+      defaultModel: 'openrouter/free',
+    }
+    expect(experimentModels(catalog).map((m) => m.id)).toEqual([MODEL.id])
+    expect(
+      experimentModels({ ...catalog, connected: { openrouter: false, opencode: false } }),
+    ).toEqual([])
+    expect(isClassificationOnlyReply('User Safety: safe')).toBe(true)
+    expect(isClassificationOnlyReply('User Safety: unsafe\nSafety Categories: S1, S2')).toBe(true)
+    expect(isClassificationOnlyReply('“User Safety: safe”表示审核通过，不能代替通知正文。')).toBe(
+      false,
+    )
+    expect(isClassificationOnlyReply('教研活动通知\n周五下午四点在学校会议室交流备课经验。')).toBe(
+      false,
+    )
+  })
+})
+
+describe('提示词实验客户端', () => {
+  it.each(['User Safety: safe', '   '])(
+    '旧服务即使发送 done，也不把无任务输出 %s 当成功',
+    async (answer) => {
+      const fetcher = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(
+          new Response(
+            'data: ' +
+              JSON.stringify({ type: 'delta', text: answer }) +
+              '\n\ndata: {"type":"done"}\n\n',
+            { headers: { 'content-type': 'text/event-stream' } },
+          ),
+        )
+      try {
+        await expect(
+          runAssistant({
+            model: MODEL.id,
+            messages: [{ role: 'user', content: '帮我写通知' }],
+            mode: 'experiment',
+            page: '/',
+            signal: new AbortController().signal,
+            onText: () => {},
+          }),
+        ).rejects.toThrow(/审核标签|没有返回回答/)
+        expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body)).mode).toBe('experiment')
+      } finally {
+        fetcher.mockRestore()
+      }
+    },
+  )
 })
 describe('流式事件', () => {
   it('逐字节读取中文和 CRLF，不把网络分片当作完整 JSON', async () => {
@@ -206,6 +276,91 @@ describe('助手私有配置与公开推理', () => {
     expect(
       (await request(env, 'POST', '/api/assistant/chat', { ...message, mode: 'paid' })).status,
     ).toBe(400)
+  })
+  it('实验按独立要求执行任务，不带站内检索，拒绝携带历史对话', async () => {
+    const { env, fetcher } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    const prompt = '请为高中教师写教研通知：本周五16点，学校会议室，每人带一个案例。'
+    const result = await request(env, 'POST', '/api/assistant/chat', {
+      ...message,
+      mode: 'experiment',
+      messages: [{ role: 'user', content: prompt }],
+    })
+    expect(result.status).toBe(200)
+    const payload = JSON.parse(
+      String(
+        fetcher.mock.calls.find(([url]) => String(url).endsWith('/chat/completions'))![1]?.body,
+      ),
+    )
+    expect(payload.model).toBe(MODEL.id)
+    expect(payload.messages).toHaveLength(2)
+    expect(payload.messages[1]).toEqual({ role: 'user', content: prompt })
+    expect(payload.messages[0].content).toContain('不评价提示词')
+    expect(payload.messages[0].content).not.toContain('以下站内资料')
+    const invalid = await request(env, 'POST', '/api/assistant/chat', {
+      ...message,
+      mode: 'experiment',
+      messages: [
+        ...message.messages,
+        { role: 'assistant', content: '过去的回答' },
+        ...message.messages,
+      ],
+    })
+    expect(invalid.status).toBe(400)
+    expect(
+      fetcher.mock.calls.filter(([url]) => String(url).endsWith('/chat/completions')),
+    ).toHaveLength(1)
+  })
+  it('实验接口拒绝随机路由，即使它通过连接测试，也不消耗推理请求', async () => {
+    const { env, fetcher } = await fixture()
+    env.env.OPENROUTER_API_KEY = KEY
+    const router = { ...MODEL, id: 'openrouter/free' }
+    fetcher.mockImplementation(async () => json({ data: [router] }))
+    await env.db.run('INSERT INTO assistant_store VALUES(?,?,?)', [
+      'health:openrouter/free',
+      JSON.stringify({
+        model: router.id,
+        provider: 'openrouter',
+        ok: true,
+        checkedAt: new Date().toISOString(),
+        latencyMs: 1,
+        firstTokenMs: 1,
+        keyTag: await sha256Base64Url(
+          'model-health:v1:' + (env.env.SITE_SALT ?? '') + ':openrouter:' + KEY,
+        ),
+      }),
+      new Date().toISOString(),
+    ])
+    const result = await request(env, 'POST', '/api/assistant/chat', {
+      ...message,
+      model: router.id,
+      mode: 'experiment',
+    })
+    expect(result.status).toBe(400)
+    expect(result.json.error).toContain('固定的对话模型')
+    expect(fetcher.mock.calls.some(([url]) => String(url).endsWith('/chat/completions'))).toBe(
+      false,
+    )
+  })
+  it('纯审核标签返回明确失败，不能记录为完成的任务', async () => {
+    const { env } = await fixture(
+      'data: {"choices":[{"delta":{"content":"User Safety: safe"}}]}\n\ndata: [DONE]\n\n',
+    )
+    env.env.OPENROUTER_API_KEY = KEY
+    const { handleApi } = await import('@/lib/admin/api')
+    const response = await handleApi(
+      new Request('https://admin.example.test/api/assistant/chat', {
+        method: 'POST',
+        headers: { Origin: 'https://admin.example.test' },
+        body: JSON.stringify({ ...message, mode: 'experiment' }),
+      }),
+      env.env,
+    )
+    const text = await response!.text()
+    expect(text).toContain('审核标签')
+    expect(text).toContain('"code":"classification"')
+    expect(text).not.toContain('"type":"done"')
+    expect(await env.db.all('SELECT * FROM assistant_slots')).toEqual([])
   })
   it('上游连接排队时先返回等待流，真实回答到达后才显示文字', async () => {
     const { env, fetcher } = await fixture()

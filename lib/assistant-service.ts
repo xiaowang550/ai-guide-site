@@ -2,6 +2,8 @@ import snapshot from '../data/assistant-models.ts'
 import knowledge from '../data/assistant-knowledge.ts'
 import {
   freeModels,
+  experimentModels,
+  isClassificationOnlyReply,
   type AssistantProvider,
   type ModelCatalog,
   type ConnectionReport,
@@ -940,8 +942,10 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
   } catch {
     return fail(400, '消息格式不正确。')
   }
-  if (body?.mode !== undefined && body.mode !== 'practice') return fail(400, '练习模式不正确。')
-  const practiceMode = body?.mode === 'practice'
+  if (body?.mode !== undefined && body.mode !== 'practice' && body.mode !== 'experiment')
+    return fail(400, '练习模式不正确。')
+  const experimentMode = body?.mode === 'experiment'
+  const practiceMode = body?.mode === 'practice' || experimentMode
   if (body?.image !== undefined && !validAssistantImage(body.image))
     return fail(400, '请使用压缩后的 JPG、PNG 或 WebP 图片，暂不接收图片网址。')
   if (raw.length - (typeof body?.image === 'string' ? body.image.length : 0) > 16000)
@@ -965,6 +969,10 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
     model = current.models.find((m) => m.id === body.model)
   if (!current.enabled) return fail(503, 'AI 体验暂时关闭，站内查找仍可使用。')
   if (!model?.available) return fail(400, '请选择当前目录中的免费文字模型。')
+  if (experimentMode && !experimentModels(current).some((m) => m.id === model.id))
+    return fail(400, '提示词实验需要固定的对话模型，请选择具体模型后重试。')
+  if (experimentMode && (messages.length !== 1 || body.image))
+    return fail(400, '每次实验请单独提交一种问法。')
   if (!supportedReasoning(model, body.reasoning))
     return fail(400, '这个模型不支持所选推理强度，请使用默认档位。')
   if (body.image && (!model.vision || model.provider !== 'openrouter'))
@@ -1075,7 +1083,10 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         : sources.length
           ? '\n以下站内资料仅供回答有关本站的问题参考，不限制其他问题的回答：\n' +
             JSON.stringify(sources)
-          : '')
+          : '') +
+      (experimentMode
+        ? '\n当前在比较两种问法。你只看到其中一种：直接完成这条用户要求，不评价提示词，不模拟好坏答案，不回答审核分类标签。用户要写通知但没有提供主题、对象或时间地点时，先简短询问必要条件；提供了条件时，严格采用这些条件和输出格式，不额外编造活动、日期、地点、落款。'
+        : '')
     const url =
       model.provider === 'openrouter'
         ? OPENROUTER_BASE + '/chat/completions'
@@ -1162,12 +1173,32 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         try {
           emit({ type: 'meta', model: model.id, name: model.name, sources })
           const opened = response ?? (await upstream)
+          let answer = ''
           const result = await consumeGeneration(
             opened,
-            (text) => emit({ type: 'delta', text }),
+            (text) => {
+              answer += text
+              emit({ type: 'delta', text })
+            },
             watch.activity,
             (actualModel) => emit({ type: 'model', name: actualModel }),
           )
+          if (!answer.trim() || isClassificationOnlyReply(answer)) {
+            const classification = isClassificationOnlyReply(answer)
+            emit({
+              type: 'error',
+              code: classification ? 'classification' : 'empty',
+              message: classification
+                ? '模型只返回了审核标签，没有完成任务。请换一个模型后重试。'
+                : '模型没有返回回答，请重试或换一个模型。',
+            })
+            await record({
+              ok: false,
+              code: classification ? 'classification' : 'empty',
+              ...result,
+            })
+            return
+          }
           const truncated = result.finishReason === 'length'
           if (truncated)
             emit({

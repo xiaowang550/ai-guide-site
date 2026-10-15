@@ -1,11 +1,12 @@
 import { readSse } from './assistant-stream'
 import type { ReasoningChoice } from './assistant-models'
+import { isClassificationOnlyReply } from './assistant-models'
 export async function runAssistant(options: {
   model: string
   messages: { role: string; content: string }[]
   page: string
   image?: string
-  mode?: 'practice'
+  mode?: 'practice' | 'experiment'
   reasoning?: ReasoningChoice
   signal: AbortSignal
   onText: (text: string) => void
@@ -35,14 +36,21 @@ export async function runAssistant(options: {
   }
   if (!response.body) throw new Error('没有收到回答，请重试。')
   let complete = false,
-    error = ''
+    error = '',
+    answer = ''
   await readSse(response.body, (data) => {
     const event = JSON.parse(data)
     if (event.type === 'meta') options.onMeta?.(event.name, event.sources)
     if (event.type === 'model') options.onMeta?.(event.name, [])
-    if (event.type === 'delta') options.onText(event.text)
+    if (event.type === 'delta') {
+      answer += event.text
+      options.onText(event.text)
+    }
     if (event.type === 'done') complete = true
     if (event.type === 'error') error = event.message
   })
   if (error || !complete) throw new Error(error || '回答中断，收到的文字已保留。')
+  if (!answer.trim()) throw new Error('模型没有返回回答，请重试或换一个模型。')
+  if (isClassificationOnlyReply(answer))
+    throw new Error('模型只返回了审核标签，没有完成任务。请换一个模型后重试。')
 }
