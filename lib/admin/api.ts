@@ -52,6 +52,7 @@ import {
   type AssistantEnv,
 } from '../assistant-service.ts'
 import { verifyMaintenanceToken } from '../assistant-maintenance-auth.ts'
+import { assistantExternal } from '../assistant-external.ts'
 import { createD1Db, D1BindingMissingError } from '../db/d1.ts'
 import type { D1Database } from '../db/d1.ts'
 import { toInt, toText } from '../db/types.ts'
@@ -416,6 +417,29 @@ const ROUTES: Route[] = [
     },
   },
   {
+    method: 'GET',
+    pattern: '/api/admin/assistant/sources',
+    auth: 'required',
+    handler: ({ db, env, request }) => assistantExternal(db, env, request),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/assistant/sources',
+    auth: 'required',
+    handler: async ({ db, env, request, identity }) => {
+      const response = await assistantExternal(db, env, request)
+      if (response.ok)
+        await db.run('INSERT INTO audit_log(at,actor,action,target,detail) VALUES(?,?,?,?,?)', [
+          nowIso(),
+          identity!.username,
+          'assistant.external',
+          'assistant',
+          '更新外部模型连接或检测状态；不记录密钥和回答',
+        ])
+      return response
+    },
+  },
+  {
     method: 'POST',
     pattern: '/api/admin/assistant/test',
     auth: 'required',
@@ -446,6 +470,11 @@ const ROUTES: Route[] = [
         ))
       )
         return fail(403, '定时检查身份验证失败。')
+      const payload = await request
+        .clone()
+        .json()
+        .catch(() => null)
+      if (payload?.scope === 'external') return assistantExternal(db, env, request, true)
       return assistantHealth(db, env, request, 'daily')
     },
   },

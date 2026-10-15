@@ -17,32 +17,62 @@ export function useTutor(enabled = true) {
     if (!enabled) return
     setLoading(true)
     let alive = true
-    const catalogAbort = new AbortController()
-    const timeout = setTimeout(() => catalogAbort.abort(), 12000)
-    fetch('/api/assistant/models', { cache: 'no-store', signal: catalogAbort.signal })
-      .then(async (r) => {
-        if (!r.ok) throw new Error('模型目录暂时无法读取。')
-        const value = (await r.json()) as ModelCatalog
-        if (!alive) return
-        setCatalog(value)
-        const usable = value.models.filter((m) => m.available && value.connected[m.provider])
-        // The service orders verified models by measured first-token latency.
-        const quick = usable[0]?.id ?? ''
-        quickChoice.current = quick
-        setModel(quick)
-      })
-      .catch((e) => {
-        if (alive)
-          setError(catalogAbort.signal.aborted ? '连接准备超时，可以先做示例练习。' : e.message)
-      })
-      .finally(() => {
-        clearTimeout(timeout)
-        if (alive) setLoading(false)
-      })
+    let catalogAbort: AbortController | null = null
+    const load = () => {
+      if (controller.current) return
+      catalogAbort?.abort()
+      const currentAbort = new AbortController()
+      catalogAbort = currentAbort
+      let timedOut = false
+      const timeout = setTimeout(() => {
+        timedOut = true
+        currentAbort.abort()
+      }, 12000)
+      void fetch('/api/assistant/models', { cache: 'no-store', signal: currentAbort.signal })
+        .then(async (r) => {
+          if (!r.ok) throw new Error('模型目录暂时无法读取。')
+          const value = (await r.json()) as ModelCatalog
+          if (!alive || currentAbort.signal.aborted) return
+          setCatalog(value)
+          const usable = value.models.filter((m) => m.available && value.connected[m.provider])
+          // The service orders verified models by measured first-token latency.
+          const quick = usable[0]?.id ?? ''
+          quickChoice.current = quick
+          setModel((old) => (usable.some((m) => m.id === old) ? old : quick))
+        })
+        .catch((e) => {
+          if (alive && (timedOut || !currentAbort.signal.aborted))
+            setError(
+              timedOut
+                ? '连接准备超时，可以先做示例练习。'
+                : e instanceof Error
+                  ? e.message
+                  : '模型目录暂时无法读取。',
+            )
+        })
+        .finally(() => {
+          clearTimeout(timeout)
+          if (alive) setLoading(false)
+        })
+    }
+    load()
+    const changed = (event: Event) => {
+      if (event.type !== 'storage' || (event as StorageEvent).key === 'ai-map:assistant-catalog:v1')
+        load()
+    }
+    const timer = setInterval(() => {
+      if (!document.hidden) load()
+    }, 60000)
+    window.addEventListener('focus', changed)
+    window.addEventListener('ai-map:assistant-models-changed', changed)
+    window.addEventListener('storage', changed)
     return () => {
       alive = false
-      clearTimeout(timeout)
-      catalogAbort.abort()
+      clearInterval(timer)
+      catalogAbort?.abort()
+      window.removeEventListener('focus', changed)
+      window.removeEventListener('ai-map:assistant-models-changed', changed)
+      window.removeEventListener('storage', changed)
       controller.current?.abort()
     }
   }, [enabled])

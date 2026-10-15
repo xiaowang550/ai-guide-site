@@ -64,10 +64,12 @@ export async function apiSend<T>(
   path: string,
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   body?: unknown,
+  signal?: AbortSignal,
 ): Promise<T> {
   const res = await fetch(path, {
     method,
     credentials: 'same-origin',
+    signal,
     headers: {
       'content-type': 'application/json',
       // 后端只校验 Origin；这个头是给同源策略之外的第二层保险，

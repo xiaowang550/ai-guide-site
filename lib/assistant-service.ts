@@ -42,6 +42,7 @@ import { freshTrends, summarizeTrends, type ToolTrends } from './tool-trends.ts'
 import { toolTrendsSeed } from '../data/tool-trends.ts'
 import { localizeNews } from './news/localize.ts'
 import { BRAND_ENGLISH_NAME } from './brand.ts'
+import { externalModels, externalConnection, externalResponse } from './assistant-external.ts'
 
 export interface AssistantEnv {
   AI_CREDENTIALS_KEY?: string
@@ -532,6 +533,7 @@ async function catalog(
     }
     exposed = models
       .flatMap((model) => {
+        if (model.provider === 'custom') return []
         const checked = health.find((h) => h.model === model.id)
         if (
           !model.available ||
@@ -543,11 +545,14 @@ async function catalog(
       })
       .sort((a, b) => (a.firstTokenMs ?? Infinity) - (b.firstTokenMs ?? Infinity))
   }
+  const external = await externalModels(db)
+  exposed.push(...external)
+  exposed.sort((a, b) => (a.firstTokenMs ?? Infinity) - (b.firstTokenMs ?? Infinity))
   return {
     models: exposed,
     checkedAt,
     stale,
-    connected,
+    connected: external.length ? { ...connected, custom: true } : connected,
     defaultModel: exposed.some((m) => m.id === prefs.defaultModel && m.available)
       ? prefs.defaultModel
       : (exposed.find((m) => m.available)?.id ?? ''),
@@ -614,6 +619,7 @@ export async function assistantHealth(
     const candidates = current.models
       .filter(
         (m) =>
+          m.provider !== 'custom' &&
           m.available &&
           current.connected[m.provider] &&
           (!current.stale || m.provider !== 'openrouter'),
@@ -679,6 +685,7 @@ export async function assistantHealth(
   const current = await catalog(db, env, false, false)
   const model = current.models.find((m) => m.id === body.model && m.available)
   const candidate = plan.models.find((m) => m.id === body.model)!
+  if (candidate.provider === 'custom') return fail(400, '外部模型请使用接入测试。')
   const key = await credential(db, env, candidate.provider)
   if (
     !key ||
@@ -979,7 +986,17 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
     return fail(400, '请选择支持看图的免费 OpenRouter 模型。')
   if (current.stale && model.provider === 'openrouter')
     return fail(503, '免费价格目录正在更新，请稍后重试。')
-  const key = await credential(db, env, model.provider)
+  let external: Awaited<ReturnType<typeof externalConnection>> | undefined
+  if (model.provider === 'custom') {
+    try {
+      external = await externalConnection(db, env, model.id, new URL(request.url).origin)
+    } catch {
+      return fail(503, '这个外部模型的连接或测试已失效，请管理员重新检测。')
+    }
+  }
+  const key =
+    external?.key ??
+    (model.provider !== 'custom' ? await credential(db, env, model.provider) : null)
   if (!key) return fail(503, 'AI 连接准备中，先用「站内查找」探索工具与教程。')
   const day = new Date().toISOString().slice(0, 10),
     minute = Math.floor(Date.now() / 60000)
@@ -1087,8 +1104,9 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       (experimentMode
         ? '\n当前在比较两种问法。你只看到其中一种：直接完成这条用户要求，不评价提示词，不模拟好坏答案，不回答审核分类标签。用户要写通知但没有提供主题、对象或时间地点时，先简短询问必要条件；提供了条件时，严格采用这些条件和输出格式，不额外编造活动、日期、地点、落款。'
         : '')
-    const url =
-      model.provider === 'openrouter'
+    const url = external
+      ? external.baseUrl + '/chat/completions'
+      : model.provider === 'openrouter'
         ? OPENROUTER_BASE + '/chat/completions'
         : ZEN_BASE + '/chat/completions'
     const upstream = fetcher(url, {
@@ -1102,7 +1120,9 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         'X-Title': BRAND_ENGLISH_NAME,
       },
       body: JSON.stringify({
-        model: model.provider === 'openrouter' ? model.id : model.id.slice('opencode:'.length),
+        model:
+          external?.model ??
+          (model.provider === 'openrouter' ? model.id : model.id.slice('opencode:'.length)),
         messages: [
           { role: 'system', content: system },
           ...messages.map((m, i) =>
@@ -1172,7 +1192,8 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         )
         try {
           emit({ type: 'meta', model: model.id, name: model.name, sources })
-          const opened = response ?? (await upstream)
+          const original = response ?? (await upstream)
+          const opened = external ? await externalResponse(original) : original
           let answer = ''
           const result = await consumeGeneration(
             opened,

@@ -29,7 +29,7 @@ export function upstreamMessage(code: number) {
     : code === 401 || code === 403
       ? '平台拒绝了连接，请管理员检查 Key、账号权限和隐私设置。'
       : code === 402
-        ? '平台账户额度不足，请管理员检查 OpenRouter 账户状态。'
+        ? '平台账户额度不足，请管理员检查该服务商的账户状态。'
         : code === 404 || code === 503
           ? '这个模型目前没有可用的免费通道，请换一个免费模型。'
           : code === 408 || code === 504

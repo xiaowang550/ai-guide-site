@@ -37,7 +37,8 @@ export interface AssistantLimits {
 export interface FreeModel {
   id: string
   name: string
-  provider: AssistantProvider
+  provider: AssistantProvider | 'custom'
+  sourceName?: string
   context: number
   vision: boolean
   reasoning: boolean
@@ -52,7 +53,7 @@ export interface ModelCatalog {
   models: FreeModel[]
   checkedAt: string
   stale: boolean
-  connected: Record<AssistantProvider, boolean>
+  connected: Record<AssistantProvider, boolean> & { custom?: boolean }
   defaultModel: string
   enabled: boolean
 }

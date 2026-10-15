@@ -169,12 +169,22 @@ export function AssistantPanel({
           if (alive) setNotice('模型目录暂时没有连上，站内查找仍可使用。')
         })
     void load()
+    const onCatalogChange = (event: Event) => {
+      if (event.type !== 'storage' || (event as StorageEvent).key === 'ai-map:assistant-catalog:v1')
+        void load()
+    }
+    window.addEventListener('focus', onCatalogChange)
+    window.addEventListener('ai-map:assistant-models-changed', onCatalogChange)
+    window.addEventListener('storage', onCatalogChange)
     const timer = setInterval(() => {
       if (!document.hidden) void load()
     }, 60000)
     return () => {
       alive = false
       clearInterval(timer)
+      window.removeEventListener('focus', onCatalogChange)
+      window.removeEventListener('ai-map:assistant-models-changed', onCatalogChange)
+      window.removeEventListener('storage', onCatalogChange)
     }
   }, [open])
   useEffect(() => {
@@ -225,7 +235,7 @@ export function AssistantPanel({
       !!model?.available &&
       !!catalog?.connected[model.provider] &&
       !!catalog?.enabled &&
-      (!catalog?.stale || model.provider === 'opencode')
+      (!catalog?.stale || model.provider !== 'openrouter')
   function choose(id: string) {
     if (mode === 'practice') {
       setExperimentSelected(id)

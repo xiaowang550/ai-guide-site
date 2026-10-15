@@ -2,6 +2,7 @@
 
 import { ModulesView } from './modules-view'
 import { SiteSettingsView } from './site-settings-view'
+import { AssistantSourcesView } from './assistant-sources-view'
 import { BuildsView } from './builds-view'
 import { NewsView } from './news-view'
 import { UpdateRadarView } from './update-radar-view'
@@ -27,6 +28,7 @@ import {
   BookOpen,
   ClipboardCheck,
   Compass,
+  FlaskConical,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -37,6 +39,7 @@ type TabKey =
   | 'modules'
   | 'school-accounts'
   | 'settings'
+  | 'model-sources'
   | 'builds'
   | 'dashboard'
   | 'content'
@@ -64,6 +67,12 @@ const TABS: { key: TabKey; label: string; hint: string; icon: typeof Activity }[
     hint: '分配学校账号、重置密码与学校资源管理',
   },
   { key: 'settings', icon: ShieldCheck, label: '站点设置', hint: '全站功能与管理员偏好' },
+  {
+    key: 'model-sources',
+    icon: FlaskConical,
+    label: '模型接入测试',
+    hint: '发现、检测与管理两端模型',
+  },
   {
     key: 'builds',
     icon: BookOpen,
@@ -305,6 +314,11 @@ export function AdminShell() {
           {tab === 'modules' && <ModulesView />}
           {tab === 'school-accounts' && <SchoolAccountsView />}
           {tab === 'settings' && <SiteSettingsView />}
+          {tab === 'model-sources' && (
+            <div className="admin-card p-4 sm:p-6">
+              <AssistantSourcesView onRefresh={async () => {}} />
+            </div>
+          )}
           {tab === 'builds' && <BuildsView />}
           {tab === 'news' && <NewsView />}
           {tab === 'update-radar' && <UpdateRadarView />}

@@ -137,7 +137,8 @@ export function ModelPicker({
                 <span className="assistant-model-label">
                   <strong>{m.name}</strong>
                   <small>
-                    {m.provider === 'opencode' ? 'OpenCode' : m.id.split('/')[0]} ·{' '}
+                    {m.sourceName ?? (m.provider === 'opencode' ? 'OpenCode' : m.id.split('/')[0])}{' '}
+                    ·{' '}
                     {m.available
                       ? m.context
                         ? `${Math.round(m.context / 1000)}K 上下文`
@@ -162,14 +163,18 @@ export function ModelPicker({
             <p>
               {current?.verifiedAt
                 ? '已通过本站实际回答测试 · ' + new Date(current.verifiedAt).toLocaleString('zh-CN')
-                : '只列出已连接且回答测试通过的免费模型。'}
+                : '只列出已连接且回答测试通过的模型。'}
             </p>
             <div>
               {current?.vision && <span>支持图像输入</span>}
               {current?.reasoning && <span>支持推理</span>}
               {current?.tools && <span>支持工具调用</span>}
             </div>
-            <small>本次助手提供文字对话。免费服务可能有额度限制。</small>
+            <small>
+              {current?.provider === 'custom'
+                ? '外部连接，由本站管理员添加；型号与额度以该服务商为准。'
+                : '本次助手提供文字对话。免费服务可能有额度限制。'}
+            </small>
           </div>
           <a href="https://openrouter.ai/models?variant=free" target="_blank" rel="noreferrer">
             查看官方免费模型目录 ↗

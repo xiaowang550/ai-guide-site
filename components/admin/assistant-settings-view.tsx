@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiSend } from './api-client'
 import { AssistantHealthView } from './assistant-health-view'
+import { AssistantSourcesView } from './assistant-sources-view'
 import type {
   AssistantProvider,
   FreeModel,
@@ -141,6 +142,9 @@ export function AssistantSettingsView() {
           {state ? `今日 ${state.todayRequests} 次请求` : '正在读取调用设置…'}
         </span>
       </div>
+      <AssistantSourcesView
+        onRefresh={async () => setState(await apiGet<State>('/api/admin/assistant'))}
+      />
       <div className="mt-5 flex items-center gap-3">
         <button
           role="switch"
