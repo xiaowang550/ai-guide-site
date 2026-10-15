@@ -13,6 +13,8 @@ import { toggleSaved, validLearningEntry, type LearningEntry } from '@/lib/learn
 import { AssistantAvatar } from './assistant-avatar'
 import { mascotState, MASCOT_STATES, type MascotState } from '@/lib/assistant-mascot'
 import { ModelPicker } from './model-picker'
+import { ReasoningPicker } from './reasoning-picker'
+import type { ReasoningChoice } from '@/lib/assistant-models'
 import { useSiteModules } from '@/components/site-module-context'
 import { pathEnabled, moduleEnabled } from '@/lib/site-modules'
 import './assistant.css'
@@ -56,6 +58,7 @@ export function AssistantPanel({
   const [indexAttempt, setIndexAttempt] = useState(0)
   const [mode, setMode] = useState<'chat' | 'practice' | 'search'>('chat'),
     [selected, setSelected] = useState('openrouter/free'),
+    [reasoning, setReasoning] = useState<ReasoningChoice>('default'),
     [draft, setDraft] = useState(''),
     [turns, setTurns] = useState<Turn[]>([])
   const [busy, setBusy] = useState(false),
@@ -207,6 +210,7 @@ export function AssistantPanel({
       (!catalog?.stale || model.provider === 'opencode')
   function choose(id: string) {
     setSelected(id)
+    setReasoning('default')
     setNotice('')
     try {
       localStorage.setItem('ai-map:assistant-model:v1', id)
@@ -221,6 +225,7 @@ export function AssistantPanel({
     abort.current = controller
     await runAssistant({
       model: selected,
+      reasoning,
       messages,
       page: pathname,
       signal: controller.signal,
@@ -695,6 +700,14 @@ export function AssistantPanel({
                 }}
               />
               <div className="assistant-composer-tools">
+                {mode !== 'search' && (
+                  <ReasoningPicker
+                    model={model}
+                    value={reasoning}
+                    onChange={setReasoning}
+                    busy={busy}
+                  />
+                )}
                 {mode !== 'search' ? (
                   <ModelPicker
                     catalog={catalog}
@@ -747,6 +760,12 @@ export function AssistantPanel({
           )}
           {mode === 'practice' && (
             <div className="assistant-practice-controls">
+              <ReasoningPicker
+                model={model}
+                value={reasoning}
+                onChange={setReasoning}
+                busy={busy}
+              />
               <ModelPicker catalog={catalog} selected={selected} onChange={choose} busy={busy} />
               {busy && (
                 <button type="button" onClick={() => abort.current?.abort()}>

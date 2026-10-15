@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { apiGet, apiSend } from './api-client'
+import { AssistantHealthView } from './assistant-health-view'
 import type {
   AssistantProvider,
   FreeModel,
@@ -46,7 +47,8 @@ export function AssistantSettingsView() {
     [filter, setFilter] = useState('')
   const testVersion = useRef(0)
   const connection = report ?? (provider === 'openrouter' && !key.trim() ? state?.connection : null)
-  const listed = (connection?.models ?? state?.models ?? []).filter((m) => m.provider === provider)
+  const listed = (state?.models ?? []).filter((m) => m.provider === provider)
+  const candidates = (connection?.models ?? listed).filter((m) => m.provider === provider)
   const models = listed.filter((m) => (m.name + m.id).toLowerCase().includes(filter.toLowerCase()))
   function invalidate() {
     testVersion.current++
@@ -67,6 +69,7 @@ export function AssistantSettingsView() {
       })
       if (version !== testVersion.current) return
       setReport(result)
+      if (infer && !key.trim()) setState(await apiGet<State>('/api/admin/assistant'))
       setTestModel((old) =>
         result.models.some((m) => m.id === old && m.available)
           ? old
@@ -160,6 +163,7 @@ export function AssistantSettingsView() {
             disabled={!state || busy}
             onChange={(e) => void update({ defaultModel: e.target.value })}
           >
+            {!state?.models.length && <option value="">暂无通过回答测试的模型</option>}
             {state?.models
               .filter((m) => m.available)
               .map((m) => (
@@ -170,6 +174,9 @@ export function AssistantSettingsView() {
           </select>
         </label>
       </div>
+      <AssistantHealthView
+        onRefresh={async () => setState(await apiGet<State>('/api/admin/assistant'))}
+      />
       <div className="mt-5 rounded-xl border p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="text-sm font-medium">本站调用限制</h3>
@@ -346,8 +353,7 @@ export function AssistantSettingsView() {
         </form>
         {provider === 'opencode' && (
           <p className="mt-3 text-xs leading-6 text-muted-foreground">
-            太空兔使用 OpenCode 的独立 Key，OpenRouter Key
-            不能用于这个入口。免费预览是否可用，以实际服务响应为准。
+            OpenCode 使用独立 Key。免费模型必须同时有官方零价格和文字接口，再通过实际回答测试。
           </p>
         )}
         {state && !state.encryptedStorageReady && (
@@ -358,7 +364,7 @@ export function AssistantSettingsView() {
       </div>
       <div className="mt-5 rounded-xl border p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="text-sm font-medium">连接状态与可用免费模型</h3>
+          <h3 className="text-sm font-medium">连接状态与回答测试通过的免费模型</h3>
           <span className="text-xs text-muted-foreground">
             {connection?.checkedAt
               ? new Date(connection.checkedAt).toLocaleString('zh-CN')
@@ -400,7 +406,7 @@ export function AssistantSettingsView() {
             className="min-w-0 flex-1 rounded-lg border bg-background p-2 text-xs"
           >
             <option value="">自动选择免费模型</option>
-            {listed
+            {candidates
               .filter((m) => m.available)
               .map((m) => (
                 <option key={m.id} value={m.id}>
@@ -450,15 +456,10 @@ export function AssistantSettingsView() {
                 <p className="mt-1 break-all text-muted-foreground">{m.id}</p>
               </div>
               <span className="shrink-0 text-muted-foreground">
-                {connection?.probe?.model === m.id
-                  ? connection.probe.ok
-                    ? '回答测试通过'
-                    : '测试未通过'
-                  : m.available
-                    ? connection?.catalogVerified
-                      ? '账号可选 · 待回答测试'
-                      : '零价格 · 待核验'
-                    : '非文字模型'}
+                回答测试通过
+                {m.firstTokenMs !== null && m.firstTokenMs !== undefined
+                  ? ` · 首字 ${(m.firstTokenMs / 1000).toFixed(1)} 秒`
+                  : ''}
               </span>
             </div>
           ))}

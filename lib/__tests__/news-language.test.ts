@@ -121,7 +121,7 @@ describe('来源保留与中文整理', () => {
       const body = JSON.parse(options.body)
       expect(body.model).toBe('openrouter/free')
       expect(body.provider.max_price).toEqual({ prompt: 0, completion: 0 })
-      expect(body.reasoning.exclude).toBe(true)
+      expect(body.reasoning).toBeUndefined() // 动态免费路由不声明统一推理档位。
       expect(body.response_format.type).toBe('json_object')
       const inputs = JSON.parse(body.messages[1].content)
       return new Response(

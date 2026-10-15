@@ -3,6 +3,7 @@ import { freeModels } from '@/lib/assistant-models'
 import { readSse } from '@/lib/assistant-stream'
 import { generationWatchdog, normalizeAssistantUrl } from '@/lib/assistant-upstream'
 import { makeTestEnv, request, login } from './helpers/admin-test-env'
+import { sha256Base64Url } from '@/lib/admin/crypto'
 const KEY = 'test-only-provider-key-not-a-real-secret'
 const MODEL = {
   id: 'test/simple:free',
@@ -28,6 +29,24 @@ async function fixture(
   })
   env.env.ASSISTANT_FETCH = fetcher as typeof fetch
   env.env.AI_CREDENTIALS_KEY = 'test-encryption-key-with-at-least-32-characters'
+  // Existing interaction cases start with a previously verified test model.
+  await env.db.exec('CREATE TABLE IF NOT EXISTS assistant_store(id TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL)')
+  await env.db.run('INSERT INTO assistant_store VALUES(?,?,?)', [
+    'health:' + MODEL.id,
+    JSON.stringify({
+      model: MODEL.id,
+      provider: 'openrouter',
+      ok: true,
+      checkedAt: new Date().toISOString(),
+      latencyMs: 1,
+      firstTokenMs: 1,
+      keyTag: await sha256Base64Url(
+        'model-health:v1:' + (env.env.SITE_SALT ?? '') + ':openrouter:' + KEY,
+      ),
+    }),
+    new Date().toISOString(),
+  ])
+  fetcher.mockClear()
   return { env, fetcher }
 }
 const message = {
@@ -109,7 +128,7 @@ describe('助手私有配置与公开推理', () => {
     expect(JSON.stringify(audit)).not.toContain(KEY)
     await request(env, 'PATCH', '/api/admin/assistant', { provider: 'openrouter', removeKey: true })
     env.cookies.clear()
-    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(503)
+    expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(400)
   })
   it('未配置加密密钥时拒绝接收 API Key', async () => {
     const { env } = await fixture()
@@ -178,7 +197,7 @@ describe('助手私有配置与公开推理', () => {
       allow_fallbacks: true,
       sort: 'latency',
     })
-    expect(payload.reasoning).toEqual({ enabled: false, exclude: true })
+    expect(payload.reasoning).toBeUndefined()
     expect(payload.messages[0].content).toContain('未知事实用【待核对】')
     expect(payload.messages[0].content).toContain('站内公开资料：[]')
     expect(
@@ -520,7 +539,7 @@ describe('连接诊断与断流恢复', () => {
         : json({ data: String(input).endsWith('/models/user') ? [] : [MODEL] }),
     )
     const catalog = await request(env, 'GET', '/api/assistant/models')
-    expect(catalog.json.models.find((m: { id: string }) => m.id === MODEL.id).available).toBe(false)
+    expect(catalog.json.models.some((m: { id: string }) => m.id === MODEL.id)).toBe(false)
     expect((await request(env, 'POST', '/api/assistant/chat', message)).status).toBe(400)
   })
   it('上游 429 的错误码准确显示且不泄露原始错误或 Key', async () => {

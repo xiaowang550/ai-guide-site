@@ -131,7 +131,7 @@ describe('Pages Functions 的依赖链（这些约束只在 Cloudflare 上才会
     expect(
       graph.files.length,
       `依赖链有 ${graph.files.length} 个文件：\n${graph.files.join('\n')}`,
-    ).toBeLessThanOrEqual(45) // 增加共享品牌常量；仍禁止完整前台工具数据与外部依赖。
+    ).toBeLessThanOrEqual(49) // 新增四个小型服务模块：健康证据、OIDC、免费价格核验、推理元数据。
     expect(
       graph.files.some((f) => /data[/\\](?:tools|index)\.ts$/.test(f)),
       'Functions 不该依赖完整工具评分和前端聚合索引',

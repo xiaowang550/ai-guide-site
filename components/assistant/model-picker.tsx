@@ -19,9 +19,9 @@ export function ModelPicker({
   const trigger = useRef<HTMLButtonElement>(null),
     search = useRef<HTMLInputElement>(null),
     list = useRef<HTMLDivElement>(null)
-  const models = (catalog?.models ?? []).filter((m) =>
-    `${m.name} ${m.id} ${m.provider}`.toLowerCase().includes(query.toLowerCase()),
-  )
+  const models = (catalog?.models ?? [])
+    .filter((m) => m.available && catalog?.connected[m.provider])
+    .filter((m) => `${m.name} ${m.id} ${m.provider}`.toLowerCase().includes(query.toLowerCase()))
   const current = catalog?.models.find((m) => m.id === selected)
   useEffect(() => {
     if (open && !window.matchMedia('(pointer: coarse)').matches)
@@ -85,7 +85,13 @@ export function ModelPicker({
         >
           <div className="assistant-model-menu-heading">
             <strong>免费模型</strong>
-            <span>{catalog?.models.length ?? 0} 个</span>
+            <span>
+              {
+                (catalog?.models ?? []).filter((m) => m.available && catalog?.connected[m.provider])
+                  .length
+              }{' '}
+              个可用
+            </span>
             <button type="button" aria-label="关闭模型菜单" onClick={close}>
               <X size={16} />
             </button>
@@ -144,12 +150,20 @@ export function ModelPicker({
               </button>
             ))}
             {!models.length && (
-              <p className="assistant-menu-empty">没有找到这个模型，试试其他名称。</p>
+              <p className="assistant-menu-empty">
+                {query
+                  ? '没有找到这个模型，试试其他名称。'
+                  : '暂时没有通过回答测试的免费模型，可以先用站内查找。'}
+              </p>
             )}
           </div>
           <div className="assistant-model-detail">
             <strong>{current?.name ?? '按任务选择'}</strong>
-            <p>{current?.note ?? '所有模型均按当前官方免费目录筛选。'}</p>
+            <p>
+              {current?.verifiedAt
+                ? '已通过本站实际回答测试 · ' + new Date(current.verifiedAt).toLocaleString('zh-CN')
+                : '只列出已连接且回答测试通过的免费模型。'}
+            </p>
             <div>
               {current?.vision && <span>支持图像输入</span>}
               {current?.reasoning && <span>支持推理</span>}
@@ -157,7 +171,7 @@ export function ModelPicker({
             </div>
             <small>本次助手提供文字对话。免费服务可能有额度限制。</small>
           </div>
-          <a href="https://openrouter.ai/models?max_price=0" target="_blank" rel="noreferrer">
+          <a href="https://openrouter.ai/models?variant=free" target="_blank" rel="noreferrer">
             查看官方免费模型目录 ↗
           </a>
         </div>

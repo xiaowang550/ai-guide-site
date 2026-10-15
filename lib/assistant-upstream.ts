@@ -79,7 +79,7 @@ export function generationOptions(reasoning: boolean, maxTokens = 4096, practice
   return {
     max_tokens: maxTokens,
     provider: practice ? { ...freeProvider, sort: 'latency' } : freeProvider,
-    ...(practice
+    ...(practice && reasoning
       ? { reasoning: { enabled: false, exclude: true } }
       : reasoning
         ? { reasoning: { effort: 'low', exclude: true } }

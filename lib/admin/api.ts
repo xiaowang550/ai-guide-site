@@ -48,8 +48,10 @@ import {
   assistantToolTrends,
   assistantChat,
   assistantTest,
+  assistantHealth,
   type AssistantEnv,
 } from '../assistant-service.ts'
+import { verifyMaintenanceToken } from '../assistant-maintenance-auth.ts'
 import { createD1Db, D1BindingMissingError } from '../db/d1.ts'
 import type { D1Database } from '../db/d1.ts'
 import { toInt, toText } from '../db/types.ts'
@@ -418,6 +420,34 @@ const ROUTES: Route[] = [
     pattern: '/api/admin/assistant/test',
     auth: 'required',
     handler: ({ db, env, request }) => assistantTest(db, env, request),
+  },
+  {
+    method: 'GET',
+    pattern: '/api/admin/assistant/health',
+    auth: 'required',
+    handler: ({ db, env, request }) => assistantHealth(db, env, request),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/admin/assistant/health',
+    auth: 'required',
+    handler: ({ db, env, request }) => assistantHealth(db, env, request),
+  },
+  {
+    method: 'POST',
+    pattern: '/api/assistant/maintenance',
+    auth: 'public',
+    handler: async ({ db, env, request }) => {
+      if (
+        !(await verifyMaintenanceToken(
+          request,
+          env.ASSISTANT_MAINTENANCE_REPOSITORY ?? 'xiaowang550/ai-guide-site',
+          env.ASSISTANT_FETCH ?? fetch,
+        ))
+      )
+        return fail(403, '定时检查身份验证失败。')
+      return assistantHealth(db, env, request, 'daily')
+    },
   },
   {
     method: 'GET',

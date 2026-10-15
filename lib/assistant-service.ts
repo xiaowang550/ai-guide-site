@@ -6,7 +6,19 @@ import {
   type ModelCatalog,
   type ConnectionReport,
   type AssistantLimits,
+  type ModelHealth,
+  type ReasoningChoice,
 } from './assistant-models.ts'
+import { reasoningOptions, supportedReasoning } from './assistant-reasoning.ts'
+import {
+  modelHealth,
+  usableHealth,
+  publicHealth,
+  healthId,
+  type StoredHealth,
+  type HealthPlan,
+} from './assistant-health.ts'
+import { ZEN_PRICING_URL, zenFreeModels } from './assistant-opencode.ts'
 import {
   normalizeAssistantUrl,
   OPENROUTER_BASE,
@@ -35,6 +47,7 @@ export interface AssistantEnv {
   OPENCODE_API_KEY?: string
   SITE_SALT?: string
   ASSISTANT_FETCH?: typeof fetch
+  ASSISTANT_MAINTENANCE_REPOSITORY?: string
 }
 interface Preferences extends AssistantLimits {
   enabled: boolean
@@ -51,6 +64,7 @@ const DEFAULT: Preferences = {
 }
 const LIMIT_FIELDS = ['dailyLimit', 'visitorDailyLimit', 'minuteLimit', 'concurrentLimit'] as const
 const ENDPOINT = 'https://openrouter.ai/api/v1/models'
+const HEALTH_RUN_TTL_MS = 2 * 3600000
 const SCHEMA = `CREATE TABLE IF NOT EXISTS assistant_store(id TEXT PRIMARY KEY,data TEXT NOT NULL,updated_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS assistant_usage(id TEXT PRIMARY KEY,count INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS assistant_slots(id TEXT PRIMARY KEY,until_ms INTEGER NOT NULL);`
@@ -126,7 +140,7 @@ export async function assistantNewsTranslations(db: Db, env: AssistantEnv) {
           body: JSON.stringify({
             model: 'openrouter/free',
             temperature: 0,
-            ...generationOptions(true, 2400),
+            ...generationOptions(false, 2400),
             response_format: { type: 'json_object' },
             messages: [
               {
@@ -254,19 +268,16 @@ async function checkConnection(
     if (provider === 'opencode') {
       // Zen 的目录是公开接口，只有实际推理测试才能证明凭据有效。
       report.error = 'OpenCode 目录已连通，点击实际回答测试核验 Key。'
-      report.models = [
-        {
-          id: 'opencode:space-bunny-free',
-          name: 'Space Bunny · 太空兔',
-          provider,
-          context: 0,
-          vision: false,
-          reasoning: false,
-          tools: false,
-          available: true,
-          note: '免费预览，以实际回答测试为准',
-        },
-      ]
+      const prices = await fetcher(ZEN_PRICING_URL, {
+        signal: AbortSignal.timeout(15000),
+        redirect: 'manual',
+      })
+      if (!prices.ok) throw new UpstreamError(prices.status)
+      report.models = zenFreeModels(payload, await prices.text())
+      report.catalogVerified = report.models.length > 0
+      report.allowedIds = report.models.map((m) => m.id)
+      if (!report.catalogVerified)
+        report.error = '未找到同时有官方免费价格和文字接口的 OpenCode 模型。'
       return report
     }
     if (!payload.data || typeof payload.data !== 'object') throw new UpstreamError(502)
@@ -376,12 +387,11 @@ export async function assistantTest(db: Db, env: AssistantEnv, request: Request)
           'HTTP-Referer': new URL(request.url).origin,
         },
         body: JSON.stringify({
-          model: provider === 'openrouter' ? model.id : 'space-bunny-free',
+          model: provider === 'openrouter' ? model.id : model.id.slice('opencode:'.length),
           messages: [{ role: 'user', content: '这是连接测试。请只回答：连接正常。不要解释。' }],
           stream: true,
-          ...(provider === 'openrouter'
-            ? generationOptions(model.reasoning || model.id === 'openrouter/free', 2048)
-            : { max_tokens: 2048 }),
+          ...(provider === 'openrouter' ? generationOptions(false, 2048) : { max_tokens: 2048 }),
+          ...reasoningOptions(model, 'default', true),
         }),
       })
       const result = await consumeGeneration(
@@ -419,9 +429,25 @@ export async function assistantTest(db: Db, env: AssistantEnv, request: Request)
     }
   }
   if (key === storedKey) await save(db, 'connection:' + provider, report)
+  if (body.infer && key === storedKey && report.probe) {
+    await save(db, healthId(report.probe.model), {
+      ...report.probe,
+      provider,
+      checkedAt: report.checkedAt,
+      keyTag: await credentialTag(env, provider, key),
+    })
+  }
   return json(report)
 }
-async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelCatalog> {
+async function credentialTag(env: AssistantEnv, provider: AssistantProvider, key: string) {
+  return sha256Base64Url('model-health:v1:' + (env.SITE_SALT ?? '') + ':' + provider + ':' + key)
+}
+async function catalog(
+  db: Db,
+  env: AssistantEnv,
+  force = false,
+  validated = true,
+): Promise<ModelCatalog> {
   await ensure(db)
   const prefs = await preferences(db)
   const cached = await db.first<{ data: string; updated_at: string }>(
@@ -454,6 +480,7 @@ async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelC
             context_length: m.context_length,
             architecture: m.architecture,
             supported_parameters: m.supported_parameters,
+            reasoning: m.reasoning,
             expiration_date: m.expiration_date,
           })),
       })
@@ -481,38 +508,262 @@ async function catalog(db: Db, env: AssistantEnv, force = false): Promise<ModelC
         model.note = '当前账号设置未开放此模型，可由管理员重新检查连接'
       }
   }
-  // OpenCode 的免费模型目录不提供价格字段，仅接入已核对的太空兔免费变体。
-  models.push({
-    id: 'opencode:space-bunny-free',
-    name: 'Space Bunny · 太空兔',
-    provider: 'opencode',
-    context: 0,
-    vision: false,
-    reasoning: false,
-    tools: false,
-    available: true,
-    note: 'OpenCode 免费入口，需管理员连接 OpenCode Key',
-  })
+  const zenKey = await credential(db, env, 'opencode')
+  if (zenKey) {
+    let zen = await readConnection(db, 'opencode')
+    if (force || !zen || Date.now() - Date.parse(zen.checkedAt) > 3600000) {
+      zen = await checkConnection(env, 'opencode', zenKey)
+      await save(db, 'connection:opencode', zen)
+    }
+    if (zen?.catalogVerified) models.push(...zen.models)
+  }
   const connected = {
-    openrouter: !!(await credential(db, env, 'openrouter')),
-    opencode: !!(await credential(db, env, 'opencode')),
+    openrouter: !!routerKey,
+    opencode: !!zenKey,
+  }
+  let exposed = models
+  if (validated) {
+    const health = await modelHealth(db)
+    const tags = {
+      openrouter: routerKey ? await credentialTag(env, 'openrouter', routerKey) : undefined,
+      opencode: zenKey ? await credentialTag(env, 'opencode', zenKey) : undefined,
+    }
+    exposed = models
+      .flatMap((model) => {
+        const checked = health.find((h) => h.model === model.id)
+        if (
+          !model.available ||
+          !connected[model.provider] ||
+          !usableHealth(checked, tags[model.provider])
+        )
+          return []
+        return [{ ...model, verifiedAt: checked!.checkedAt, firstTokenMs: checked!.firstTokenMs }]
+      })
+      .sort((a, b) => (a.firstTokenMs ?? Infinity) - (b.firstTokenMs ?? Infinity))
   }
   return {
-    models,
+    models: exposed,
     checkedAt,
     stale,
     connected,
-    defaultModel: models.some((m) => m.id === prefs.defaultModel && m.available)
+    defaultModel: exposed.some((m) => m.id === prefs.defaultModel && m.available)
       ? prefs.defaultModel
-      : ((
-          models.find((m) => m.id === 'openrouter/free' && m.available) ??
-          models.find((m) => m.available)
-        )?.id ?? 'openrouter/free'),
+      : (exposed.find((m) => m.available)?.id ?? ''),
     enabled: prefs.enabled && (await readSiteConfig(db)).features.assistant !== false,
   }
 }
 export async function assistantCatalog(db: Db, env: AssistantEnv) {
   return json(await catalog(db, env))
+}
+async function healthSummary(db: Db) {
+  const row = await db.first<{ data: string }>(
+    "SELECT data FROM assistant_store WHERE id='health-run'",
+  )
+  const plan = row ? (JSON.parse(row.data) as HealthPlan) : null
+  const daily = await db.first<{ data: string }>(
+    "SELECT data FROM assistant_store WHERE id='health-last-daily'",
+  )
+  return {
+    runId: plan?.id ?? null,
+    startedAt: plan?.startedAt ?? null,
+    completedAt: plan?.completedAt ?? null,
+    source: plan?.source ?? null,
+    total: plan?.models.length ?? 0,
+    checked: plan?.results.length ?? 0,
+    checks: (await modelHealth(db)).map(publicHealth),
+    models: plan?.models ?? [],
+    lastDailyAt: daily ? JSON.parse(daily.data).completedAt : null,
+  }
+}
+/** Bounded sequential probes; credentials never leave this service. */
+export async function assistantHealth(
+  db: Db,
+  env: AssistantEnv,
+  request: Request,
+  source: 'admin' | 'daily' = 'admin',
+) {
+  await ensure(db)
+  if (request.method === 'GET') return json(await healthSummary(db))
+  const body = await readJson<Record<string, unknown>>(request)
+  if (
+    !body ||
+    Object.keys(body).some((k) => !['phase', 'runId', 'model'].includes(k)) ||
+    !['start', 'probe', 'finish'].includes(String(body.phase))
+  )
+    return fail(400, '模型检查格式不正确。')
+  if (body.phase === 'start') {
+    const prior = await db.first<{ data: string }>(
+      "SELECT data FROM assistant_store WHERE id='health-run'",
+    )
+    const existing = prior ? (JSON.parse(prior.data) as HealthPlan) : null
+    if (
+      existing &&
+      !existing.completedAt &&
+      Date.now() - Date.parse(existing.startedAt) < HEALTH_RUN_TTL_MS &&
+      existing.source === source
+    )
+      return json({
+        runId: existing.id,
+        models: existing.models,
+        startedAt: existing.startedAt,
+        resumed: true,
+      })
+    const current = await catalog(db, env, true, false)
+    const candidates = current.models
+      .filter(
+        (m) =>
+          m.available &&
+          current.connected[m.provider] &&
+          (!current.stale || m.provider !== 'openrouter'),
+      )
+      .slice(0, 128)
+    if (!candidates.length)
+      return fail(503, '没有可以测试的免费文字模型，请检查平台连接和免费目录。')
+    const now = new Date().toISOString()
+    const lock = await db.run(
+      "INSERT INTO assistant_store(id,data,updated_at) VALUES('health-run-lock','{}',?) ON CONFLICT(id) DO UPDATE SET updated_at=excluded.updated_at WHERE assistant_store.updated_at<?",
+      [new Date(Date.now() + HEALTH_RUN_TTL_MS).toISOString(), now],
+    )
+    if (!lock.changes) return fail(409, '已有一次模型检查正在进行，可在后台查看进度。')
+    try {
+      const keyTags: HealthPlan['keyTags'] = {}
+      for (const provider of ['openrouter', 'opencode'] as const) {
+        const key = await credential(db, env, provider)
+        if (key) keyTags[provider] = await credentialTag(env, provider, key)
+      }
+      const plan: HealthPlan = {
+        id: crypto.randomUUID(),
+        startedAt: now,
+        source,
+        models: candidates,
+        keyTags,
+        results: [],
+      }
+      await save(db, 'health-run', plan)
+      return json({ runId: plan.id, models: plan.models, startedAt: now })
+    } catch (error) {
+      await db.run("DELETE FROM assistant_store WHERE id='health-run-lock'")
+      throw error
+    }
+  }
+  const row = await db.first<{ data: string }>(
+    "SELECT data FROM assistant_store WHERE id='health-run'",
+  )
+  const plan = row ? (JSON.parse(row.data) as HealthPlan) : null
+  if (
+    !plan ||
+    plan.id !== body.runId ||
+    Date.now() - Date.parse(plan.startedAt) > HEALTH_RUN_TTL_MS ||
+    plan.source !== source
+  )
+    return fail(409, '这次检查已结束或过期，请重新开始。')
+  if (body.phase === 'finish') {
+    if (plan.results.length !== plan.models.length)
+      return fail(409, '还有模型未检查，不能结束本次检查。')
+    plan.completedAt = new Date().toISOString()
+    await save(db, 'health-run', plan)
+    if (source === 'daily') await save(db, 'health-last-daily', { completedAt: plan.completedAt })
+    await db.run("DELETE FROM assistant_store WHERE id='health-run-lock'")
+    return json(await healthSummary(db))
+  }
+  if (
+    plan.completedAt ||
+    typeof body.model !== 'string' ||
+    !plan.models.some((m) => m.id === body.model)
+  )
+    return fail(400, '请选择本次检查中的模型。')
+  const previous = plan.results.find((r) => r.model === body.model)
+  if (previous) return json(previous)
+  const current = await catalog(db, env, false, false)
+  const model = current.models.find((m) => m.id === body.model && m.available)
+  const candidate = plan.models.find((m) => m.id === body.model)!
+  const key = await credential(db, env, candidate.provider)
+  if (
+    !key ||
+    (await credentialTag(env, candidate.provider, key)) !== plan.keyTags[candidate.provider]
+  )
+    return fail(409, '平台连接已改变，请重新开始检查。')
+  const prefs = await preferences(db),
+    slot = 'health:' + plan.id
+  await db.run('DELETE FROM assistant_slots WHERE id=? AND until_ms<?', [slot, Date.now()])
+  const lock = await db.run(
+    'INSERT OR IGNORE INTO assistant_slots(id,until_ms) SELECT ?,? WHERE (?=0 OR (SELECT COUNT(*) FROM assistant_slots WHERE until_ms>?)<?)',
+    [slot, Date.now() + 55000, prefs.concurrentLimit, Date.now(), prefs.concurrentLimit],
+  )
+  if (!lock.changes) return fail(429, '正在生成或检查，请稍后重试。')
+  const started = Date.now()
+  const result: ModelHealth = {
+    model: candidate.id,
+    provider: candidate.provider,
+    ok: false,
+    checkedAt: new Date().toISOString(),
+    latencyMs: 0,
+    firstTokenMs: null,
+  }
+  const watch = generationWatchdog(AbortSignal.any([request.signal, AbortSignal.timeout(45000)]))
+  try {
+    if (!model || (current.stale && candidate.provider === 'openrouter'))
+      throw new UpstreamError(503)
+    const response = await (env.ASSISTANT_FETCH ?? fetch)(
+      (model.provider === 'openrouter' ? OPENROUTER_BASE : ZEN_BASE) + '/chat/completions',
+      {
+        method: 'POST',
+        redirect: 'manual',
+        signal: watch.controller.signal,
+        headers: {
+          Authorization: 'Bearer ' + key,
+          'content-type': 'application/json',
+          'X-Title': BRAND_ENGLISH_NAME,
+          'HTTP-Referer': new URL(request.url).origin,
+        },
+        body: JSON.stringify({
+          model: model.provider === 'openrouter' ? model.id : model.id.slice('opencode:'.length),
+          stream: true,
+          messages: [
+            { role: 'user', content: '这是中文连接测试。请只回复这四个字：连接正常。不需要解释。' },
+          ],
+          ...(model.provider === 'openrouter'
+            ? generationOptions(false, 2048, true)
+            : { max_tokens: 2048 }),
+          ...reasoningOptions(model, 'default', true),
+        }),
+      },
+    )
+    let sample = ''
+    const generation = await consumeGeneration(
+      response,
+      (text) => {
+        result.firstTokenMs ??= Date.now() - started
+        sample = (sample + text).slice(0, 512)
+      },
+      watch.activity,
+    )
+    result.ok =
+      generation.finishReason !== 'length' && sample.replace(/\s+/g, '').includes('连接正常')
+    if (!result.ok) {
+      result.code = generation.finishReason === 'length' ? 'length' : 'instruction'
+      result.message =
+        generation.finishReason === 'length' ? '测试回答未完成。' : '未通过中文指令测试。'
+    }
+  } catch (error) {
+    result.code = watch.controller.signal.aborted
+      ? 504
+      : error instanceof UpstreamError
+        ? error.code
+        : 502
+    result.message = upstreamMessage(Number(result.code))
+  } finally {
+    watch.clear()
+    result.latencyMs = Date.now() - started
+    await db.run('DELETE FROM assistant_slots WHERE id=?', [slot])
+  }
+  await save(db, healthId(candidate.id), {
+    ...result,
+    keyTag: plan.keyTags[candidate.provider]!,
+  } satisfies StoredHealth)
+  plan.results.push(result)
+  await save(db, 'health-run', plan)
+  return json(result)
 }
 export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request) {
   await ensure(db)
@@ -523,6 +774,7 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
     ])
     return json({
       ...(await preferences(db)),
+      defaultModel: current.defaultModel,
       connected: current.connected,
       models: current.models,
       checkedAt: current.checkedAt,
@@ -532,6 +784,7 @@ export async function assistantAdmin(db: Db, env: AssistantEnv, request: Request
       baseUrl: OPENROUTER_BASE,
       connection: await readConnection(db, 'openrouter'),
       recentGeneration: await readConnection(db, 'generation'),
+      health: await healthSummary(db),
     })
   }
   const body = await readJson<Record<string, unknown>>(request)
@@ -674,7 +927,14 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
   if (length > 280000) return fail(413, '这次输入过长，请缩短或压缩图片后再试。')
   const raw = await request.text()
   if (raw.length > 260000) return fail(413, '这次输入过长，请缩短或压缩图片后再试。')
-  let body: { model?: unknown; messages?: unknown; page?: unknown; image?: unknown; mode?: unknown }
+  let body: {
+    model?: unknown
+    messages?: unknown
+    page?: unknown
+    image?: unknown
+    mode?: unknown
+    reasoning?: unknown
+  }
   try {
     body = JSON.parse(raw)
   } catch {
@@ -705,6 +965,8 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
     model = current.models.find((m) => m.id === body.model)
   if (!current.enabled) return fail(503, 'AI 体验暂时关闭，站内查找仍可使用。')
   if (!model?.available) return fail(400, '请选择当前目录中的免费文字模型。')
+  if (!supportedReasoning(model, body.reasoning))
+    return fail(400, '这个模型不支持所选推理强度，请使用默认档位。')
   if (body.image && (!model.vision || model.provider !== 'openrouter'))
     return fail(400, '请选择支持看图的免费 OpenRouter 模型。')
   if (current.stale && model.provider === 'openrouter')
@@ -790,12 +1052,12 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
       const available =
         list.ok &&
         ((await list.json()) as { data: { id: string }[] }).data.some(
-          (m) => m.id === 'space-bunny-free',
+          (m) => m.id === model.id.slice('opencode:'.length),
         )
       if (!available) {
         await release()
         watch.clear()
-        return fail(503, '太空兔的免费入口暂时不可用，请选择 OpenRouter 免费模型。')
+        return fail(503, '这个 OpenCode 免费入口暂时不可用，请换一个模型。')
       }
     }
     const sources = practiceMode
@@ -823,7 +1085,7 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         'X-Title': BRAND_ENGLISH_NAME,
       },
       body: JSON.stringify({
-        model: model.provider === 'openrouter' ? model.id : 'space-bunny-free',
+        model: model.provider === 'openrouter' ? model.id : model.id.slice('opencode:'.length),
         messages: [
           { role: 'system', content: system },
           ...messages.map((m, i) =>
@@ -841,11 +1103,18 @@ export async function assistantChat(db: Db, env: AssistantEnv, request: Request)
         stream: true,
         ...(model.provider === 'openrouter'
           ? generationOptions(
-              model.reasoning || model.id === 'openrouter/free',
-              practiceMode ? 700 : 4096,
+              false,
+              typeof body.reasoning === 'string' && body.reasoning.startsWith('budget-')
+                ? Number(body.reasoning.slice(7)) + 2048
+                : practiceMode
+                  ? model.reasoningSupport?.mandatory
+                    ? 2048
+                    : 700
+                  : 4096,
               practiceMode,
             )
           : { max_tokens: 4096 }),
+        ...reasoningOptions(model, (body.reasoning ?? 'default') as ReasoningChoice, practiceMode),
       }),
     })
     // Return a live stream while the provider is still opening its connection.

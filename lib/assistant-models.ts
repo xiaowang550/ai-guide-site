@@ -1,4 +1,32 @@
 export type AssistantProvider = 'openrouter' | 'opencode'
+export const REASONING_EFFORTS = [
+  'none',
+  'minimal',
+  'low',
+  'medium',
+  'high',
+  'xhigh',
+  'max',
+] as const
+export type ReasoningEffort = (typeof REASONING_EFFORTS)[number]
+export type ReasoningChoice =
+  'default' | ReasoningEffort | 'budget-1024' | 'budget-2048' | 'budget-4096'
+export interface ReasoningSupport {
+  efforts: ReasoningEffort[]
+  mandatory: boolean
+  defaultEffort?: ReasoningEffort
+  budget: boolean
+}
+export interface ModelHealth {
+  model: string
+  provider: AssistantProvider
+  ok: boolean
+  checkedAt: string
+  latencyMs: number
+  firstTokenMs: number | null
+  code?: string | number
+  message?: string
+}
 /** 本站调用限制；0 表示无限制，不改变平台自己的免费额度。 */
 export interface AssistantLimits {
   dailyLimit: number
@@ -16,6 +44,9 @@ export interface FreeModel {
   tools: boolean
   available: boolean
   note: string
+  reasoningSupport?: ReasoningSupport
+  verifiedAt?: string
+  firstTokenMs?: number | null
 }
 export interface ModelCatalog {
   models: FreeModel[]
@@ -24,6 +55,25 @@ export interface ModelCatalog {
   connected: Record<AssistantProvider, boolean>
   defaultModel: string
   enabled: boolean
+}
+export function reasoningSupport(raw: unknown): ReasoningSupport | undefined {
+  if (!raw || typeof raw !== 'object') return undefined
+  const value = raw as Record<string, unknown>
+  const advertised = value.supported_efforts
+  const efforts =
+    advertised === null
+      ? [...REASONING_EFFORTS]
+      : Array.isArray(advertised)
+        ? REASONING_EFFORTS.filter((e) => advertised.includes(e))
+        : []
+  return {
+    efforts: efforts.filter((e) => e !== 'none' || value.mandatory !== true),
+    mandatory: value.mandatory === true,
+    budget: value.supports_max_tokens === true,
+    ...(REASONING_EFFORTS.includes(value.default_effort as ReasoningEffort)
+      ? { defaultEffort: value.default_effort as ReasoningEffort }
+      : {}),
+  }
 }
 export interface ConnectionReport {
   checkedAt: string
@@ -100,7 +150,10 @@ export function freeModels(value: unknown, now = Date.now()): FreeModel[] {
       provider: 'openrouter',
       context: Math.max(0, Number(raw.context_length) || 0),
       vision: architecture?.input_modalities?.includes('image') ?? false,
-      reasoning: parameters.includes('reasoning'),
+      reasoning: id !== 'openrouter/free' && parameters.includes('reasoning'),
+      ...(id !== 'openrouter/free' && raw.reasoning
+        ? { reasoningSupport: reasoningSupport(raw.reasoning) }
+        : {}),
       tools: parameters.includes('tools'),
       available: !audio && (architecture?.output_modalities?.includes('text') ?? false),
       note: audio

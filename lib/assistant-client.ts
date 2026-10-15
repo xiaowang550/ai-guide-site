@@ -1,10 +1,12 @@
 import { readSse } from './assistant-stream'
+import type { ReasoningChoice } from './assistant-models'
 export async function runAssistant(options: {
   model: string
   messages: { role: string; content: string }[]
   page: string
   image?: string
   mode?: 'practice'
+  reasoning?: ReasoningChoice
   signal: AbortSignal
   onText: (text: string) => void
   onMeta?: (
@@ -21,6 +23,9 @@ export async function runAssistant(options: {
       messages: options.messages,
       page: options.page,
       ...(options.mode ? { mode: options.mode } : {}),
+      ...(options.reasoning && options.reasoning !== 'default'
+        ? { reasoning: options.reasoning }
+        : {}),
       ...(options.image ? { image: options.image } : {}),
     }),
   })

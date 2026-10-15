@@ -136,3 +136,30 @@ body:has(.assistant-dialog[open]) { overflow: hidden; }
 .assistant-dialog[data-compact=true] .assistant-footer textarea { height:32px; }
 .assistant-dialog[data-compact=true] .assistant-body { padding-top:0; padding-bottom:0; }
 .assistant-dialog[data-compact=true] .assistant-connection { display:none; }
+.assistant-reasoning-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.assistant-reasoning-control select {
+  min-height: 44px;
+  max-width: 136px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-radius: 10px;
+  padding: 6px;
+}
+.assistant-composer-tools:has(.assistant-reasoning-control) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.assistant-composer-tools:has(.assistant-reasoning-control) .assistant-picker {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.assistant-composer-tools .assistant-reasoning-control { grid-column: 1; grid-row: 2; }
+.assistant-composer-tools:has(.assistant-reasoning-control) .assistant-send { grid-column: 2; grid-row: 2; }
+.assistant-practice-controls { flex-wrap: wrap; }
