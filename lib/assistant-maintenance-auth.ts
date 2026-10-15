@@ -27,7 +27,7 @@ export async function verifyMaintenanceToken(
       claims.ref !== 'refs/heads/main' ||
       claims.workflow_ref !==
         repository + '/.github/workflows/assistant-model-health.yml@refs/heads/main' ||
-      !['schedule', 'workflow_dispatch'].includes(claims.event_name) ||
+      !['schedule', 'workflow_dispatch', 'push'].includes(claims.event_name) ||
       typeof claims.exp !== 'number' ||
       claims.exp <= now ||
       typeof claims.iat !== 'number' ||

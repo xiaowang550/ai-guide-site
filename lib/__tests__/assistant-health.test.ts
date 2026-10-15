@@ -233,6 +233,14 @@ describe('每日任务身份', () => {
     expect(await verifyMaintenanceToken(await req(), repository, fetcher as typeof fetch)).toBe(
       true,
     )
+    for (const event_name of ['schedule', 'push'])
+      expect(
+        await verifyMaintenanceToken(
+          await req({ event_name }),
+          repository,
+          fetcher as typeof fetch,
+        ),
+      ).toBe(true)
     for (const override of [
       { repository: 'other/repo' },
       { ref: 'refs/pull/1/merge' },

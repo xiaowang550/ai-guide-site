@@ -33,8 +33,20 @@ async function call(body) {
     )
   return value
 }
-const plan = await call({ phase: 'start' }),
-  results = []
+// A maintenance update can start before Pages has finished deploying its endpoint.
+// Retry only the start request; every attempt uses a fresh short-lived GitHub identity.
+let plan
+for (let attempt = 0; attempt < 12; attempt++) {
+  try {
+    plan = await call({ phase: 'start' })
+    break
+  } catch (error) {
+    if (attempt === 11) throw error
+    console.log('Waiting for the maintenance endpoint before starting model checks.')
+    await new Promise((resolve) => setTimeout(resolve, 20000))
+  }
+}
+const results = []
 for (const model of plan.models) {
   let value
   for (let attempt = 0; attempt < 3; attempt++) {

@@ -1,5 +1,10 @@
 name: 免费模型每日实测
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/assistant-model-health.yml'
+      - 'lib/assistant-maintenance-auth.ts'
   schedule:
     - cron: '40 0 * * *'
   workflow_dispatch:
