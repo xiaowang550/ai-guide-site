@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { ReferenceArt } from './reference-art'
 import { DesignCopy } from './design-copy'
 
 export interface Crumb {
@@ -53,39 +52,40 @@ export function PageHeader({
 }) {
   return (
     <div
-      className={cn(
-        'page-heading border-b border-border/60',
-        illustrated && 'reference-heading',
-        className,
-      )}
+      className={cn('page-heading x-page-heading', className)}
+      data-illustrated={illustrated || undefined}
     >
-      <div className="container py-10 sm:py-14">
-        {breadcrumbs?.length && (!illustrated || breadcrumbs.length > 2) ? (
-          <Breadcrumbs items={breadcrumbs} className="mb-4" />
-        ) : null}
+      <div className="container">
+        <div className="x-page-topline">
+          <p className="x-page-overline">
+            <span aria-hidden="true">+</span> XIAN <span aria-hidden="true">/</span> EXPLORE
+          </p>
+          {breadcrumbs?.length ? (
+            <Breadcrumbs items={breadcrumbs} className="x-page-breadcrumbs" />
+          ) : null}
+        </div>
         <div
-          className={
-            illustrated
-              ? ['reference-heading-grid', aside && 'has-aside'].filter(Boolean).join(' ')
-              : 'flex flex-col gap-5 md:flex-row md:items-end md:justify-between'
-          }
+          className={cn('x-page-heading-grid', aside && 'has-aside', !aside && art && 'has-art')}
         >
-          <div className="min-w-0 flex-1">
-            <h1 className="title-serif text-[1.875rem] sm:text-[2.5rem]">
+          <div className="x-page-copy min-w-0">
+            <h1 className="x-page-title">
               <DesignCopy>{title}</DesignCopy>
             </h1>
             {description ? (
-              <p className="measure-wide mt-4 text-base leading-7 text-muted-foreground">
+              <p className="x-page-description">
                 <DesignCopy>{description}</DesignCopy>
               </p>
             ) : null}
             {meta ? (
-              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">{meta}</div>
+              <div className="x-page-meta flex flex-wrap items-center gap-x-4 gap-y-2">{meta}</div>
             ) : null}
+            {actions ? <div className="x-page-actions flex flex-wrap gap-2">{actions}</div> : null}
           </div>
-          {illustrated && (art ?? <ReferenceArt />)}
-          {aside && <aside className="reference-panel hero-aside">{aside}</aside>}
-          {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+          {aside ? (
+            <aside className="x-page-aside">{aside}</aside>
+          ) : art ? (
+            <div className="x-page-art">{art}</div>
+          ) : null}
         </div>
       </div>
     </div>

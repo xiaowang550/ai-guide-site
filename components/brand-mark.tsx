@@ -2,25 +2,15 @@ import { siteConfig } from '@/lib/site'
 
 export function BrandMark({ full = false }: { full?: boolean }) {
   return (
-    <>
-      <span className="design-brand">
-        <span className="design-brand-symbol" aria-hidden="true" />
-        <span>{siteConfig.name}</span>
-      </span>
-      <picture className={full ? 'brand-identity brand-identity-full' : 'brand-identity'}>
-        <source
-          media={full ? undefined : '(min-width: 1280px)'}
-          srcSet="/brand/zhiya-wordmark-v1.webp"
-        />
-        {/* picture 按屏幕只加载一个 Logo，首屏优先显示 */}
-        <img
-          src="/brand/sprout-mark-v3.webp"
-          alt={siteConfig.name}
-          width={64}
-          height={64}
-          fetchPriority="high"
-        />
-      </picture>
-    </>
+    <span className={full ? 'xian-brand xian-brand-full' : 'xian-brand'}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- compact code-native SVG identity */}
+      <img
+        src="/brand/xian/logo.svg"
+        alt={siteConfig.name}
+        width={150}
+        height={38}
+        fetchPriority="high"
+      />
+    </span>
   )
 }

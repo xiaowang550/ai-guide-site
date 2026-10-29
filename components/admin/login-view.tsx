@@ -73,10 +73,10 @@ export function LoginView({ onSuccess }: { onSuccess: () => void }) {
           {/* eslint-disable-next-line @next/next/no-img-element -- shared optimized public mascot */}
           <img
             className="admin-login-mascot"
-            src="/brand/sprout-hero-v3.webp"
+            src="/brand/xian/mark.svg"
             width="260"
             height="260"
-            alt="小芽欢迎你回来"
+            alt="弦域轨道标识"
           />
           <div className="mt-6 flex items-center gap-2 text-xs text-primary">
             <ShieldCheck className="h-4 w-4" />

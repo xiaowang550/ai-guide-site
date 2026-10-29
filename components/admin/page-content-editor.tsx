@@ -36,7 +36,11 @@ export function PageContentEditor({
     if (!pageModule || dirty) return
     const merged = mergedRegions(pageModule.id, pageModule.regions)
     if (pageModule.id === 'home' && !pageModule.regions) {
-      const order = [...new Set([...config.layout.home, ...merged.map((region) => region.id)])]
+      const preferred =
+        config.layout.version === 1
+          ? ['hero', 'tasks', 'metrics', 'tools', 'workspace', 'guides', 'start', 'news', 'final']
+          : config.layout.home
+      const order = [...new Set([...preferred, ...merged.map((region) => region.id)])]
       merged.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id))
       setRegions(merged.map((r) => ({ ...r, enabled: !config.layout.hiddenHome.includes(r.id) })))
     } else setRegions(merged)

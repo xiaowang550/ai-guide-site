@@ -22,7 +22,8 @@ const GuidedTour = dynamic(() => import('./onboarding/guided-tour').then((m) => 
 export function SiteModulesProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState(DEFAULT_SITE_CONFIG),
     [ready, setReady] = useState(false),
-    [preview, setPreview] = useState(false)
+    [preview, setPreview] = useState(false),
+    [tourRequested, setTourRequested] = useState(false)
   const active = useRef(true),
     previewMode = useRef(false),
     firstPublicRefresh = useRef(true),
@@ -71,6 +72,7 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     active.current = true
     previewMode.current = new URLSearchParams(location.search).get('admin-preview') === '1'
+    setTourRequested(new URLSearchParams(location.search).get('tour') === '1')
     void refresh()
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') void refresh()
@@ -151,7 +153,7 @@ export function SiteModulesProvider({ children }: { children: React.ReactNode })
       {children}
       {preview && <PreviewControls />}
       {config.features.assistant && <AssistantDock />}
-      {ready && !preview && config.features.onboarding && <GuidedTour />}
+      {ready && !preview && config.features.onboarding && tourRequested && <GuidedTour />}
     </SiteContext.Provider>
   )
 }

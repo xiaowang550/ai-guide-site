@@ -16,10 +16,10 @@ const items = (values: string[][]): ModuleBlock[] =>
   }))
 export const PAGE_REGIONS: Record<string, RegionDefinition[]> = {
   home: [
-    { id: 'hero', title: '首页欢迎区' },
+    { id: 'hero', title: '轨道主视觉' },
     {
       id: 'start',
-      title: '学习入口',
+      title: '实践档案',
       items: items([
         ['系统教程', '照着步骤，练习对话、写作和资料整理。', '/guides'],
         ['精选案例', '看看周报、会议记录和教学材料怎么做。', '/cases'],
@@ -27,13 +27,14 @@ export const PAGE_REGIONS: Record<string, RegionDefinition[]> = {
       ]),
     },
     { id: 'metrics', title: '内容数量' },
-    { id: 'tools', title: '本周推荐' },
-    { id: 'guides', title: '学习路径' },
+    { id: 'tools', title: '创造工具' },
+    { id: 'workspace', title: 'AI 任务终端' },
+    { id: 'guides', title: '学习路线' },
+    { id: 'final', title: '开始创造' },
     { id: 'news', title: 'AI 实时资讯' },
     {
       id: 'tasks',
       title: '按任务选工具',
-      nested: true,
       items: items([
         ['写一篇文章', '写作表达、提示词方法', '/find?s=write'],
         ['读懂长文档', '长文理解、信息整理', '/find?s=read-long-doc'],

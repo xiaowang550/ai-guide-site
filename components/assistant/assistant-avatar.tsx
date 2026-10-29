@@ -1,4 +1,4 @@
-import { MASCOT_STATES, type MascotState } from '@/lib/assistant-mascot'
+import { type MascotState } from '@/lib/assistant-mascot'
 export function AssistantAvatar({
   thinking = false,
   full = false,
@@ -22,7 +22,7 @@ export function AssistantAvatar({
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- 小型透明 WebP，静态导出直接加载站内素材 */}
       <img
-        src={MASCOT_STATES[thinking ? 'working' : state].image}
+        src="/brand/xian/mark.svg"
         width="256"
         height="256"
         alt=""

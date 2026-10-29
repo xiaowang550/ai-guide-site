@@ -1,12 +1,9 @@
-import { SiteHeader } from '@/components/site-header'
-import { SiteFooter } from '@/components/site-footer'
+import { XianNavigation, XianFooter } from '@/components/xian/navigation'
 import { MotionLayer } from '@/components/motion/motion-layer'
 import { ServiceWorkerRegistrar } from '@/components/motion/service-worker-registrar'
 import { AnalyticsBeacon } from '@/components/analytics-beacon'
 import { SiteModulesProvider } from '@/components/site-modules'
 import { ModuleGate } from '@/components/module-visibility'
-import { MobileTabs } from '@/components/mobile/mobile-tabs'
-import { TemplateNavigationEntry } from '@/components/template-entry'
 import '@/app/styles/reference-base.css'
 import '@/app/styles/benchmarks.css'
 
@@ -24,13 +21,11 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         >
           跳到主要内容
         </a>
-        <SiteHeader />
-        <TemplateNavigationEntry />
+        <XianNavigation />
         <main id="main" className="flex-1">
           <ModuleGate>{children}</ModuleGate>
         </main>
-        <SiteFooter />
-        <MobileTabs />
+        <XianFooter />
       </SiteModulesProvider>
     </div>
   )

@@ -1,5 +1,5 @@
 /* Public reading cache only. Authenticated pages and API responses never enter it. */
-const CACHE_VERSION = 'v8'
+const CACHE_VERSION = 'v9'
 const STATIC_CACHE = `ai-map-static-${CACHE_VERSION}`
 const PAGES_CACHE = `ai-map-pages-${CACHE_VERSION}`
 const OFFLINE_URL = '/offline/'
@@ -20,9 +20,9 @@ self.addEventListener('install', (event) => {
       await pages.addAll(PRECACHE)
       // Registration follows the first render: save scripts/styles already loaded too.
       const assets = new Set([
-        '/brand/sprout-mark-v3.webp',
-        '/brand/sprout-hero-v3.webp',
-        '/brand/zhiya-wordmark-v1.webp',
+        '/brand/xian/mark.svg',
+        '/brand/xian/favicon.svg',
+        '/brand/xian/logo.svg',
       ])
       for (const page of PRECACHE) {
         const html = await (await pages.match(page)).text()

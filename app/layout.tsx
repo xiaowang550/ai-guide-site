@@ -4,6 +4,8 @@ import './globals.css'
 import './styles/surfaces.css'
 import './styles/learning.css'
 import './styles/mobile.css'
+import '../public/design/xian.css'
+import '../public/design/xian-workspaces.css'
 import { MOBILE_VIEWPORT_BOOTSTRAP } from '@/lib/mobile-viewport'
 import { siteConfig, siteTitle } from '@/lib/site'
 import { ThemeScript } from '@/components/theme-script'
@@ -63,11 +65,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="zh-CN" data-xian="true" className="dark" suppressHydrationWarning>
       <head>
         <ThemeScript />
         <style>{'.design-brief,.design-new-home,.design-brand,.template-only{display:none}'}</style>
-        <script src="/design/runtime-v2.js?rev=20261014-shared-load" defer />
+        <script src="/design/xian-runtime.js" defer />
         <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOTSTRAP }} />
         {/* 禁用 JS 时撤销进场动画的初始隐藏状态，确保内容永远可见 */}
         <noscript>

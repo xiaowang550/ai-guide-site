@@ -13,7 +13,7 @@ export const siteConfig = {
    */
   tagline: '',
   description:
-    '把每个 AI 工具的能力量化成 14 个维度，用场景决策器告诉你「现在该用哪个、为什么、怎么问」。不吹不黑：强项、弱项、别用它做，全部写清楚。',
+    '与 AI 一起探索、创造、解决问题。发现工具、运行真实任务、跟着案例练习，把想法接入下一维。',
   url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ai-guide-site.pages.dev',
   locale: 'zh-CN',
   /**

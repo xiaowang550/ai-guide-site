@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="xian-favicon-title">
+  <title id="xian-favicon-title">弦域</title>
+  <rect width="64" height="64" rx="16" fill="#080b0a"/>
+  <g stroke="#d7ff64" stroke-width="3.4">
+    <ellipse cx="32" cy="32" rx="8" ry="23" transform="rotate(45 32 32)"/>
+    <ellipse cx="32" cy="32" rx="8" ry="23" transform="rotate(-45 32 32)"/>
+  </g>
+  <circle cx="32" cy="32" r="2.2" fill="#f4f5ed"/>
+  <circle cx="48.3" cy="15.7" r="3.3" fill="#f4f5ed"/>
+</svg>

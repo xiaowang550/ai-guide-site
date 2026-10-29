@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" fill="none" role="img" aria-labelledby="xian-logo-title xian-logo-description">
+  <title id="xian-logo-title">弦域 XIAN</title>
+  <desc id="xian-logo-description">两条交汇的荧光绿轨道，连接弦域中文名称与几何字标 XIAN。</desc>
+  <g stroke="#d7ff64" stroke-width="3.4">
+    <ellipse cx="32" cy="32" rx="9" ry="25" transform="rotate(45 32 32)"/>
+    <ellipse cx="32" cy="32" rx="9" ry="25" transform="rotate(-45 32 32)"/>
+  </g>
+  <g fill="#f4f5ed">
+    <circle cx="32" cy="32" r="2.2"/>
+    <circle cx="49.7" cy="14.3" r="3.3"/>
+    <text x="80" y="44" font-family="Inter, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="33" font-weight="700" letter-spacing="2">弦域</text>
+    <path d="M179 16h8l8 10 8-10h8l-12 16 12 16h-8l-8-10-8 10h-8l12-16z"/>
+    <path d="M220 16h8v32h-8z"/>
+    <path fill-rule="evenodd" d="m236 48 13-32h9l13 32h-8l-2.8-7h-13.4l-2.8 7zm13.8-13h8.4L254 24z" clip-rule="evenodd"/>
+    <path d="M280 48V16h7l18 20V16h8v32h-7l-18-20v20z"/>
+  </g>
+  <path d="M161 16v32" stroke="#f4f5ed" stroke-opacity=".28"/>
+</svg>

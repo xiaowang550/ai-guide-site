@@ -1,321 +1,70 @@
-import '@/app/styles/tool-signals.css'
-import '@/app/styles/reference-hero.css'
-import '@/app/styles/reference-home.css'
-import { moduleForPath } from '@/lib/site-modules'
-import { ModuleSection } from '@/components/module-visibility'
-import { HomeLayout } from '@/components/home-layout'
-import { NewsPreview } from '@/components/news/news-preview'
-import { seedNewsItems } from '@/lib/news/seed-view'
-import '@/app/styles/news-preview.css'
 import type { Metadata } from 'next'
-import Link from 'next/link'
-import {
-  ArrowRight,
-  ArrowUpRight,
-  BookOpen,
-  Check,
-  Feather,
-  Layers,
-  Lightbulb,
-  Sparkles,
-} from 'lucide-react'
-import { cases, concepts, guides, paths, tools } from '@/data'
-import { WeeklyRecommendations, type WeeklyEntry } from '@/components/weekly-recommendations'
-import { Section } from '@/components/page-header'
-import { ReferenceArt } from '@/components/reference-art'
-import { DesignHome } from '@/components/design-home'
-import { RegionSlot } from '@/components/page-regions'
+import { tools, guides, cases } from '@/data'
+import { XianHome } from '@/components/xian/home'
 
 export const metadata: Metadata = {
-  description: '用清晰的能力地图、实用教程和场景决策器，找到适合你的 AI 工具。',
+  description: '弦域 XIAN：探索 AI 工具、运行真实任务、跟着案例实践。把想法接入下一维。',
   alternates: { canonical: '/' },
 }
-
-const startingPoints = [
-  {
-    icon: BookOpen,
-    title: '系统教程',
-    description: '照着步骤，练习对话、写作和资料整理。',
-    href: '/guides',
-    label: '开始学习',
-    tone: 'sage',
-  },
-  {
-    icon: Lightbulb,
-    title: '精选案例',
-    description: '看看周报、会议记录和教学材料怎么做。',
-    href: '/cases',
-    label: '浏览案例',
-    tone: 'sand',
-  },
-  {
-    icon: Layers,
-    title: '实用工具库',
-    description: '比较功能、费用和使用条件。',
-    href: '/tools',
-    label: '探索工具',
-    tone: 'lavender',
-  },
-]
-const tasks = [
-  { title: '把零散想法写成一篇文章', icon: Feather, task: 'write', hint: '写作表达 · 提示词方法' },
-  { title: '读懂一份长文档', icon: BookOpen, task: 'read-long-doc', hint: '长文理解 · 信息整理' },
-  { title: '做一份清楚的汇报', icon: Layers, task: 'make-office', hint: '办公产出 · 内容组织' },
-]
-
 export default function HomePage() {
-  const recommendedTools = ['chatgpt', 'deepseek', 'claude']
-    .map((id) => tools.find((tool) => tool.id === id))
-    .filter((tool) => !!tool)
-  const weekly: WeeklyEntry[] = recommendedTools.flatMap((tool, index) => {
-    const guide = guides[index],
-      example = cases[index]
-    return [
-      {
-        id: tool.id,
-        kind: '工具' as const,
-        href: `/tools/${tool.id}`,
-        title: tool.name,
-        description: tool.tagline,
-        logo: tool.logo,
-        score: tool.overallScore,
-        tags: tool.tags,
-      },
-      {
-        id: guide.id,
-        kind: '教程' as const,
-        href: `/guides/${guide.id}`,
-        title: guide.title,
-        description: guide.summary ?? guide.outcome,
-        tags: ['可跟着练', `${guide.durationMin} 分钟`],
-      },
-      {
-        id: example.id,
-        kind: '案例' as const,
-        href: `/cases/${example.id}`,
-        title: example.title,
-        description: example.summary ?? example.scenario,
-        tags: ['提示词可复制', '真实任务练习'],
-      },
-    ]
-  })
-  const counts = [
-    { value: tools.length, label: '个工具' },
-    { value: concepts.length, label: '个概念' },
-    { value: guides.length, label: '篇教程' },
-    { value: cases.length, label: '个案例' },
-  ]
-
+  const ids = ['chatgpt', 'claude', 'gemini', 'deepseek', 'kimi', 'doubao']
+  const categories: Record<string, string> = {
+    chatgpt: '创作',
+    claude: '写作',
+    gemini: '研究',
+    deepseek: '编程',
+    kimi: '研究',
+    doubao: '创作',
+  }
   return (
-    <HomeLayout
-      sections={[
-        {
-          id: 'hero',
-          content: (
-            <>
-              <DesignHome />
-              <section className="home-hero">
-                <div className="home-cover-grid container">
-                  <div className="home-cover-copy">
-                    <h1 className="home-cover-title">
-                      找 AI 工具，
-                      <br />
-                      <span className="text-primary">学会怎么用。</span>
-                    </h1>
-                    <p className="mt-6 max-w-lg text-base leading-8 text-muted-foreground">
-                      写消息、整理资料、做汇报，从一个小任务开始。
-                    </p>
-                    <div className="mt-8 flex flex-wrap gap-3">
-                      <ModuleSection id="finder">
-                        <Link prefetch={false} className="home-button" href="/find">
-                          找到适合我的工具
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </ModuleSection>
-                      <ModuleSection id="beginner">
-                        <Link
-                          prefetch={false}
-                          className="home-button home-button-secondary"
-                          href="/start"
-                        >
-                          第一次用？从这里开始
-                          <BookOpen className="h-4 w-4" />
-                        </Link>
-                      </ModuleSection>
-                    </div>
-                    <div className="hero-promises mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-                      {['可查看评分来源', '可比较工具能力', '无需注册'].map((t) => (
-                        <span key={t} className="flex items-center gap-1.5">
-                          <span className="hero-promise-check">
-                            <Check className="h-3.5 w-3.5 text-primary" />
-                          </span>
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <ReferenceArt home />
-                  <ModuleSection id="finder">
-                    <RegionSlot moduleId="home" id="tasks">
-                      <div className="hero-workbench">
-                        <div className="mb-7 flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-sm font-semibold">
-                            <span className="hero-small-icon">
-                              <Sparkles className="h-4 w-4" />
-                            </span>
-                            按任务选工具
-                          </span>
-                        </div>
-                        <p className="text-xl font-semibold tracking-tight">你想做什么？</p>
-                        <div className="mt-6 space-y-3">
-                          {tasks.map(({ title, icon: Icon, hint, task }) => (
-                            <Link
-                              prefetch={false}
-                              key={task}
-                              href={`/find?s=${task}`}
-                              className="hero-task"
-                            >
-                              <span className="hero-task-icon">
-                                <Icon className="h-4 w-4" />
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block text-sm font-medium">{title}</span>
-                                <span className="mt-1 block text-xs text-muted-foreground">
-                                  {hint}
-                                </span>
-                              </span>
-                              <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                            </Link>
-                          ))}
-                        </div>
-                        <div className="mt-6 flex items-center justify-between border-t border-border/60 pt-5 text-xs">
-                          <span className="text-muted-foreground">根据任务推荐工具</span>
-                          <Link prefetch={false} href="/find" className="font-medium text-primary">
-                            帮我选工具 →
-                          </Link>
-                        </div>
-                      </div>
-                    </RegionSlot>
-                  </ModuleSection>
-                </div>
-              </section>
-            </>
+    <XianHome
+      totals={{ tools: tools.length, guides: guides.length, cases: cases.length }}
+      tools={ids.flatMap((id) => {
+        const tool = tools.find((t) => t.id === id)
+        return tool
+          ? [
+              {
+                id: tool.id,
+                name: tool.name,
+                logo: tool.logo,
+                tagline: tool.tagline,
+                category: categories[id],
+              },
+            ]
+          : []
+      })}
+      cases={cases
+        .filter((item) =>
+          ['weekly-report-ops', 'meeting-action-items', 'teaching-materials'].includes(item.id),
+        )
+        .concat(
+          cases.filter(
+            (item) =>
+              !['weekly-report-ops', 'meeting-action-items', 'teaching-materials'].includes(
+                item.id,
+              ),
           ),
-        },
-        {
-          id: 'metrics',
-          content: (
-            <div className="home-metrics">
-              <div className="hidden text-xs leading-6 text-muted-foreground sm:block">
-                <span className="font-medium text-foreground">AI 使用指南</span>
-              </div>
-              {counts.map((m) => (
-                <div key={m.label}>
-                  <span className="text-2xl font-semibold tracking-tight">{m.value}</span>
-                  <p className="mt-1.5 text-xs text-muted-foreground">{m.label}</p>
-                </div>
-              ))}
-            </div>
-          ),
-        },
-        {
-          id: 'start',
-          content: (
-            <Section title="学用法、看案例、选工具" className="home-growth">
-              <div className="grid gap-4 md:grid-cols-3">
-                {startingPoints.map(({ icon: Icon, ...item }) => (
-                  <ModuleSection key={item.href} id={moduleForPath(item.href) ?? 'knowledge'}>
-                    <Link
-                      prefetch={false}
-                      href={item.href}
-                      className={`entry-card entry-${item.tone}`}
-                    >
-                      <span className="entry-icon">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <h3 className="mt-6 text-lg">{item.title}</h3>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        {item.description}
-                      </p>
-                      <span className="entry-card-arrow" aria-hidden="true">
-                        <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </Link>
-                  </ModuleSection>
-                ))}
-              </div>
-            </Section>
-          ),
-        },
-        {
-          id: 'tools',
-          content: (
-            <ModuleSection id="tools">
-              <WeeklyRecommendations entries={weekly} />
-            </ModuleSection>
-          ),
-        },
-        {
-          id: 'guides',
-          content: (
-            <ModuleSection id="guides">
-              <Section
-                title="学习路径"
-                description="选择适合自己的路线，进度会自动保存。"
-                action={
-                  <Link prefetch={false} href="/paths" className="section-link">
-                    所有学习路径
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                }
-              >
-                <div className="grid gap-4 md:grid-cols-2">
-                  {paths.map((p, i) => (
-                    <Link
-                      prefetch={false}
-                      key={p.id}
-                      href={`/paths/${p.id}`}
-                      className="learning-card"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-primary">
-                          PATH {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                      <h3 className="mt-6 text-lg">{p.title}</h3>
-                      <p className="mt-2 text-xs text-muted-foreground">{p.audience}</p>
-                      <p className="mt-4 text-sm leading-7 text-muted-foreground">{p.summary}</p>
-                      <div className="mt-7 border-t pt-4 text-xs text-muted-foreground">
-                        {p.phases.length} 个阶段<span className="mx-2">·</span>约 {p.estHours} 小时
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </Section>
-            </ModuleSection>
-          ),
-        },
-        {
-          id: 'news',
-          content: (
-            <ModuleSection id="news">
-              <Section
-                title="AI 实时资讯"
-                description="查看新模型和新功能的官方消息。"
-                action={
-                  <Link prefetch={false} href="/updates" className="section-link">
-                    查看 AI 实时资讯
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                }
-              >
-                <NewsPreview initial={seedNewsItems().slice(0, 4)} />
-              </Section>
-            </ModuleSection>
-          ),
-        },
-      ]}
+        )
+        .slice(0, 3)
+        .map((item) => ({
+          id: item.id,
+          title: item.title,
+          summary: item.summary ?? item.scenario,
+          industry: item.industry,
+        }))}
+      guides={['prompt-basics', 'long-pdf-summary', 'structured-handoff'].flatMap((id) => {
+        const guide = guides.find((g) => g.id === id)
+        return guide
+          ? [
+              {
+                id: guide.id,
+                title: guide.title,
+                summary: guide.summary ?? guide.outcome,
+                duration: guide.durationMin,
+              },
+            ]
+          : []
+      })}
     />
   )
 }
