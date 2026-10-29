@@ -1,6 +1,7 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import {
   ArrowDown,
   ArrowRight,
@@ -8,8 +9,7 @@ import {
   Bookmark,
   Check,
   ChevronDown,
-  ChevronRight,
-  Code2,
+  ListChecks,
   Compass,
   Layers,
   Pause,
@@ -19,8 +19,7 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
-import { OrbitalCore } from './orbital-core'
-import { XianWorkbench } from './workbench'
+import type { WorkbenchTask } from './workbench'
 import { ToolLogo } from '@/components/tool-logo'
 import { readLibrary, toggleSaved, LIBRARY_EVENT } from '@/lib/learning/library'
 import { PageRegions } from '@/components/page-regions'
@@ -29,13 +28,61 @@ import { useSiteModules } from '@/components/site-module-context'
 import { moduleEnabled, pathEnabled } from '@/lib/site-modules'
 import { hasNativeHomeRegion } from './regions'
 
+const OrbitalCore = dynamic(() => import('./orbital-core').then((m) => m.OrbitalCore), {
+  ssr: false,
+  loading: () => (
+    <div className="xo-loading" aria-label="X-01 领航员">
+      {/* eslint-disable-next-line @next/next/no-img-element -- code-native vector fallback, no raster to optimize */}
+      <img src="/brand/xian/companion.svg" width="320" height="320" alt="" />
+      <span>X—01 / 准备与你见面</span>
+    </div>
+  ),
+})
+const XianWorkbench = dynamic(() => import('./workbench').then((m) => m.XianWorkbench), {
+  ssr: false,
+  loading: () => (
+    <section id="workspace" className="x-section x-workspace">
+      <div className="x-section-heading">
+        <div>
+          <span className="x-eyebrow">02 / 任务工作台</span>
+          <h2>让想法，开始运行。</h2>
+        </div>
+        <p>写下需求，直接和 AI 做一件事。</p>
+      </div>
+      <div className="xdp-device xl-loading">
+        <span>写消息 · 整理资料 · 编程 · 规划</span>
+        <p role="status">正在准备工作台，你选择的材料会保留。</p>
+      </div>
+    </section>
+  ),
+})
+const TaskPreview = dynamic(() => import('./task-preview').then((m) => m.TaskPreview), {
+  ssr: false,
+  loading: () => (
+    <section className="x-starter-strip x-task-demo" aria-label="快速开始">
+      <div className="xdp-heading">
+        <span className="x-eyebrow">从一件小事开始</span>
+        <h2>
+          AI 能做什么？
+          <br />
+          <span>点开，看看。</span>
+        </h2>
+        <p>写消息、整理记录、做一个小网页。</p>
+      </div>
+      <div className="xdp-device xdp-loading">
+        <span>选一个场景，看看材料怎样变成结果。</span>
+        <span role="status">正在准备互动示例…</span>
+      </div>
+    </section>
+  ),
+})
+
 export interface XianHomeData {
   totals: { tools: number; guides: number; cases: number }
   tools: { id: string; name: string; logo: string; tagline: string; category: string }[]
   cases: { id: string; title: string; summary: string; industry: string }[]
   guides: { id: string; title: string; summary: string; duration: number }[]
 }
-const tasks = ['帮我把一段想法写清楚', '从会议记录里提取行动项', '给我一个能运行的代码例子']
 const routes = [
   {
     n: '01',
@@ -64,6 +111,8 @@ const routes = [
 ]
 export function XianHome({ tools, cases, guides, totals }: XianHomeData) {
   const { config, preview } = useSiteModules()
+  const [handoff, setHandoff] = useState<WorkbenchTask | null>(null)
+  const clearHandoff = useCallback(() => setHandoff(null), [])
   const [paused, setPaused] = useState(false),
     [category, setCategory] = useState('全部'),
     [query, setQuery] = useState('')
@@ -91,8 +140,8 @@ export function XianHome({ tools, cases, guides, totals }: XianHomeData) {
       window.removeEventListener('storage', update)
     }
   }, [])
-  function launch(text: string) {
-    window.dispatchEvent(new CustomEvent('xian:prompt', { detail: text }))
+  function launch(text: string, mode: number) {
+    setHandoff({ prompt: text, mode })
     document.getElementById('workspace')?.scrollIntoView({
       behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
     })
@@ -171,18 +220,13 @@ export function XianHome({ tools, cases, guides, totals }: XianHomeData) {
                   <div className={'x-core ' + (paused ? 'is-paused' : '')}>
                     <div className="x-core-corner x-core-corner-a" />
                     <div className="x-core-corner x-core-corner-b" />
-                    <span className="x-core-label">XIAN / GENERATIVE CORE</span>
-                    <span className="x-core-coordinates">
-                      X 0.83
-                      <br />Y 1.24
-                      <br />Z 0.62
-                    </span>
+                    <span className="x-core-label">X—01 / YOUR CO-PILOT</span>
                     <OrbitalCore paused={paused} />
                     <div className="x-core-glow" />
                     <div className="x-core-bottom">
                       <span>
                         <i className="x-status-dot" />
-                        {paused ? 'MOTION PAUSED' : 'MOVE TO EXPLORE'}
+                        {paused ? '动态已暂停' : '移动鼠标，或点一下和它打招呼'}
                       </span>
                       <button
                         type="button"
@@ -209,20 +253,7 @@ export function XianHome({ tools, cases, guides, totals }: XianHomeData) {
           },
           {
             id: 'tasks',
-            content: workspaceVisible ? (
-              <section className="x-starter-strip" aria-label="快速开始">
-                <span className="x-eyebrow">
-                  你的第一个指令 <ChevronRight size={13} />
-                </span>
-                {tasks.map((task, i) => (
-                  <button key={task} onClick={() => launch(task)}>
-                    <span>0{i + 1}</span>
-                    {task}
-                    <ArrowUpRight size={15} />
-                  </button>
-                ))}
-              </section>
-            ) : null,
+            content: workspaceVisible ? <TaskPreview onLaunch={launch} /> : null,
           },
           {
             id: 'metrics',
@@ -376,7 +407,10 @@ export function XianHome({ tools, cases, guides, totals }: XianHomeData) {
               </ModuleSection>
             ),
           },
-          { id: 'workspace', content: <XianWorkbench /> },
+          {
+            id: 'workspace',
+            content: <XianWorkbench task={handoff} onTaskHandled={clearHandoff} />,
+          },
           {
             id: 'guides',
             content: (
@@ -489,7 +523,7 @@ export function XianHome({ tools, cases, guides, totals }: XianHomeData) {
                             ) : i === 1 ? (
                               <>
                                 <span className="x-art-window">
-                                  <Code2 size={40} />
+                                  <ListChecks size={40} />
                                   <i />
                                   <i />
                                 </span>

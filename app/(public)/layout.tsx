@@ -4,6 +4,7 @@ import { ServiceWorkerRegistrar } from '@/components/motion/service-worker-regis
 import { AnalyticsBeacon } from '@/components/analytics-beacon'
 import { SiteModulesProvider } from '@/components/site-modules'
 import { ModuleGate } from '@/components/module-visibility'
+import { RefinementMotion } from '@/components/xian/refinement-motion'
 import '@/app/styles/reference-base.css'
 import '@/app/styles/benchmarks.css'
 
@@ -13,6 +14,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <div className="public-site flex flex-1 flex-col">
       <SiteModulesProvider>
         <MotionLayer />
+        <RefinementMotion />
         <ServiceWorkerRegistrar />
         <AnalyticsBeacon />
         <a

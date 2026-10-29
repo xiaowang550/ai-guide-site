@@ -547,7 +547,7 @@ export function AssistantPanel({
           <AssistantAvatar state={state} />
           <div>
             <strong>
-              弦域 <span>· AI 伙伴</span>
+              X-01 <span>· 弦域助手</span>
             </strong>
             <p aria-live="polite">
               {busy

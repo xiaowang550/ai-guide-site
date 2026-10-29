@@ -1,0 +1,40 @@
+/* X-01 is rendered procedurally. These controls share the sculpture's quiet instrument language. */
+.xo-observatory { position: relative; width: 100%; height: 100%; isolation: isolate; color: #e5ede2; }
+.xo-identity { position: absolute; z-index: 3; top: 39px; left: 23px; display: flex; align-items: center; gap: 10px; pointer-events: none; font: 12px/1.2 ui-monospace, Consolas, monospace; letter-spacing: .12em; }
+.xo-identity-mark { color: #d7ff84; font-size: 22px; font-weight: 400; }
+.xo-identity small { display: block; color: #778774; font: 8px/1.8 ui-monospace, Consolas, monospace; letter-spacing: .12em; }
+.xo-stage { position: absolute; inset: 16px 0 129px; display: block; width: 100%; padding: 0; border: 0; border-radius: 24px; background: transparent; cursor: pointer; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.xo-stage:focus-visible { outline: 1px solid #d7ff84 !important; outline-offset: -7px !important; box-shadow: inset 0 0 50px #d7ff8408; }
+.xo-stage:active { cursor: grabbing; }
+.xo-stage .xo-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; opacity: 1; transition: none; border-radius: inherit; }
+.xo-fallback { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 1; }
+.xo-observatory[data-canvas-ready='true'] .xo-fallback { visibility: hidden; }
+.xo-touch-hint { position: absolute; display: flex; align-items: center; justify-content: center; gap: 7px; left: 0; right: 0; bottom: -2px; color: #7d8b74; font: 10px/1.6 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; letter-spacing: .04em; pointer-events: none; }
+.xo-touch-hint > span { width: 4px; height: 4px; border: 1px solid #9fb18d; border-radius: 50%; }
+.xo-caption { position: absolute; left: 12px; right: 12px; bottom: 98px; z-index: 3; margin: 0; text-align: center; color: #9aa891; font: 11px/1.65 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; letter-spacing: .025em; pointer-events: none; }
+.xo-modes { position: absolute; z-index: 4; bottom: 46px; left: 50%; transform: translateX(-50%); display: flex; padding: 4px; gap: 2px; border: 1px solid #374130; border-radius: 12px; background: #10170fe6; box-shadow: 0 5px 24px #00000016; }
+.xo-modes button { display: flex; align-items: center; justify-content: center; gap: 9px; min-width: 89px; min-height: 38px; padding: 8px 12px; color: #9cae8f; background: transparent; border: 1px solid transparent; border-radius: 8px; font: 11px/1.3 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; white-space: nowrap; transition: color .18s, background-color .18s, border-color .18s; }
+.xo-modes button:hover { color: #e1f4cf; background: #22301a80; }
+.xo-modes button[aria-pressed='true'] { color: #e6ffd0; background: #293a20; border-color: #4b633b; }
+.xo-modes button:focus-visible { outline: 2px solid #d7ff84 !important; outline-offset: 3px !important; }
+.xo-mode-number { color: #64795b; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .05em; }
+.xo-modes button[aria-pressed='true'] .xo-mode-number { color: #a2c18a; }
+.xo-mode-indicator { width: 4px; height: 4px; border: 1px solid #637956; border-radius: 50%; }
+.xo-modes button[aria-pressed='true'] .xo-mode-indicator { border-color: #d7ff84; background: #d7ff84; box-shadow: 0 0 7px #d7ff8426; }
+.xo-observatory[data-mode='warp'] .xo-identity-mark { color: #b9eeff; }
+.xo-observatory[data-mode='warp'] .xo-caption { color: #a3c7c4; }
+@media (max-width: 640px) {
+  .xo-identity { top: 35px; left: 17px; font-size: 10px; }
+  .xo-identity small { font-size: 7px; }
+  .xo-stage { inset: 8px 0 127px; }
+  .xo-caption { bottom: 95px; font-size: 10px; }
+  .xo-modes { bottom: 42px; padding: 3px; }
+  .xo-modes button { min-height: 40px; min-width: 82px; gap: 8px; padding: 8px 10px; }
+  .xo-touch-hint { bottom: -5px; font-size: 9px; }
+}
+@media (pointer: coarse) {
+  .xo-modes button { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .xo-modes button { transition: none; }
+}

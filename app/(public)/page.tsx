@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { tools, guides, cases } from '@/data'
 import { XianHome } from '@/components/xian/home'
+import '@/public/design/xian-observatory.css'
+import '@/public/design/xian-lab.css'
 
 export const metadata: Metadata = {
   description: '弦域 XIAN：探索 AI 工具、运行真实任务、跟着案例实践。把想法接入下一维。',

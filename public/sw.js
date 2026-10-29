@@ -1,5 +1,5 @@
 /* Public reading cache only. Authenticated pages and API responses never enter it. */
-const CACHE_VERSION = 'v9'
+const CACHE_VERSION = 'v10'
 const STATIC_CACHE = `ai-map-static-${CACHE_VERSION}`
 const PAGES_CACHE = `ai-map-pages-${CACHE_VERSION}`
 const OFFLINE_URL = '/offline/'
@@ -23,6 +23,7 @@ self.addEventListener('install', (event) => {
         '/brand/xian/mark.svg',
         '/brand/xian/favicon.svg',
         '/brand/xian/logo.svg',
+        '/brand/xian/companion.svg',
       ])
       for (const page of PRECACHE) {
         const html = await (await pages.match(page)).text()

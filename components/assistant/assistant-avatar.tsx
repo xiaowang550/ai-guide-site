@@ -20,9 +20,9 @@ export function AssistantAvatar({
         .filter(Boolean)
         .join(' ')}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- 小型透明 WebP，静态导出直接加载站内素材 */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- Original SVG companion, shared with the interactive scene. */}
       <img
-        src="/brand/xian/mark.svg"
+        src="/brand/xian/companion.svg"
         width="256"
         height="256"
         alt=""

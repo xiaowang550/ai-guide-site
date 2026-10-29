@@ -1,35 +1,89 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowUpRight, Menu, X, ArrowRight, Bookmark } from 'lucide-react'
 import { CommandSearch } from '@/components/command-search'
 import { BrandMark } from '@/components/brand-mark'
 import { useSiteModules } from '@/components/site-module-context'
-import { pathEnabled } from '@/lib/site-modules'
+import { pathEnabled, moduleForPath, moduleHref, builtinModules } from '@/lib/site-modules'
+import { siteNavigation } from '@/lib/site-navigation'
 import { hasNativeHomeRegion } from './regions'
 export function XianNavigation() {
   const [open, setOpen] = useState(false),
+    [activeAnchor, setActiveAnchor] = useState(''),
     pathname = usePathname(),
     { config } = useSiteModules()
-  const links = [
-    {
-      href: hasNativeHomeRegion(config, 'tools') ? '/#explore' : '/tools/',
-      title: '探索',
-      path: '/tools',
-    },
-    { href: '/#workspace', title: '工作台', path: '/' },
-    { href: '/guides/', title: '学习', path: '/guides' },
-    { href: '/cases/', title: '实践', path: '/cases' },
-    { href: '/updates/', title: '动态', path: '/updates' },
-  ].filter(
-    (link) =>
-      pathEnabled(config, link.path) &&
-      (link.title !== '工作台' || hasNativeHomeRegion(config, 'workspace')),
-  )
+  const header = useRef<HTMLElement>(null)
+  const anchors: Record<string, { region: string; anchor: string; title: string }> = {
+    tools: { region: 'tools', anchor: 'explore', title: '探索' },
+    guides: { region: 'guides', anchor: 'learning', title: '学习' },
+    cases: { region: 'start', anchor: 'missions', title: '实践' },
+  }
+  const links = siteNavigation(config)
+    .filter((item) => item.href !== '/')
+    .map((item) => {
+      const id =
+        moduleForPath(item.href) ?? config.modules.find((m) => moduleHref(m) === item.href)?.id
+      const entry = config.modules.find((m) => m.id === id)
+      const customTitle =
+        entry?.title !== builtinModules.find((m) => m.id === id)?.title ? entry?.title : undefined
+      const anchor = id ? anchors[id] : undefined
+      return {
+        href:
+          pathname === '/' && anchor && hasNativeHomeRegion(config, anchor.region)
+            ? `/#${anchor.anchor}`
+            : item.href,
+        title:
+          customTitle ||
+          anchor?.title ||
+          (id === 'news' ? '动态' : id === 'knowledge' ? '知识' : item.label),
+        path: item.href,
+      }
+    })
+  if (pathEnabled(config, '/') && hasNativeHomeRegion(config, 'workspace')) {
+    const toolsIndex = links.findIndex((item) => moduleForPath(item.path) === 'tools')
+    links.splice(toolsIndex >= 0 ? toolsIndex + 1 : 0, 0, {
+      href: '/#workspace',
+      title: '工作台',
+      path: '/',
+    })
+  }
   useEffect(() => {
     setOpen(false)
   }, [pathname])
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const total = document.documentElement.scrollHeight - innerHeight
+      header.current?.style.setProperty('--x-progress', String(total > 0 ? scrollY / total : 0))
+      header.current?.setAttribute('data-scrolled', String(scrollY > 30))
+      if (pathname !== '/') return setActiveAnchor('')
+      let current = ''
+      let nearestTop = -Infinity
+      for (const id of ['explore', 'workspace', 'learning', 'missions']) {
+        const el = document.getElementById(id)
+        const top = el?.getBoundingClientRect().top
+        if (top !== undefined && top < innerHeight * 0.45 && top > nearestTop) {
+          current = id
+          nearestTop = top
+        }
+      }
+      setActiveAnchor(current)
+    }
+    const scroll = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', scroll, { passive: true })
+    window.addEventListener('resize', scroll)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', scroll)
+      window.removeEventListener('resize', scroll)
+    }
+  }, [pathname, config.revision])
   useEffect(() => {
     if (!open) return
     const key = (e: KeyboardEvent) => {
@@ -46,7 +100,7 @@ export function XianNavigation() {
     }
   }, [open])
   return (
-    <header className="x-nav">
+    <header ref={header} className="x-nav">
       <Link href="/" className="x-nav-brand" aria-label="弦域首页">
         <BrandMark full />
       </Link>
@@ -57,9 +111,11 @@ export function XianNavigation() {
             href={link.href}
             onClick={() => setOpen(false)}
             aria-current={
-              pathname !== '/' && pathname.startsWith(link.path) && link.path !== '/'
-                ? 'page'
-                : undefined
+              pathname === '/' && link.href === `/#${activeAnchor}`
+                ? 'location'
+                : pathname !== '/' && pathname.startsWith(link.path) && link.path !== '/'
+                  ? 'page'
+                  : undefined
             }
           >
             {link.title}
@@ -91,6 +147,7 @@ export function XianNavigation() {
           {open ? <X size={21} /> : <Menu size={21} />}
         </button>
       </div>
+      <span className="x-nav-progress" aria-hidden="true" />
     </header>
   )
 }
